@@ -160,31 +160,50 @@ export default function Page() {
     const sqFtEach = sqInEach / 144;
     const totalSqFt = sqFtEach * q;
 
-    if (product === "vinyl") {
-      const v = vinylOptions[vinylType];
-      const materialCost = totalSqFt * v.cost;
-      const shipping = totalSqFt >= 1000 ? 199 : 10;
+   if (product === "vinyl") {
+  const v = vinylOptions[vinylType];
 
-      let basePrice = totalSqFt * v.retail;
-      if (vinylContour) basePrice *= 1.1;
-      if (vinylRush) basePrice *= 2;
+  const materialCost = totalSqFt * v.cost;
+  const shipping = totalSqFt >= 1000 ? 199 : 10;
+  const cost = materialCost + shipping;
 
-      const cost = materialCost + shipping;
-      const retail = (basePrice + fees) * mult;
+  // Base shop pricing (your real-world pricing)
+  let shopPrice = totalSqFt * v.retail;
 
-      return {
-        label: "Printed Vinyl",
-        retail,
-        each: retail / q,
-        cost,
-        profit: retail - cost,
-        margin: retail ? ((retail - cost) / retail) * 100 : 0,
-        totalSqFt,
-        materialCost,
-        shipping,
-        basePrice,
-      };
-    }
+  // Optional margin-based pricing (backup safety)
+  let costMarginPrice = cost / (1 - m);
+
+  // Apply options
+  if (vinylContour) {
+    shopPrice *= 1.1;
+    costMarginPrice *= 1.1;
+  }
+
+  if (vinylRush) {
+    shopPrice *= 2;
+    costMarginPrice *= 2;
+  }
+
+  // Choose the better price (protects you on edge cases)
+  const basePrice = Math.max(shopPrice, costMarginPrice);
+
+  const retail = (basePrice + fees) * mult;
+
+  return {
+    label: "Printed Vinyl",
+    retail,
+    each: retail / q,
+    cost,
+    profit: retail - cost,
+    margin: retail ? ((retail - cost) / retail) * 100 : 0,
+    totalSqFt,
+    materialCost,
+    shipping,
+    shopPrice,
+    costMarginPrice,
+    basePrice,
+  };
+}
 
     if (product === "banner") {
       const b = bannerOptions[bannerType];
