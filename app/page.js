@@ -3,7 +3,10 @@
 import { useMemo, useState } from "react";
 
 const money = (n) =>
-  Number(n || 0).toLocaleString("en-US", { style: "currency", currency: "USD" });
+  Number(n || 0).toLocaleString("en-US", {
+    style: "currency",
+    currency: "USD",
+  });
 
 const num = (v, fallback = 0) => {
   if (v === "" || v === null || v === undefined) return fallback;
@@ -91,11 +94,30 @@ function shippingBySize(w, h, sheets) {
   return 199;
 }
 
-function getVinylBillableSqFt(w, h, q, gangVinyl, vinylContour, contourPadding, gangWastePercent) {
-  const actualEach = (w * h) / 144;
+function calculateLayout(pieceW, pieceH, qty, rollWidth) {
+  const piecesAcross = Math.max(Math.floor(rollWidth / pieceW), 1);
+  const rows = Math.ceil(qty / piecesAcross);
+  const rawHeight = rows * pieceH;
+  const roundedHeight = Math.ceil(rawHeight / 12) * 12;
+  const totalSqFt = (rollWidth * roundedHeight) / 144;
 
-  const effectiveW = vinylContour && gangVinyl ? w + contourPadding * 2 : w;
-  const effectiveH = vinylContour && gangVinyl ? h + contourPadding * 2 : h;
+  return {
+    piecesAcross,
+    rows,
+    rawHeight,
+    roundedHeight,
+    totalSqFt,
+    pieceW,
+    pieceH,
+  };
+}
+
+function getVinylBillableSqFt(w, h, qty, gangVinyl, vinylContour, contourPadding, gangWastePercent) {
+  const actualEach = (w * h) / 144;
+  const pad = vinylContour && gangVinyl ? contourPadding * 2 : 0;
+
+  const effectiveW = w + pad;
+  const effectiveH = h + pad;
   const effectiveEach = (effectiveW * effectiveH) / 144;
 
   if (!gangVinyl) {
@@ -104,9 +126,9 @@ function getVinylBillableSqFt(w, h, q, gangVinyl, vinylContour, contourPadding, 
 
     return {
       actualEach,
-      effectiveEach,
+      effectiveEach: actualEach,
       billableEach,
-      totalBillable: billableEach * q,
+      totalBillable: billableEach * qty,
       mode: "Single piece billing",
       layoutWidth: w,
       layoutHeight: roundedHeight,
@@ -114,26 +136,34 @@ function getVinylBillableSqFt(w, h, q, gangVinyl, vinylContour, contourPadding, 
   }
 
   const rollWidth = 52;
-  const piecesAcross = Math.max(Math.floor(rollWidth / effectiveW), 1);
-  const rows = Math.ceil(q / piecesAcross);
-  const rawTotalHeight = rows * effectiveH;
-  const roundedHeight = Math.ceil(rawTotalHeight / 12) * 12;
 
-  const rawBillable = (rollWidth * roundedHeight) / 144;
+  const normal = calculateLayout(effectiveW, effectiveH, qty, rollWidth);
+  const rotated = calculateLayout(effectiveH, effectiveW, qty, rollWidth);
+
+  const best =
+    normal.totalSqFt <= rotated.totalSqFt
+      ? { ...normal, rotated: false }
+      : { ...rotated, rotated: true };
+
   const wasteMultiplier = vinylContour ? 1 + num(gangWastePercent, 0) / 100 : 1;
-  const totalBillable = Math.ceil(rawBillable * wasteMultiplier);
+  const totalBillable = Math.ceil(best.totalSqFt * wasteMultiplier);
 
   return {
     actualEach,
     effectiveEach,
-    billableEach: totalBillable / q,
+    billableEach: totalBillable / qty,
     totalBillable,
-    mode: `Ganged layout: ${piecesAcross} across x ${rows} rows`,
-    piecesAcross,
-    rows,
+    mode: `Ganged layout: ${best.piecesAcross} across x ${best.rows} rows${best.rotated ? " (ROTATED)" : ""}`,
+    piecesAcross: best.piecesAcross,
+    rows: best.rows,
     layoutWidth: rollWidth,
-    layoutHeight: roundedHeight,
-    rawBillable,
+    layoutHeight: best.roundedHeight,
+    rawBillable: best.totalSqFt,
+    pieceW: best.pieceW,
+    pieceH: best.pieceH,
+    rotated: best.rotated,
+    normalSqFt: normal.totalSqFt,
+    rotatedSqFt: rotated.totalSqFt,
   };
 }
 
@@ -211,6 +241,7 @@ export default function Page() {
 
     if (product === "vinyl") {
       const v = vinylOptions[vinylType];
+
       const vinylSqFt = getVinylBillableSqFt(
         w,
         h,
@@ -221,14 +252,11 @@ export default function Page() {
         num(gangWastePercent, 0)
       );
 
-      const actualTotalSqFt = vinylSqFt.actualEach * q;
-      const vinylBillableTotalSqFt = vinylSqFt.totalBillable;
-
-      const materialCost = vinylBillableTotalSqFt * v.cost;
-      const shipping = vinylBillableTotalSqFt >= 1000 ? 199 : 10;
+      const materialCost = vinylSqFt.totalBillable * v.cost;
+      const shipping = vinylSqFt.totalBillable >= 1000 ? 199 : 10;
       const cost = materialCost + shipping;
 
-      let shopPrice = vinylBillableTotalSqFt * v.retail;
+      let shopPrice = vinylSqFt.totalBillable * v.retail;
       let costMarginPrice = cost / (1 - m);
 
       if (vinylContour) {
@@ -251,8 +279,8 @@ export default function Page() {
         cost,
         profit: retail - cost,
         margin: retail ? ((retail - cost) / retail) * 100 : 0,
-        totalSqFt: vinylBillableTotalSqFt,
-        actualTotalSqFt,
+        totalSqFt: vinylSqFt.totalBillable,
+        actualTotalSqFt: vinylSqFt.actualEach * q,
         actualSqFtEach: vinylSqFt.actualEach,
         effectiveSqFtEach: vinylSqFt.effectiveEach,
         billableSqFtEach: vinylSqFt.billableEach,
@@ -260,6 +288,13 @@ export default function Page() {
         layoutWidth: vinylSqFt.layoutWidth,
         layoutHeight: vinylSqFt.layoutHeight,
         rawBillableSqFt: vinylSqFt.rawBillable,
+        piecesAcross: vinylSqFt.piecesAcross,
+        rows: vinylSqFt.rows,
+        pieceW: vinylSqFt.pieceW,
+        pieceH: vinylSqFt.pieceH,
+        rotated: vinylSqFt.rotated,
+        normalSqFt: vinylSqFt.normalSqFt,
+        rotatedSqFt: vinylSqFt.rotatedSqFt,
         materialCost,
         shipping,
         shopPrice,
@@ -620,7 +655,7 @@ export default function Page() {
               <Check label="Gang Vinyl Layout" value={gangVinyl} setValue={setGangVinyl} />
 
               {vinylContour && gangVinyl && (
-                <div style={grid}>
+                <div className="formGrid" style={grid}>
                   <Field label="Contour Padding Inches" value={contourPadding} setValue={setContourPadding} />
                   <Field label="Gang Waste %" value={gangWastePercent} setValue={setGangWastePercent} />
                 </div>
@@ -695,29 +730,16 @@ export default function Page() {
           <p>Product: {calc.label}</p>
           <p>Total Sq Ft: {calc.totalSqFt?.toFixed(2)}</p>
 
-          {calc.actualTotalSqFt !== undefined && (
-            <p>Actual Sq Ft: {calc.actualTotalSqFt.toFixed(2)}</p>
-          )}
-
-          {calc.effectiveSqFtEach !== undefined && (
-            <p>Effective Sq Ft Each: {calc.effectiveSqFtEach.toFixed(2)}</p>
-          )}
-
-          {calc.billableSqFtEach !== undefined && (
-            <p>Billable Sq Ft Each: {calc.billableSqFtEach.toFixed(2)}</p>
-          )}
-
+          {calc.actualTotalSqFt !== undefined && <p>Actual Sq Ft: {calc.actualTotalSqFt.toFixed(2)}</p>}
+          {calc.effectiveSqFtEach !== undefined && <p>Effective Sq Ft Each: {calc.effectiveSqFtEach.toFixed(2)}</p>}
+          {calc.billableSqFtEach !== undefined && <p>Billable Sq Ft Each: {calc.billableSqFtEach.toFixed(2)}</p>}
           {calc.layoutWidth !== undefined && calc.layoutHeight !== undefined && (
             <p>Layout Size: {calc.layoutWidth}" x {calc.layoutHeight}"</p>
           )}
-
-          {calc.rawBillableSqFt !== undefined && (
-            <p>Raw Gang Sq Ft: {calc.rawBillableSqFt.toFixed(2)}</p>
-          )}
-
-          {calc.billingMode !== undefined && (
-            <p>Billing Mode: {calc.billingMode}</p>
-          )}
+          {calc.rawBillableSqFt !== undefined && <p>Raw Gang Sq Ft: {calc.rawBillableSqFt.toFixed(2)}</p>}
+          {calc.billingMode !== undefined && <p>Billing Mode: {calc.billingMode}</p>}
+          {calc.normalSqFt !== undefined && <p>Normal Layout Sq Ft: {calc.normalSqFt.toFixed(2)}</p>}
+          {calc.rotatedSqFt !== undefined && <p>Rotated Layout Sq Ft: {calc.rotatedSqFt.toFixed(2)}</p>}
 
           {calc.tierPrice !== undefined && <p>Tier Price Total: {money(calc.tierPrice)}</p>}
           {calc.costMarginPrice !== undefined && <p>Cost + Margin Price: {money(calc.costMarginPrice)}</p>}
@@ -731,6 +753,7 @@ export default function Page() {
           <p>Multiplier: {num(multiplier, 1)}x</p>
 
           <ProductVisual product={product} />
+          {product === "vinyl" && <VinylLayoutPreview calc={calc} />}
           <SelectedDetails details={selectedDetails} />
         </aside>
       </div>
@@ -763,19 +786,6 @@ function Box({ title, children }) {
     <div style={{ marginTop: 20, padding: 15, background: "#f8fafc", borderRadius: 12 }}>
       <h3>{title}</h3>
       {children}
-    </div>
-  );
-}
-
-function SelectedDetails({ details }) {
-  return (
-    <div style={detailsBox}>
-      <h3 style={{ marginTop: 0 }}>Selected Details</h3>
-      <p><strong>Product:</strong> {details.productName}</p>
-      <p><strong>Size:</strong> {details.size}</p>
-      <p><strong>Quantity:</strong> {details.qty}</p>
-      <p><strong>Material:</strong> {details.material}</p>
-      <p><strong>Options:</strong> {details.options.length ? details.options.join(", ") : "None"}</p>
     </div>
   );
 }
@@ -820,12 +830,74 @@ function ProductVisual({ product }) {
   );
 }
 
+function VinylLayoutPreview({ calc }) {
+  if (!calc.piecesAcross || !calc.rows || !calc.pieceW || !calc.pieceH) return null;
+
+  const scale = 3;
+  const rollW = 52 * scale;
+  const boxW = calc.pieceW * scale;
+  const boxH = calc.pieceH * scale;
+
+  return (
+    <div style={previewBox}>
+      <h4 style={{ marginTop: 0, marginBottom: 10 }}>Layout Preview</h4>
+
+      <div style={{ fontSize: 12, marginBottom: 8, color: "#cbd5e1" }}>
+        52" roll width • {calc.layoutHeight}" long
+      </div>
+
+      <div style={{ width: rollW, maxWidth: "100%", overflowX: "auto", border: "2px solid #38bdf8", padding: 5 }}>
+        {Array.from({ length: calc.rows }).map((_, row) => (
+          <div key={row} style={{ display: "flex" }}>
+            {Array.from({ length: calc.piecesAcross }).map((_, col) => (
+              <div
+                key={col}
+                title={`${calc.pieceW.toFixed(1)}" x ${calc.pieceH.toFixed(1)}"`}
+                style={{
+                  width: boxW,
+                  height: boxH,
+                  border: "1px dashed #94a3b8",
+                  margin: 2,
+                  background: "rgba(255,255,255,0.08)",
+                  flexShrink: 0,
+                }}
+              />
+            ))}
+          </div>
+        ))}
+      </div>
+
+      <p style={{ marginTop: 10, fontSize: 13 }}>{calc.billingMode}</p>
+    </div>
+  );
+}
+
+function SelectedDetails({ details }) {
+  return (
+    <div style={detailsBox}>
+      <h3 style={{ marginTop: 0 }}>Selected Details</h3>
+      <p><strong>Product:</strong> {details.productName}</p>
+      <p><strong>Size:</strong> {details.size}</p>
+      <p><strong>Quantity:</strong> {details.qty}</p>
+      <p><strong>Material:</strong> {details.material}</p>
+      <p><strong>Options:</strong> {details.options.length ? details.options.join(", ") : "None"}</p>
+    </div>
+  );
+}
+
 const visualBox = {
   marginTop: 25,
   padding: 18,
   borderRadius: 16,
   background: "rgba(255,255,255,0.08)",
   textAlign: "center",
+};
+
+const previewBox = {
+  marginTop: 20,
+  padding: 15,
+  background: "rgba(255,255,255,0.05)",
+  borderRadius: 12,
 };
 
 const detailsBox = {
