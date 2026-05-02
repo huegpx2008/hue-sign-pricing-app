@@ -91,8 +91,12 @@ function shippingBySize(w, h, sheets) {
   return 199;
 }
 
-function getVinylBillableSqFt(w, h, q, gangVinyl) {
+function getVinylBillableSqFt(w, h, q, gangVinyl, vinylContour, contourPadding, gangWastePercent) {
   const actualEach = (w * h) / 144;
+
+  const effectiveW = vinylContour && gangVinyl ? w + contourPadding * 2 : w;
+  const effectiveH = vinylContour && gangVinyl ? h + contourPadding * 2 : h;
+  const effectiveEach = (effectiveW * effectiveH) / 144;
 
   if (!gangVinyl) {
     const roundedHeight = Math.ceil(h / 12) * 12;
@@ -100,23 +104,36 @@ function getVinylBillableSqFt(w, h, q, gangVinyl) {
 
     return {
       actualEach,
+      effectiveEach,
       billableEach,
       totalBillable: billableEach * q,
       mode: "Single piece billing",
+      layoutWidth: w,
+      layoutHeight: roundedHeight,
     };
   }
 
   const rollWidth = 52;
-  const piecesAcross = Math.max(Math.floor(rollWidth / w), 1);
+  const piecesAcross = Math.max(Math.floor(rollWidth / effectiveW), 1);
   const rows = Math.ceil(q / piecesAcross);
-  const totalHeight = rows * h;
-  const roundedHeight = Math.ceil(totalHeight / 12) * 12;
+  const rawTotalHeight = rows * effectiveH;
+  const roundedHeight = Math.ceil(rawTotalHeight / 12) * 12;
+
+  const rawBillable = (rollWidth * roundedHeight) / 144;
+  const wasteMultiplier = vinylContour ? 1 + num(gangWastePercent, 0) / 100 : 1;
+  const totalBillable = Math.ceil(rawBillable * wasteMultiplier);
 
   return {
     actualEach,
-    billableEach: actualEach,
-    totalBillable: (rollWidth * roundedHeight) / 144,
+    effectiveEach,
+    billableEach: totalBillable / q,
+    totalBillable,
     mode: `Ganged layout: ${piecesAcross} across x ${rows} rows`,
+    piecesAcross,
+    rows,
+    layoutWidth: rollWidth,
+    layoutHeight: roundedHeight,
+    rawBillable,
   };
 }
 
@@ -158,6 +175,8 @@ export default function Page() {
   const [vinylContour, setVinylContour] = useState(false);
   const [vinylRush, setVinylRush] = useState(false);
   const [gangVinyl, setGangVinyl] = useState(false);
+  const [contourPadding, setContourPadding] = useState(0.5);
+  const [gangWastePercent, setGangWastePercent] = useState(15);
 
   function preset(prod, w, h, double = false) {
     setProduct(prod);
@@ -192,7 +211,15 @@ export default function Page() {
 
     if (product === "vinyl") {
       const v = vinylOptions[vinylType];
-      const vinylSqFt = getVinylBillableSqFt(w, h, q, gangVinyl);
+      const vinylSqFt = getVinylBillableSqFt(
+        w,
+        h,
+        q,
+        gangVinyl,
+        vinylContour,
+        num(contourPadding, 0.5),
+        num(gangWastePercent, 0)
+      );
 
       const actualTotalSqFt = vinylSqFt.actualEach * q;
       const vinylBillableTotalSqFt = vinylSqFt.totalBillable;
@@ -227,8 +254,12 @@ export default function Page() {
         totalSqFt: vinylBillableTotalSqFt,
         actualTotalSqFt,
         actualSqFtEach: vinylSqFt.actualEach,
+        effectiveSqFtEach: vinylSqFt.effectiveEach,
         billableSqFtEach: vinylSqFt.billableEach,
         billingMode: vinylSqFt.mode,
+        layoutWidth: vinylSqFt.layoutWidth,
+        layoutHeight: vinylSqFt.layoutHeight,
+        rawBillableSqFt: vinylSqFt.rawBillable,
         materialCost,
         shipping,
         shopPrice,
@@ -378,6 +409,8 @@ export default function Page() {
     vinylContour,
     vinylRush,
     gangVinyl,
+    contourPadding,
+    gangWastePercent,
   ]);
 
   const selectedDetails = {
@@ -399,6 +432,12 @@ export default function Page() {
       product === "vinyl" && vinylContour ? "Contour Cut" : null,
       product === "vinyl" && vinylRush ? "Rush Order" : null,
       product === "vinyl" && gangVinyl ? "Gang Vinyl Layout" : null,
+      product === "vinyl" && vinylContour && gangVinyl
+        ? `Contour Padding: ${num(contourPadding, 0.5)}"`
+        : null,
+      product === "vinyl" && vinylContour && gangVinyl
+        ? `Gang Waste: ${num(gangWastePercent, 0)}%`
+        : null,
       product === "coro" && stakes ? "Standard Stakes" : null,
       product === "coro" && heavyStakes ? "Heavy Duty Stakes" : null,
       product === "coro" && grommets ? "Grommets" : null,
@@ -579,6 +618,13 @@ export default function Page() {
               <Check label="Contour Cut (+10%)" value={vinylContour} setValue={setVinylContour} />
               <Check label="Rush Order (2x)" value={vinylRush} setValue={setVinylRush} />
               <Check label="Gang Vinyl Layout" value={gangVinyl} setValue={setGangVinyl} />
+
+              {vinylContour && gangVinyl && (
+                <div style={grid}>
+                  <Field label="Contour Padding Inches" value={contourPadding} setValue={setContourPadding} />
+                  <Field label="Gang Waste %" value={gangWastePercent} setValue={setGangWastePercent} />
+                </div>
+              )}
             </Box>
           )}
 
@@ -653,8 +699,20 @@ export default function Page() {
             <p>Actual Sq Ft: {calc.actualTotalSqFt.toFixed(2)}</p>
           )}
 
+          {calc.effectiveSqFtEach !== undefined && (
+            <p>Effective Sq Ft Each: {calc.effectiveSqFtEach.toFixed(2)}</p>
+          )}
+
           {calc.billableSqFtEach !== undefined && (
             <p>Billable Sq Ft Each: {calc.billableSqFtEach.toFixed(2)}</p>
+          )}
+
+          {calc.layoutWidth !== undefined && calc.layoutHeight !== undefined && (
+            <p>Layout Size: {calc.layoutWidth}" x {calc.layoutHeight}"</p>
+          )}
+
+          {calc.rawBillableSqFt !== undefined && (
+            <p>Raw Gang Sq Ft: {calc.rawBillableSqFt.toFixed(2)}</p>
           )}
 
           {calc.billingMode !== undefined && (
