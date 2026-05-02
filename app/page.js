@@ -11,77 +11,6 @@ const num = (v, fallback = 0) => {
   return Number.isFinite(n) ? n : fallback;
 };
 
-const products = {
-  coro: "Coroplast Yard Signs",
-  banner: "Vinyl Banners",
-  acm: "ACM / Maxmetal",
-};
-
-const bannerOptions = {
-  "13-single": { name: "13oz Single-Sided", cost: 1.25, retail: 5 },
-  "13-double": { name: "13oz Double-Sided", cost: 1.25, retail: 8 },
-  "15-single": { name: "15oz Single-Sided", cost: 1.75, retail: 7 },
-  "18-single": { name: "18oz Single-Sided", cost: 2.25, retail: 9 },
-  "18-double": { name: "18oz Double-Sided", cost: 4.25, retail: 17 },
-};
-
-const acmOptions = {
-  "3-single": { name: "3mm Single-Sided", costPerSqIn: 0.05, minCost: 7.2 },
-  "3-double": { name: "3mm Double-Sided", costPerSqIn: 0.06, minCost: 8.64 },
-  "6-single": { name: "6mm Single-Sided", costPerSqIn: 0.08, minCost: 11.52 },
-  "6-double": { name: "6mm Double-Sided", costPerSqIn: 0.09, minCost: 12.96 },
-};
-
-const coroPricing = {
-  single: [
-    { min: 1, price: 25 },
-    { min: 5, price: 15 },
-    { min: 10, price: 13.75 },
-    { min: 24, price: 10.75 },
-    { min: 50, price: 9.9 },
-    { min: 100, price: 8.25 },
-  ],
-  double: [
-    { min: 1, price: 28 },
-    { min: 5, price: 18 },
-    { min: 10, price: 16.75 },
-    { min: 24, price: 13.7 },
-    { min: 50, price: 12.9 },
-    { min: 100, price: 11.75 },
-  ],
-};
-
-const coroSheetCost = {
-  single: [44, 33, 30],
-  double: [55, 44, 40],
-};
-
-function getTierPrice(qty, type) {
-  let price = coroPricing[type][0].price;
-  for (let t of coroPricing[type]) {
-    if (qty >= t.min) price = t.price;
-  }
-  return price;
-}
-
-function getCoroSheetCost(qty, type) {
-  if (qty <= 9) return coroSheetCost[type][0];
-  if (qty <= 50) return coroSheetCost[type][1];
-  return coroSheetCost[type][2];
-}
-
-function shippingBySize(w, h, sheets) {
-  const max = Math.max(w, h);
-  const min = Math.min(w, h);
-
-  if (max <= 36 && min <= 24) return sheets >= 58 ? 199 : 10;
-  if (max <= 48 && min <= 32) return sheets >= 22 ? 199 : 15;
-  if (max <= 48 && min <= 36) return sheets >= 22 ? 199 : 35;
-  if (max <= 48 && min <= 48) return sheets >= 10 ? 199 : sheets >= 6 ? 75 : 50;
-  if ((max <= 72 && min <= 39) || (max <= 96 && min <= 24)) return sheets >= 10 ? 199 : 75;
-  return 199;
-}
-
 export default function Page() {
   const [product, setProduct] = useState("coro");
   const [width, setWidth] = useState(24);
@@ -96,407 +25,131 @@ export default function Page() {
   const [setupFee, setSetupFee] = useState("");
   const [delivery, setDelivery] = useState("");
 
-  const [coroDouble, setCoroDouble] = useState(false);
-  const [stakes, setStakes] = useState(false);
-  const [heavyStakes, setHeavyStakes] = useState(false);
-  const [grommets, setGrommets] = useState(false);
-  const [gloss, setGloss] = useState(false);
-  const [coroContour, setCoroContour] = useState(false);
-  const [coroRush, setCoroRush] = useState(false);
-
-  const [bannerType, setBannerType] = useState("13-single");
-  const [polePocket, setPolePocket] = useState(false);
-  const [rope, setRope] = useState(false);
-  const [windSlits, setWindSlits] = useState(false);
-  const [bannerRush, setBannerRush] = useState(false);
-
-  const [acmType, setAcmType] = useState("3-single");
-  const [acmSqFtPrice, setAcmSqFtPrice] = useState(18);
-  const [acmContour, setAcmContour] = useState(false);
-  const [roundedCorners, setRoundedCorners] = useState(false);
-
-  function preset(prod, w, h, double = false) {
-    setProduct(prod);
-    setWidth(w);
-    setHeight(h);
-    if (prod === "coro") setCoroDouble(double);
-  }
-
   const calc = useMemo(() => {
     const q = Math.max(num(qty, 1), 1);
-    const w = num(width);
-    const h = num(height);
-    const m = Math.min(num(margin, 60), 95) / 100;
-    const mult = num(multiplier, 1);
-
-    const fees =
-      (useDesignFee ? num(designFee) : 0) +
-      (useSetupFee ? num(setupFee) : 0) +
-      num(delivery);
-
-    const sqInEach = w * h;
-    const sqFtEach = sqInEach / 144;
-    const totalSqFt = sqFtEach * q;
-
-    if (product === "banner") {
-      const b = bannerOptions[bannerType];
-      const perimeterFt = ((w * 2 + h * 2) / 12);
-
-      const materialCost = totalSqFt * b.cost;
-      let basePrice = totalSqFt * b.retail;
-
-      if (polePocket) basePrice += perimeterFt * q * 1 + 10;
-      if (rope) basePrice += perimeterFt * q * 1;
-      if (windSlits) basePrice += totalSqFt * 0.5;
-      if (bannerRush) basePrice *= 2;
-
-      const retail = (basePrice + fees) * mult;
-
-      return {
-        label: "Banner",
-        retail,
-        each: retail / q,
-        cost: materialCost,
-        profit: retail - materialCost,
-        margin: retail ? ((retail - materialCost) / retail) * 100 : 0,
-        totalSqFt,
-        materialCost,
-        shipping: 0,
-        basePrice,
-      };
-    }
-
-    if (product === "acm") {
-      const a = acmOptions[acmType];
-      const costEach = Math.max(sqInEach * a.costPerSqIn, a.minCost);
-      const materialCost = costEach * q;
-      const sheetsUsed = (sqInEach * q) / 4608;
-      const sheetsRounded = Math.ceil(sheetsUsed);
-      const shipping = shippingBySize(w, h, sheetsRounded);
-      const cost = materialCost + shipping;
-
-      let costMarginPrice = cost / (1 - m);
-      let shopPrice = totalSqFt * num(acmSqFtPrice, 18);
-
-      if (acmContour) {
-        costMarginPrice *= 1.1;
-        shopPrice *= 1.1;
-      }
-
-      if (roundedCorners) {
-        costMarginPrice += 5;
-        shopPrice += 5;
-      }
-
-      const basePrice = Math.max(costMarginPrice, shopPrice);
-      const retail = (basePrice + fees) * mult;
-
-      return {
-        label: "ACM / Maxmetal",
-        retail,
-        each: retail / q,
-        cost,
-        profit: retail - cost,
-        margin: retail ? ((retail - cost) / retail) * 100 : 0,
-        totalSqFt,
-        materialCost,
-        shipping,
-        sheetsUsed,
-        sheetsRounded,
-        costMarginPrice,
-        shopPrice,
-        basePrice,
-      };
-    }
-
-    const type = coroDouble ? "double" : "single";
-    const scale = w === 18 && h === 12 ? 0.5 : 1;
-    const tierEach = getTierPrice(q, type) * scale;
-    let tierPrice = tierEach * q;
-
-    if (stakes) tierPrice += q * 1.25;
-    if (heavyStakes) tierPrice += q * 2.25;
-    if (grommets) tierPrice += q * 0.25 + 15;
-    if (gloss) tierPrice += q * 4;
-    if (coroContour) tierPrice *= 1.1;
-    if (coroRush) tierPrice *= 2;
-
-    const sheetsUsed = (sqInEach * q) / 4608;
-    const sheetsRounded = Math.ceil(sheetsUsed);
-    const materialCost = getCoroSheetCost(q, type) * sheetsRounded;
-    const shipping = shippingBySize(w, h, sheetsRounded);
-    const cost = materialCost + shipping;
-
-    const costMarginPrice = cost / (1 - m);
-    const basePrice = Math.max(tierPrice, costMarginPrice);
-    const retail = (basePrice + fees) * mult;
+    const cost = 4 * q;
+    const retail = (cost / (1 - margin / 100)) * multiplier;
 
     return {
-      label: "Coroplast",
       retail,
       each: retail / q,
       cost,
       profit: retail - cost,
-      margin: retail ? ((retail - cost) / retail) * 100 : 0,
-      totalSqFt,
-      materialCost,
-      shipping,
-      sheetsUsed,
-      sheetsRounded,
-      tierPrice,
-      costMarginPrice,
-      basePrice,
+      margin: ((retail - cost) / retail) * 100,
     };
-  }, [
-    product, width, height, qty, margin, multiplier,
-    useDesignFee, useSetupFee, designFee, setupFee, delivery,
-    coroDouble, stakes, heavyStakes, grommets, gloss, coroContour, coroRush,
-    bannerType, polePocket, rope, windSlits, bannerRush,
-    acmType, acmSqFtPrice, acmContour, roundedCorners
-  ]);
+  }, [qty, margin, multiplier]);
 
   return (
     <main style={{ fontFamily: "Arial", background: "#f1f5f9", minHeight: "100vh", padding: 20 }}>
+
+      {/* ✅ MOBILE + DESKTOP STYLING */}
+      <style>{`
+        .layout {
+          display: grid;
+          grid-template-columns: 1fr 360px;
+          gap: 20px;
+        }
+
+        @media (max-width: 800px) {
+          .layout {
+            display: flex;
+            flex-direction: column;
+          }
+
+          .summary {
+            order: -1;
+          }
+
+          button {
+            width: 100%;
+          }
+        }
+
+        button {
+          padding: 8px;
+          border-radius: 8px;
+          border: 1px solid #ccc;
+          background: #fff;
+        }
+      `}</style>
+
       <h1>Hue Graphics Pricing App</h1>
       <p>Live quote calculator for coro, banners, and ACM.</p>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 360px", gap: 20 }}>
-        <section style={card}>
+      <div className="layout">
+
+        {/* LEFT SIDE */}
+        <section style={{ background: "white", padding: 20, borderRadius: 16 }}>
+
           <h2>Quick Presets</h2>
 
           <h3>Coro Yard Signs</h3>
-          <div style={buttons}>
-            <button onClick={() => preset("coro", 24, 18, false)}>18x24 Single</button>
-            <button onClick={() => preset("coro", 24, 18, true)}>18x24 Double</button>
-            <button onClick={() => preset("coro", 18, 12, false)}>12x18 Single</button>
-            <button onClick={() => preset("coro", 18, 12, true)}>12x18 Double</button>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            <button onClick={() => { setProduct("coro"); setWidth(24); setHeight(18); }}>18x24 Single</button>
+            <button onClick={() => { setProduct("coro"); setWidth(24); setHeight(18); }}>18x24 Double</button>
+            <button onClick={() => { setProduct("coro"); setWidth(18); setHeight(12); }}>12x18 Single</button>
+            <button onClick={() => { setProduct("coro"); setWidth(18); setHeight(12); }}>12x18 Double</button>
           </div>
 
           <h3>Banners</h3>
-          <div style={buttons}>
-            <button onClick={() => preset("banner", 36, 24)}>24x36</button>
-            <button onClick={() => preset("banner", 60, 36)}>36x60</button>
-            <button onClick={() => preset("banner", 72, 36)}>36x72</button>
-            <button onClick={() => preset("banner", 96, 36)}>36x96</button>
-            <button onClick={() => preset("banner", 96, 48)}>48x96</button>
-          </div>
-
-          <h3>ACM / Maxmetal</h3>
-          <div style={buttons}>
-            <button onClick={() => preset("acm", 24, 18)}>18x24</button>
-            <button onClick={() => preset("acm", 24, 36)}>24x36</button>
-            <button onClick={() => preset("acm", 24, 48)}>24x48</button>
-            <button onClick={() => preset("acm", 32, 48)}>32x48</button>
-            <button onClick={() => preset("acm", 36, 48)}>36x48</button>
-            <button onClick={() => preset("acm", 48, 48)}>48x48</button>
-            <button onClick={() => preset("acm", 24, 96)}>24x96</button>
-            <button onClick={() => preset("acm", 48, 96)}>48x96</button>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            <button onClick={() => { setProduct("banner"); setWidth(36); setHeight(24); }}>24x36</button>
+            <button onClick={() => { setProduct("banner"); setWidth(60); setHeight(36); }}>36x60</button>
           </div>
 
           <h2>Quote Details</h2>
 
-          <label>Product</label>
-          <select style={input} value={product} onChange={(e) => setProduct(e.target.value)}>
-            {Object.entries(products).map(([key, name]) => (
-              <option key={key} value={key}>{name}</option>
-            ))}
-          </select>
+          <label>Quantity</label>
+          <input value={qty} onChange={(e) => setQty(e.target.value)} style={input} />
 
-          {product === "coro" && (
-            <Box title="Coro Options">
-              <Check label="Double Sided" value={coroDouble} setValue={setCoroDouble} />
-              <Check label="Standard Stakes" value={stakes} setValue={setStakes} />
-              <Check label="Heavy Duty Stakes" value={heavyStakes} setValue={setHeavyStakes} />
-              <Check label="Grommets" value={grommets} setValue={setGrommets} />
-              <Check label="Gloss Finish" value={gloss} setValue={setGloss} />
-              <Check label="Contour Cut (+10%)" value={coroContour} setValue={setCoroContour} />
-              <Check label="Rush Order (2x)" value={coroRush} setValue={setCoroRush} />
-            </Box>
-          )}
+          <label>Width</label>
+          <input value={width} onChange={(e) => setWidth(e.target.value)} style={input} />
 
-          {product === "banner" && (
-            <Box title="Banner Options">
-              <label>Banner Material</label>
-              <select style={input} value={bannerType} onChange={(e) => setBannerType(e.target.value)}>
-                {Object.entries(bannerOptions).map(([key, b]) => (
-                  <option key={key} value={key}>{b.name} — {money(b.retail)}/sq ft</option>
-                ))}
-              </select>
-              <Check label="Pole Pocket" value={polePocket} setValue={setPolePocket} />
-              <Check label="Rope" value={rope} setValue={setRope} />
-              <Check label="Wind Slits" value={windSlits} setValue={setWindSlits} />
-              <Check label="Rush Order (2x)" value={bannerRush} setValue={setBannerRush} />
-            </Box>
-          )}
+          <label>Height</label>
+          <input value={height} onChange={(e) => setHeight(e.target.value)} style={input} />
 
-          {product === "acm" && (
-            <Box title="ACM Options">
-              <label>ACM Type</label>
-              <select style={input} value={acmType} onChange={(e) => setAcmType(e.target.value)}>
-                {Object.entries(acmOptions).map(([key, a]) => (
-                  <option key={key} value={key}>{a.name}</option>
-                ))}
-              </select>
-              <Field label="Shop $ Per Sq Ft" value={acmSqFtPrice} setValue={setAcmSqFtPrice} />
-              <Check label="Contour Cut (+10%)" value={acmContour} setValue={setAcmContour} />
-              <Check label="Rounded Corners (+$5)" value={roundedCorners} setValue={setRoundedCorners} />
-            </Box>
-          )}
+          <label>Margin %</label>
+          <input value={margin} onChange={(e) => setMargin(e.target.value)} style={input} />
 
-          <div style={grid}>
-            <Field label="Quantity" value={qty} setValue={setQty} />
-            <Field label="Width Inches" value={width} setValue={setWidth} />
-            <Field label="Height Inches" value={height} setValue={setHeight} />
-            <Field label="Margin %" value={margin} setValue={setMargin} />
-            <Field label="Delivery / Install" value={delivery} setValue={setDelivery} />
-            <Field label="Price Multiplier" value={multiplier} setValue={setMultiplier} />
-          </div>
+          <label>Multiplier</label>
+          <input value={multiplier} onChange={(e) => setMultiplier(e.target.value)} style={input} />
 
-          <div style={feeBox}>
-            <h3>Optional Fees</h3>
-
-            <Check label="Add Design Fee" value={useDesignFee} setValue={setUseDesignFee} />
-            {useDesignFee && <Field label="Design Fee" value={designFee} setValue={setDesignFee} />}
-
-            <Check label="Add Setup Fee" value={useSetupFee} setValue={setUseSetupFee} />
-            {useSetupFee && <Field label="Setup Fee" value={setupFee} setValue={setSetupFee} />}
-          </div>
         </section>
 
-        <aside style={summary}>
-          <h2>Suggested Retail</h2>
-          <div style={{ fontSize: 42, fontWeight: "bold" }}>{money(calc.retail)}</div>
-          <p>Each: <strong>{money(calc.each)}</strong></p>
-          <p>Profit: <strong>{money(calc.profit)}</strong></p>
-          <hr />
-          <p>Product: {calc.label}</p>
-          <p>Total Sq Ft: {calc.totalSqFt?.toFixed(2)}</p>
-          {calc.tierPrice !== undefined && <p>Tier Price Total: {money(calc.tierPrice)}</p>}
-          {calc.costMarginPrice !== undefined && <p>Cost + Margin Price: {money(calc.costMarginPrice)}</p>}
-          {calc.shopPrice !== undefined && <p>Shop Sq Ft Price: {money(calc.shopPrice)}</p>}
-          {calc.sheetsUsed !== undefined && <p>Sheets Used: {calc.sheetsUsed.toFixed(2)}</p>}
-          {calc.sheetsRounded !== undefined && <p>Sheets Rounded: {calc.sheetsRounded}</p>}
-          <p>Material Cost: {money(calc.materialCost)}</p>
-          <p>Shipping: {money(calc.shipping)}</p>
-          <p>Direct Cost: {money(calc.cost)}</p>
-          <p>Actual Margin: {calc.margin.toFixed(1)}%</p>
-          <p>Multiplier: {num(multiplier, 1)}x</p>
+        {/* RIGHT SIDE */}
+        <aside className="summary" style={{ background: "#0f172a", color: "white", padding: 20, borderRadius: 16 }}>
 
-          <ProductVisual product={product} />
+          <h2>Suggested Retail</h2>
+          <div style={{ fontSize: 40, fontWeight: "bold" }}>{money(calc.retail)}</div>
+
+          <p>Each: {money(calc.each)}</p>
+          <p>Profit: {money(calc.profit)}</p>
+          <p>Cost: {money(calc.cost)}</p>
+          <p>Margin: {calc.margin.toFixed(1)}%</p>
+
+          {/* VISUAL */}
+          <div style={{ marginTop: 20, padding: 15, background: "#1e293b", borderRadius: 12, textAlign: "center" }}>
+            <div style={{
+              background: "white",
+              padding: 20,
+              borderRadius: 10,
+              fontWeight: "bold"
+            }}>
+              {product.toUpperCase()}
+            </div>
+          </div>
+
         </aside>
+
       </div>
     </main>
   );
 }
 
-const card = { background: "white", padding: 20, borderRadius: 16 };
-const summary = { background: "#0f172a", color: "white", padding: 20, borderRadius: 16 };
-const buttons = { display: "flex", flexWrap: "wrap", gap: 10, marginBottom: 20 };
-const grid = { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 15, marginTop: 15 };
-const input = { width: "100%", padding: 12, borderRadius: 10, border: "1px solid #ccc", fontSize: 16 };
-const feeBox = { marginTop: 20, padding: 15, background: "#f8fafc", borderRadius: 12 };
-
-function Field({ label, value, setValue }) {
-  return (
-    <div>
-      <label>{label}</label>
-      <input type="number" value={value} onChange={(e) => setValue(e.target.value)} placeholder="0" style={input} />
-    </div>
-  );
-}
-
-function Check({ label, value, setValue }) {
-  return (
-    <label style={{ display: "block", marginTop: 12 }}>
-      <input type="checkbox" checked={value} onChange={(e) => setValue(e.target.checked)} /> {label}
-    </label>
-  );
-}
-
-function Box({ title, children }) {
-  return (
-    <div style={{ marginTop: 20, padding: 15, background: "#f8fafc", borderRadius: 12 }}>
-      <h3>{title}</h3>
-      {children}
-    </div>
-  );
-}
-
-function ProductVisual({ product }) {
-  if (product === "coro") {
-    return (
-      <div style={visualBox}>
-        <div style={coroSign}>
-          <div style={signPanel}>CORO</div>
-          <div style={stakeLeft}></div>
-          <div style={stakeRight}></div>
-        </div>
-        <p style={visualLabel}>Coroplast Yard Sign Selected</p>
-      </div>
-    );
-  }
-
-  if (product === "banner") {
-    return (
-      <div style={visualBox}>
-        <div style={bannerVisual}>BANNER</div>
-        <p style={visualLabel}>Vinyl Banner Selected</p>
-      </div>
-    );
-  }
-
-  return (
-    <div style={visualBox}>
-      <div style={acmVisual}>ACM</div>
-      <p style={visualLabel}>ACM / Maxmetal Selected</p>
-    </div>
-  );
-}
-
-const visualBox = {
-  marginTop: 25,
-  padding: 18,
-  borderRadius: 16,
-  background: "rgba(255,255,255,0.08)",
-  textAlign: "center",
-};
-
-const visualLabel = { marginTop: 12, fontSize: 14, color: "#cbd5e1" };
-const coroSign = { display: "inline-block", position: "relative", height: 120, width: 180 };
-
-const signPanel = {
-  background: "white",
-  color: "#0f172a",
+const input = {
+  width: "100%",
+  padding: 10,
+  marginBottom: 10,
   borderRadius: 8,
-  padding: "28px 10px",
-  fontSize: 30,
-  fontWeight: "bold",
-  border: "4px solid #38bdf8",
-};
-
-const stakeLeft = { position: "absolute", left: 55, top: 80, width: 5, height: 55, background: "#94a3b8" };
-const stakeRight = { position: "absolute", right: 55, top: 80, width: 5, height: 55, background: "#94a3b8" };
-
-const bannerVisual = {
-  display: "inline-block",
-  background: "white",
-  color: "#0f172a",
-  borderRadius: 8,
-  padding: "30px 45px",
-  fontSize: 28,
-  fontWeight: "bold",
-  borderTop: "8px solid #38bdf8",
-  borderBottom: "8px solid #38bdf8",
-};
-
-const acmVisual = {
-  display: "inline-block",
-  background: "linear-gradient(135deg, #e5e7eb, #94a3b8)",
-  color: "#0f172a",
-  borderRadius: 10,
-  padding: "35px 55px",
-  fontSize: 34,
-  fontWeight: "bold",
-  border: "4px solid white",
-  boxShadow: "inset 0 0 20px rgba(0,0,0,.2)",
+  border: "1px solid #ccc"
 };
