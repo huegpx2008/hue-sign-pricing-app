@@ -1,5 +1,5 @@
 export const metadata = {
-  title: "Hue Sign Pricing App",
+  title: "Hue Sign Pricing App v2",
   description: "Sign pricing calculator for Hue Graphics",
 };
 
