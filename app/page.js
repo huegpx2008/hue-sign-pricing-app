@@ -97,9 +97,23 @@ export default function Page() {
   const [delivery, setDelivery] = useState("");
 
   const [coroDouble, setCoroDouble] = useState(false);
+  const [stakes, setStakes] = useState(false);
+  const [heavyStakes, setHeavyStakes] = useState(false);
+  const [grommets, setGrommets] = useState(false);
+  const [gloss, setGloss] = useState(false);
+  const [coroContour, setCoroContour] = useState(false);
+  const [coroRush, setCoroRush] = useState(false);
+
   const [bannerType, setBannerType] = useState("13-single");
+  const [polePocket, setPolePocket] = useState(false);
+  const [rope, setRope] = useState(false);
+  const [windSlits, setWindSlits] = useState(false);
+  const [bannerRush, setBannerRush] = useState(false);
+
   const [acmType, setAcmType] = useState("3-single");
   const [acmSqFtPrice, setAcmSqFtPrice] = useState(18);
+  const [acmContour, setAcmContour] = useState(false);
+  const [roundedCorners, setRoundedCorners] = useState(false);
 
   function preset(prod, w, h, double = false) {
     setProduct(prod);
@@ -126,8 +140,16 @@ export default function Page() {
 
     if (product === "banner") {
       const b = bannerOptions[bannerType];
+      const perimeterFt = ((w * 2 + h * 2) / 12);
+
       const materialCost = totalSqFt * b.cost;
-      const basePrice = totalSqFt * b.retail;
+      let basePrice = totalSqFt * b.retail;
+
+      if (polePocket) basePrice += perimeterFt * q * 1 + 10;
+      if (rope) basePrice += perimeterFt * q * 1;
+      if (windSlits) basePrice += totalSqFt * 0.5;
+      if (bannerRush) basePrice *= 2;
+
       const retail = (basePrice + fees) * mult;
 
       return {
@@ -153,8 +175,19 @@ export default function Page() {
       const shipping = shippingBySize(w, h, sheetsRounded);
       const cost = materialCost + shipping;
 
-      const costMarginPrice = cost / (1 - m);
-      const shopPrice = totalSqFt * num(acmSqFtPrice, 18);
+      let costMarginPrice = cost / (1 - m);
+      let shopPrice = totalSqFt * num(acmSqFtPrice, 18);
+
+      if (acmContour) {
+        costMarginPrice *= 1.1;
+        shopPrice *= 1.1;
+      }
+
+      if (roundedCorners) {
+        costMarginPrice += 5;
+        shopPrice += 5;
+      }
+
       const basePrice = Math.max(costMarginPrice, shopPrice);
       const retail = (basePrice + fees) * mult;
 
@@ -179,7 +212,14 @@ export default function Page() {
     const type = coroDouble ? "double" : "single";
     const scale = w === 18 && h === 12 ? 0.5 : 1;
     const tierEach = getTierPrice(q, type) * scale;
-    const tierPrice = tierEach * q;
+    let tierPrice = tierEach * q;
+
+    if (stakes) tierPrice += q * 1.25;
+    if (heavyStakes) tierPrice += q * 2.25;
+    if (grommets) tierPrice += q * 0.25 + 15;
+    if (gloss) tierPrice += q * 4;
+    if (coroContour) tierPrice *= 1.1;
+    if (coroRush) tierPrice *= 2;
 
     const sheetsUsed = (sqInEach * q) / 4608;
     const sheetsRounded = Math.ceil(sheetsUsed);
@@ -210,7 +250,9 @@ export default function Page() {
   }, [
     product, width, height, qty, margin, multiplier,
     useDesignFee, useSetupFee, designFee, setupFee, delivery,
-    coroDouble, bannerType, acmType, acmSqFtPrice
+    coroDouble, stakes, heavyStakes, grommets, gloss, coroContour, coroRush,
+    bannerType, polePocket, rope, windSlits, bannerRush,
+    acmType, acmSqFtPrice, acmContour, roundedCorners
   ]);
 
   return (
@@ -261,24 +303,34 @@ export default function Page() {
           </select>
 
           {product === "coro" && (
-            <label style={{ display: "block", marginTop: 12 }}>
-              <input type="checkbox" checked={coroDouble} onChange={(e) => setCoroDouble(e.target.checked)} /> Double Sided
-            </label>
+            <Box title="Coro Options">
+              <Check label="Double Sided" value={coroDouble} setValue={setCoroDouble} />
+              <Check label="Standard Stakes" value={stakes} setValue={setStakes} />
+              <Check label="Heavy Duty Stakes" value={heavyStakes} setValue={setHeavyStakes} />
+              <Check label="Grommets" value={grommets} setValue={setGrommets} />
+              <Check label="Gloss Finish" value={gloss} setValue={setGloss} />
+              <Check label="Contour Cut (+10%)" value={coroContour} setValue={setCoroContour} />
+              <Check label="Rush Order (2x)" value={coroRush} setValue={setCoroRush} />
+            </Box>
           )}
 
           {product === "banner" && (
-            <>
+            <Box title="Banner Options">
               <label>Banner Material</label>
               <select style={input} value={bannerType} onChange={(e) => setBannerType(e.target.value)}>
                 {Object.entries(bannerOptions).map(([key, b]) => (
                   <option key={key} value={key}>{b.name} — {money(b.retail)}/sq ft</option>
                 ))}
               </select>
-            </>
+              <Check label="Pole Pocket" value={polePocket} setValue={setPolePocket} />
+              <Check label="Rope" value={rope} setValue={setRope} />
+              <Check label="Wind Slits" value={windSlits} setValue={setWindSlits} />
+              <Check label="Rush Order (2x)" value={bannerRush} setValue={setBannerRush} />
+            </Box>
           )}
 
           {product === "acm" && (
-            <>
+            <Box title="ACM Options">
               <label>ACM Type</label>
               <select style={input} value={acmType} onChange={(e) => setAcmType(e.target.value)}>
                 {Object.entries(acmOptions).map(([key, a]) => (
@@ -286,7 +338,9 @@ export default function Page() {
                 ))}
               </select>
               <Field label="Shop $ Per Sq Ft" value={acmSqFtPrice} setValue={setAcmSqFtPrice} />
-            </>
+              <Check label="Contour Cut (+10%)" value={acmContour} setValue={setAcmContour} />
+              <Check label="Rounded Corners (+$5)" value={roundedCorners} setValue={setRoundedCorners} />
+            </Box>
           )}
 
           <div style={grid}>
@@ -301,16 +355,10 @@ export default function Page() {
           <div style={feeBox}>
             <h3>Optional Fees</h3>
 
-            <label style={checkLine}>
-              <input type="checkbox" checked={useDesignFee} onChange={(e) => setUseDesignFee(e.target.checked)} />
-              Add Design Fee
-            </label>
+            <Check label="Add Design Fee" value={useDesignFee} setValue={setUseDesignFee} />
             {useDesignFee && <Field label="Design Fee" value={designFee} setValue={setDesignFee} />}
 
-            <label style={checkLine}>
-              <input type="checkbox" checked={useSetupFee} onChange={(e) => setUseSetupFee(e.target.checked)} />
-              Add Setup Fee
-            </label>
+            <Check label="Add Setup Fee" value={useSetupFee} setValue={setUseSetupFee} />
             {useSetupFee && <Field label="Setup Fee" value={setupFee} setValue={setSetupFee} />}
           </div>
         </section>
@@ -347,19 +395,29 @@ const buttons = { display: "flex", flexWrap: "wrap", gap: 10, marginBottom: 20 }
 const grid = { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 15, marginTop: 15 };
 const input = { width: "100%", padding: 12, borderRadius: 10, border: "1px solid #ccc", fontSize: 16 };
 const feeBox = { marginTop: 20, padding: 15, background: "#f8fafc", borderRadius: 12 };
-const checkLine = { display: "block", marginTop: 12 };
 
 function Field({ label, value, setValue }) {
   return (
     <div>
       <label>{label}</label>
-      <input
-        type="number"
-        value={value}
-        onChange={(e) => setValue(e.target.value)}
-        placeholder="0"
-        style={input}
-      />
+      <input type="number" value={value} onChange={(e) => setValue(e.target.value)} placeholder="0" style={input} />
+    </div>
+  );
+}
+
+function Check({ label, value, setValue }) {
+  return (
+    <label style={{ display: "block", marginTop: 12 }}>
+      <input type="checkbox" checked={value} onChange={(e) => setValue(e.target.checked)} /> {label}
+    </label>
+  );
+}
+
+function Box({ title, children }) {
+  return (
+    <div style={{ marginTop: 20, padding: 15, background: "#f8fafc", borderRadius: 12 }}>
+      <h3>{title}</h3>
+      {children}
     </div>
   );
 }
@@ -403,18 +461,8 @@ const visualBox = {
   textAlign: "center",
 };
 
-const visualLabel = {
-  marginTop: 12,
-  fontSize: 14,
-  color: "#cbd5e1",
-};
-
-const coroSign = {
-  display: "inline-block",
-  position: "relative",
-  height: 120,
-  width: 180,
-};
+const visualLabel = { marginTop: 12, fontSize: 14, color: "#cbd5e1" };
+const coroSign = { display: "inline-block", position: "relative", height: 120, width: 180 };
 
 const signPanel = {
   background: "white",
@@ -426,23 +474,8 @@ const signPanel = {
   border: "4px solid #38bdf8",
 };
 
-const stakeLeft = {
-  position: "absolute",
-  left: 55,
-  top: 80,
-  width: 5,
-  height: 55,
-  background: "#94a3b8",
-};
-
-const stakeRight = {
-  position: "absolute",
-  right: 55,
-  top: 80,
-  width: 5,
-  height: 55,
-  background: "#94a3b8",
-};
+const stakeLeft = { position: "absolute", left: 55, top: 80, width: 5, height: 55, background: "#94a3b8" };
+const stakeRight = { position: "absolute", right: 55, top: 80, width: 5, height: 55, background: "#94a3b8" };
 
 const bannerVisual = {
   display: "inline-block",
