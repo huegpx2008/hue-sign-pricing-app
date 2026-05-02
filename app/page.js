@@ -122,6 +122,14 @@ export default function Page() {
     if (prod === "coro") setCoroDouble(double);
   }
 
+  function isPresetActive(prod, w, h, double = false) {
+    return product === prod && num(width) === w && num(height) === h && (prod !== "coro" || coroDouble === double);
+  }
+
+  function presetClass(prod, w, h, double = false) {
+    return isPresetActive(prod, w, h, double) ? "presetBtn activePreset" : "presetBtn";
+  }
+
   const calc = useMemo(() => {
     const q = Math.max(num(qty, 1), 1);
     const w = num(width);
@@ -140,7 +148,7 @@ export default function Page() {
 
     if (product === "banner") {
       const b = bannerOptions[bannerType];
-      const perimeterFt = ((w * 2 + h * 2) / 12);
+      const perimeterFt = (w * 2 + h * 2) / 12;
       const materialCost = totalSqFt * b.cost;
       let basePrice = totalSqFt * b.retail;
 
@@ -254,6 +262,39 @@ export default function Page() {
     acmType, acmSqFtPrice, acmContour, roundedCorners
   ]);
 
+  const selectedDetails = {
+    product,
+    productName: products[product],
+    size: `${num(width)}" x ${num(height)}"`,
+    qty: num(qty, 1),
+    material:
+      product === "banner"
+        ? bannerOptions[bannerType].name
+        : product === "acm"
+        ? acmOptions[acmType].name
+        : coroDouble
+        ? "4mm Double-Sided Coroplast"
+        : "4mm Single-Sided Coroplast",
+    options: [
+      product === "coro" && stakes ? "Standard Stakes" : null,
+      product === "coro" && heavyStakes ? "Heavy Duty Stakes" : null,
+      product === "coro" && grommets ? "Grommets" : null,
+      product === "coro" && gloss ? "Gloss Finish" : null,
+      product === "coro" && coroContour ? "Contour Cut" : null,
+      product === "coro" && coroRush ? "Rush Order" : null,
+      product === "banner" && polePocket ? "Pole Pocket" : null,
+      product === "banner" && rope ? "Rope" : null,
+      product === "banner" && windSlits ? "Wind Slits" : null,
+      product === "banner" && bannerRush ? "Rush Order" : null,
+      product === "acm" && acmContour ? "Contour Cut" : null,
+      product === "acm" && roundedCorners ? "Rounded Corners" : null,
+      useDesignFee ? `Design Fee: ${money(num(designFee))}` : null,
+      useSetupFee ? `Setup Fee: ${money(num(setupFee))}` : null,
+      num(delivery) > 0 ? `Delivery/Install: ${money(num(delivery))}` : null,
+      num(multiplier, 1) !== 1 ? `Multiplier: ${num(multiplier, 1)}x` : null,
+    ].filter(Boolean),
+  };
+
   return (
     <main style={{ fontFamily: "Arial", background: "#f1f5f9", minHeight: "100vh", padding: 20 }}>
       <style>{`
@@ -283,12 +324,20 @@ export default function Page() {
           margin-bottom: 20px;
         }
 
-        button {
+        .presetBtn {
           padding: 8px 10px;
           border-radius: 8px;
           border: 1px solid #ccc;
           background: white;
           font-size: 14px;
+        }
+
+        .activePreset {
+          background: #0f172a;
+          color: white;
+          border-color: #38bdf8;
+          box-shadow: 0 0 0 2px #38bdf8;
+          font-weight: 700;
         }
 
         input, select {
@@ -319,7 +368,7 @@ export default function Page() {
             grid-template-columns: 1fr 1fr;
           }
 
-          button {
+          .presetBtn {
             width: 100%;
             font-size: 15px;
             padding: 10px;
@@ -340,31 +389,31 @@ export default function Page() {
 
           <h3>Coro Yard Signs</h3>
           <div className="buttonGrid">
-            <button onClick={() => preset("coro", 24, 18, false)}>18x24 Single</button>
-            <button onClick={() => preset("coro", 24, 18, true)}>18x24 Double</button>
-            <button onClick={() => preset("coro", 18, 12, false)}>12x18 Single</button>
-            <button onClick={() => preset("coro", 18, 12, true)}>12x18 Double</button>
+            <button className={presetClass("coro", 24, 18, false)} onClick={() => preset("coro", 24, 18, false)}>18x24 Single</button>
+            <button className={presetClass("coro", 24, 18, true)} onClick={() => preset("coro", 24, 18, true)}>18x24 Double</button>
+            <button className={presetClass("coro", 18, 12, false)} onClick={() => preset("coro", 18, 12, false)}>12x18 Single</button>
+            <button className={presetClass("coro", 18, 12, true)} onClick={() => preset("coro", 18, 12, true)}>12x18 Double</button>
           </div>
 
           <h3>Banners</h3>
           <div className="buttonGrid">
-            <button onClick={() => preset("banner", 36, 24)}>24x36</button>
-            <button onClick={() => preset("banner", 60, 36)}>36x60</button>
-            <button onClick={() => preset("banner", 72, 36)}>36x72</button>
-            <button onClick={() => preset("banner", 96, 36)}>36x96</button>
-            <button onClick={() => preset("banner", 96, 48)}>48x96</button>
+            <button className={presetClass("banner", 36, 24)} onClick={() => preset("banner", 36, 24)}>24x36</button>
+            <button className={presetClass("banner", 60, 36)} onClick={() => preset("banner", 60, 36)}>36x60</button>
+            <button className={presetClass("banner", 72, 36)} onClick={() => preset("banner", 72, 36)}>36x72</button>
+            <button className={presetClass("banner", 96, 36)} onClick={() => preset("banner", 96, 36)}>36x96</button>
+            <button className={presetClass("banner", 96, 48)} onClick={() => preset("banner", 96, 48)}>48x96</button>
           </div>
 
           <h3>ACM / Maxmetal</h3>
           <div className="buttonGrid">
-            <button onClick={() => preset("acm", 24, 18)}>18x24</button>
-            <button onClick={() => preset("acm", 24, 36)}>24x36</button>
-            <button onClick={() => preset("acm", 24, 48)}>24x48</button>
-            <button onClick={() => preset("acm", 32, 48)}>32x48</button>
-            <button onClick={() => preset("acm", 36, 48)}>36x48</button>
-            <button onClick={() => preset("acm", 48, 48)}>48x48</button>
-            <button onClick={() => preset("acm", 24, 96)}>24x96</button>
-            <button onClick={() => preset("acm", 48, 96)}>48x96</button>
+            <button className={presetClass("acm", 24, 18)} onClick={() => preset("acm", 24, 18)}>18x24</button>
+            <button className={presetClass("acm", 24, 36)} onClick={() => preset("acm", 24, 36)}>24x36</button>
+            <button className={presetClass("acm", 24, 48)} onClick={() => preset("acm", 24, 48)}>24x48</button>
+            <button className={presetClass("acm", 32, 48)} onClick={() => preset("acm", 32, 48)}>32x48</button>
+            <button className={presetClass("acm", 36, 48)} onClick={() => preset("acm", 36, 48)}>36x48</button>
+            <button className={presetClass("acm", 48, 48)} onClick={() => preset("acm", 48, 48)}>48x48</button>
+            <button className={presetClass("acm", 24, 96)} onClick={() => preset("acm", 24, 96)}>24x96</button>
+            <button className={presetClass("acm", 48, 96)} onClick={() => preset("acm", 48, 96)}>48x96</button>
           </div>
 
           <h2>Quote Details</h2>
@@ -454,6 +503,7 @@ export default function Page() {
           <p>Multiplier: {num(multiplier, 1)}x</p>
 
           <ProductVisual product={product} />
+          <SelectedDetails details={selectedDetails} />
         </aside>
       </div>
     </main>
@@ -485,6 +535,19 @@ function Box({ title, children }) {
     <div style={{ marginTop: 20, padding: 15, background: "#f8fafc", borderRadius: 12 }}>
       <h3>{title}</h3>
       {children}
+    </div>
+  );
+}
+
+function SelectedDetails({ details }) {
+  return (
+    <div style={detailsBox}>
+      <h3 style={{ marginTop: 0 }}>Selected Details</h3>
+      <p><strong>Product:</strong> {details.productName}</p>
+      <p><strong>Size:</strong> {details.size}</p>
+      <p><strong>Quantity:</strong> {details.qty}</p>
+      <p><strong>Material:</strong> {details.material}</p>
+      <p><strong>Options:</strong> {details.options.length ? details.options.join(", ") : "None"}</p>
     </div>
   );
 }
@@ -526,6 +589,16 @@ const visualBox = {
   borderRadius: 16,
   background: "rgba(255,255,255,0.08)",
   textAlign: "center",
+};
+
+const detailsBox = {
+  marginTop: 16,
+  padding: 16,
+  borderRadius: 16,
+  background: "rgba(255,255,255,0.08)",
+  color: "#e5e7eb",
+  fontSize: 14,
+  lineHeight: 1.35,
 };
 
 const visualLabel = { marginTop: 12, fontSize: 14, color: "#cbd5e1" };
