@@ -15,6 +15,7 @@ const products = {
   coro: "Coroplast Yard Signs",
   banner: "Vinyl Banners",
   acm: "ACM / Maxmetal",
+  vinyl: "Printed Vinyl",
 };
 
 const bannerOptions = {
@@ -30,6 +31,13 @@ const acmOptions = {
   "3-double": { name: "3mm Double-Sided", costPerSqIn: 0.06, minCost: 8.64 },
   "6-single": { name: "6mm Single-Sided", costPerSqIn: 0.08, minCost: 11.52 },
   "6-double": { name: "6mm Double-Sided", costPerSqIn: 0.09, minCost: 12.96 },
+};
+
+const vinylOptions = {
+  "gf-standard": { name: "GF 203OAPAE Standard Vinyl", cost: 2.49, retail: 8.75 },
+  "3m-premium": { name: "3M IJ-35C Premium Vinyl", cost: 2.99, retail: 10.51 },
+  "gf830-auto": { name: "GF830 AutoMark Vehicle Vinyl", cost: 3.99, retail: 14.02 },
+  "3m-controltac": { name: "3M Controltac Premium Vehicle Vinyl", cost: 4.99, retail: 17.54 },
 };
 
 const coroPricing = {
@@ -115,6 +123,11 @@ export default function Page() {
   const [acmContour, setAcmContour] = useState(false);
   const [roundedCorners, setRoundedCorners] = useState(false);
 
+  const [vinylType, setVinylType] = useState("gf-standard");
+  const [vinylLaminate, setVinylLaminate] = useState("Gloss Laminate");
+  const [vinylContour, setVinylContour] = useState(false);
+  const [vinylRush, setVinylRush] = useState(false);
+
   function preset(prod, w, h, double = false) {
     setProduct(prod);
     setWidth(w);
@@ -145,6 +158,32 @@ export default function Page() {
     const sqInEach = w * h;
     const sqFtEach = sqInEach / 144;
     const totalSqFt = sqFtEach * q;
+
+    if (product === "vinyl") {
+      const v = vinylOptions[vinylType];
+      const materialCost = totalSqFt * v.cost;
+      const shipping = totalSqFt >= 1000 ? 199 : 10;
+
+      let basePrice = totalSqFt * v.retail;
+      if (vinylContour) basePrice *= 1.1;
+      if (vinylRush) basePrice *= 2;
+
+      const cost = materialCost + shipping;
+      const retail = (basePrice + fees) * mult;
+
+      return {
+        label: "Printed Vinyl",
+        retail,
+        each: retail / q,
+        cost,
+        profit: retail - cost,
+        margin: retail ? ((retail - cost) / retail) * 100 : 0,
+        totalSqFt,
+        materialCost,
+        shipping,
+        basePrice,
+      };
+    }
 
     if (product === "banner") {
       const b = bannerOptions[bannerType];
@@ -259,7 +298,8 @@ export default function Page() {
     useDesignFee, useSetupFee, designFee, setupFee, delivery,
     coroDouble, stakes, heavyStakes, grommets, gloss, coroContour, coroRush,
     bannerType, polePocket, rope, windSlits, bannerRush,
-    acmType, acmSqFtPrice, acmContour, roundedCorners
+    acmType, acmSqFtPrice, acmContour, roundedCorners,
+    vinylType, vinylLaminate, vinylContour, vinylRush
   ]);
 
   const selectedDetails = {
@@ -268,7 +308,9 @@ export default function Page() {
     size: `${num(width)}" x ${num(height)}"`,
     qty: num(qty, 1),
     material:
-      product === "banner"
+      product === "vinyl"
+        ? `${vinylOptions[vinylType].name} / ${vinylLaminate}`
+        : product === "banner"
         ? bannerOptions[bannerType].name
         : product === "acm"
         ? acmOptions[acmType].name
@@ -276,6 +318,8 @@ export default function Page() {
         ? "4mm Double-Sided Coroplast"
         : "4mm Single-Sided Coroplast",
     options: [
+      product === "vinyl" && vinylContour ? "Contour Cut" : null,
+      product === "vinyl" && vinylRush ? "Rush Order" : null,
       product === "coro" && stakes ? "Standard Stakes" : null,
       product === "coro" && heavyStakes ? "Heavy Duty Stakes" : null,
       product === "coro" && grommets ? "Grommets" : null,
@@ -381,7 +425,7 @@ export default function Page() {
       `}</style>
 
       <h1>Hue Graphics Pricing App</h1>
-      <p>Live quote calculator for coro, banners, and ACM.</p>
+      <p>Live quote calculator for coro, banners, ACM, and vinyl.</p>
 
       <div className="layout">
         <section className="card">
@@ -416,6 +460,16 @@ export default function Page() {
             <button className={presetClass("acm", 48, 96)} onClick={() => preset("acm", 48, 96)}>48x96</button>
           </div>
 
+          <h3>Printed Vinyl</h3>
+          <div className="buttonGrid">
+            <button className={presetClass("vinyl", 12, 12)} onClick={() => preset("vinyl", 12, 12)}>12x12</button>
+            <button className={presetClass("vinyl", 24, 12)} onClick={() => preset("vinyl", 24, 12)}>12x24</button>
+            <button className={presetClass("vinyl", 24, 24)} onClick={() => preset("vinyl", 24, 24)}>24x24</button>
+            <button className={presetClass("vinyl", 36, 24)} onClick={() => preset("vinyl", 36, 24)}>24x36</button>
+            <button className={presetClass("vinyl", 48, 24)} onClick={() => preset("vinyl", 48, 24)}>24x48</button>
+            <button className={presetClass("vinyl", 96, 48)} onClick={() => preset("vinyl", 96, 48)}>48x96</button>
+          </div>
+
           <h2>Quote Details</h2>
 
           <label>Product</label>
@@ -424,6 +478,27 @@ export default function Page() {
               <option key={key} value={key}>{name}</option>
             ))}
           </select>
+
+          {product === "vinyl" && (
+            <Box title="Printed Vinyl Options">
+              <label>Vinyl Type</label>
+              <select style={input} value={vinylType} onChange={(e) => setVinylType(e.target.value)}>
+                {Object.entries(vinylOptions).map(([key, v]) => (
+                  <option key={key} value={key}>{v.name} — {money(v.retail)}/sq ft</option>
+                ))}
+              </select>
+
+              <label>Laminate</label>
+              <select style={input} value={vinylLaminate} onChange={(e) => setVinylLaminate(e.target.value)}>
+                <option>Gloss Laminate</option>
+                <option>Matte Laminate</option>
+                <option>No Laminate</option>
+              </select>
+
+              <Check label="Contour Cut (+10%)" value={vinylContour} setValue={setVinylContour} />
+              <Check label="Rush Order (2x)" value={vinylRush} setValue={setVinylRush} />
+            </Box>
+          )}
 
           {product === "coro" && (
             <Box title="Coro Options">
@@ -575,6 +650,15 @@ function ProductVisual({ product }) {
     );
   }
 
+  if (product === "vinyl") {
+    return (
+      <div style={visualBox}>
+        <div style={vinylVisual}>VINYL</div>
+        <p style={visualLabel}>Printed Vinyl Selected</p>
+      </div>
+    );
+  }
+
   return (
     <div style={visualBox}>
       <div style={acmVisual}>ACM</div>
@@ -627,6 +711,17 @@ const bannerVisual = {
   fontWeight: "bold",
   borderTop: "8px solid #38bdf8",
   borderBottom: "8px solid #38bdf8",
+};
+
+const vinylVisual = {
+  display: "inline-block",
+  background: "linear-gradient(135deg, #ffffff, #dbeafe)",
+  color: "#0f172a",
+  borderRadius: 8,
+  padding: "30px 45px",
+  fontSize: 28,
+  fontWeight: "bold",
+  border: "4px dashed #38bdf8",
 };
 
 const acmVisual = {
