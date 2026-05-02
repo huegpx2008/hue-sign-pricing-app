@@ -1,116 +1,152 @@
-import React, { useMemo, useState } from "react"; import { Card, CardContent } from "@/components/ui/card"; import { Button } from "@/components/ui/button"; import { Input } from "@/components/ui/input"; import { Label } from "@/components/ui/label"; import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"; import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"; import { Switch } from "@/components/ui/switch"; import { Calculator, DollarSign, FileText, Settings, Truck, Wrench } from "lucide-react";
+"use client";
 
-const PRODUCTS = { coroplast: { name: "Coroplast Yard Sign", description: "Yard signs, campaign signs, event signs, open house signs.", materialRate: 1.15, printRate: 2.35, minPrice: 18, defaultLaborMinutes: 8 }, realEstate: { name: "Real Estate Sign Panel", description: "Larger outdoor panels for real estate frames and property signs.", materialRate: 3.25, printRate: 3.75, minPrice: 65, defaultLaborMinutes: 18 }, rider: { name: "Real Estate Rider", description: "Small add-on riders such as SOLD, Coming Soon, Open House, etc.", materialRate: 2.1, printRate: 2.95, minPrice: 25, defaultLaborMinutes: 10 }, banner: { name: "Vinyl Banner", description: "Indoor/outdoor vinyl banners with hems and grommets.", materialRate: 1.85, printRate: 3.65, minPrice: 45, defaultLaborMinutes: 15 }, meshBanner: { name: "Mesh Banner", description: "Wind-friendly banners for fences, fields, and outdoor events.", materialRate: 2.25, printRate: 4.1, minPrice: 65, defaultLaborMinutes: 20 }, aluminum: { name: "Aluminum Sign", description: "Metal signs for parking, directional, safety, and outdoor use.", materialRate: 4.5, printRate: 3.95, minPrice: 55, defaultLaborMinutes: 20 }, acm: { name: "ACM / Dibond Sign", description: "Premium rigid outdoor panels for business signs and long-term use.", materialRate: 5.85, printRate: 4.25, minPrice: 85, defaultLaborMinutes: 25 }, pvc: { name: "PVC Sign", description: "Rigid indoor or short-term outdoor sign boards.", materialRate: 3.45, printRate: 3.45, minPrice: 55, defaultLaborMinutes: 18 }, foamBoard: { name: "Foam Board Sign", description: "Lightweight indoor signs for presentations, events, and displays.", materialRate: 2.4, printRate: 3.1, minPrice: 40, defaultLaborMinutes: 14 }, decal: { name: "Cut Vinyl / Decal", description: "Simple cut vinyl lettering, decals, and small graphics.", materialRate: 1.5, printRate: 2.85, minPrice: 25, defaultLaborMinutes: 12 }, printedVinyl: { name: "Printed Vinyl Decal", description: "Printed decals, laminated stickers, window decals, and contour-cut graphics.", materialRate: 2.1, printRate: 4.25, minPrice: 35, defaultLaborMinutes: 16 }, windowPerf: { name: "Window Perf", description: "Perforated window graphics for storefronts and vehicle windows.", materialRate: 3.25, printRate: 4.75, minPrice: 65, defaultLaborMinutes: 22 }, magnet: { name: "Vehicle Magnet", description: "Magnetic vehicle door signs and removable graphics.", materialRate: 4.2, printRate: 3.85, minPrice: 55, defaultLaborMinutes: 18 }, bannerStand: { name: "Retractable Banner Stand", description: "Pull-up banner with hardware included.", materialRate: 5.25, printRate: 4.75, minPrice: 145, defaultLaborMinutes: 25 }, };
+import { useMemo, useState } from "react";
 
-function money(value) { return Number(value || 0).toLocaleString("en-US", { style: "currency", currency: "USD" }); }
+const products = {
+  coroplast: { name: "Coroplast Yard Sign", material: 1.15, print: 2.35, min: 18, labor: 8 },
+  realEstate: { name: "Real Estate Sign Panel", material: 3.25, print: 3.75, min: 65, labor: 18 },
+  rider: { name: "Real Estate Rider", material: 2.1, print: 2.95, min: 25, labor: 10 },
+  banner: { name: "Vinyl Banner", material: 1.85, print: 3.65, min: 45, labor: 15 },
+  meshBanner: { name: "Mesh Banner", material: 2.25, print: 4.1, min: 65, labor: 20 },
+  aluminum: { name: "Aluminum Sign", material: 4.5, print: 3.95, min: 55, labor: 20 },
+  acm: { name: "ACM / Dibond Sign", material: 5.85, print: 4.25, min: 85, labor: 25 },
+  pvc: { name: "PVC Sign", material: 3.45, print: 3.45, min: 55, labor: 18 },
+  foamBoard: { name: "Foam Board Sign", material: 2.4, print: 3.1, min: 40, labor: 14 },
+  decal: { name: "Cut Vinyl / Decal", material: 1.5, print: 2.85, min: 25, labor: 12 },
+  printedVinyl: { name: "Printed Vinyl Decal", material: 2.1, print: 4.25, min: 35, labor: 16 },
+  windowPerf: { name: "Window Perf", material: 3.25, print: 4.75, min: 65, labor: 22 },
+  magnet: { name: "Vehicle Magnet", material: 4.2, print: 3.85, min: 55, labor: 18 },
+  bannerStand: { name: "Retractable Banner Stand", material: 5.25, print: 4.75, min: 145, labor: 25 },
+};
 
-export default function SignPricingApp() { const [productKey, setProductKey] = useState("coroplast"); const [width, setWidth] = useState(24); const [height, setHeight] = useState(18); const [quantity, setQuantity] = useState(10); const [doubleSided, setDoubleSided] = useState(false); const [targetMargin, setTargetMargin] = useState(60); const [shopRate, setShopRate] = useState(65); const [laborMinutes, setLaborMinutes] = useState(PRODUCTS.coroplast.defaultLaborMinutes); const [designFee, setDesignFee] = useState(25); const [setupFee, setSetupFee] = useState(10); const [hardwareFee, setHardwareFee] = useState(0); const [deliveryFee, setDeliveryFee] = useState(0); const [rushFee, setRushFee] = useState(0);
+const money = (n) =>
+  Number(n || 0).toLocaleString("en-US", { style: "currency", currency: "USD" });
 
-const product = PRODUCTS[productKey];
+export default function Page() {
+  const [productKey, setProductKey] = useState("coroplast");
+  const [width, setWidth] = useState(24);
+  const [height, setHeight] = useState(18);
+  const [quantity, setQuantity] = useState(10);
+  const [doubleSided, setDoubleSided] = useState(false);
+  const [margin, setMargin] = useState(60);
+  const [shopRate, setShopRate] = useState(65);
+  const [designFee, setDesignFee] = useState(25);
+  const [setupFee, setSetupFee] = useState(10);
+  const [hardware, setHardware] = useState(0);
+  const [delivery, setDelivery] = useState(0);
+  const [rush, setRush] = useState(0);
 
-const calc = useMemo(() => { const qty = Math.max(Number(quantity) || 1, 1); const sqFtEach = ((Number(width) || 0) * (Number(height) || 0)) / 144; const sideMultiplier = doubleSided ? 2 : 1; const totalSqFt = sqFtEach * qty * sideMultiplier; const materialCost = totalSqFt * product.materialRate; const printCost = totalSqFt * product.printRate; const laborCost = ((Number(laborMinutes) || 0) / 60) * (Number(shopRate) || 0); const directCost = materialCost + printCost + laborCost + Number(hardwareFee || 0) + Number(deliveryFee || 0); const marginDecimal = Math.min(Number(targetMargin) || 0, 95) / 100; const retailBeforeFees = directCost / (1 - marginDecimal); const retail = Math.max(retailBeforeFees + Number(designFee || 0) + Number(setupFee || 0) + Number(rushFee || 0), product.minPrice * qty); const profit = retail - directCost; const actualMargin = retail > 0 ? (profit / retail) * 100 : 0; const priceEach = retail / qty; return { sqFtEach, totalSqFt, materialCost, printCost, laborCost, directCost, retail, profit, actualMargin, priceEach }; }, [width, height, quantity, doubleSided, product, laborMinutes, shopRate, hardwareFee, deliveryFee, targetMargin, designFee, setupFee, rushFee]);
+  const product = products[productKey];
 
-function handleProductChange(value) { setProductKey(value); setLaborMinutes(PRODUCTS[value].defaultLaborMinutes); }
+  const calc = useMemo(() => {
+    const qty = Math.max(Number(quantity) || 1, 1);
+    const sqFtEach = ((Number(width) || 0) * (Number(height) || 0)) / 144;
+    const totalSqFt = sqFtEach * qty * (doubleSided ? 2 : 1);
+    const materialCost = totalSqFt * product.material;
+    const printCost = totalSqFt * product.print;
+    const laborCost = (product.labor / 60) * Number(shopRate || 0);
+    const cost = materialCost + printCost + laborCost + Number(hardware || 0) + Number(delivery || 0);
+    const retail = Math.max(
+      cost / (1 - Number(margin || 0) / 100) + Number(designFee || 0) + Number(setupFee || 0) + Number(rush || 0),
+      product.min * qty
+    );
+    return {
+      sqFtEach,
+      totalSqFt,
+      materialCost,
+      printCost,
+      laborCost,
+      cost,
+      retail,
+      each: retail / qty,
+      profit: retail - cost,
+      actualMargin: ((retail - cost) / retail) * 100,
+    };
+  }, [productKey, width, height, quantity, doubleSided, margin, shopRate, designFee, setupFee, hardware, delivery, rush]);
 
-return ( <div className="min-h-screen bg-slate-100 p-4 md:p-8 text-slate-900"> <div className="mx-auto max-w-6xl space-y-6"> <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between"> <div> <div className="inline-flex items-center gap-2 rounded-full bg-blue-100 px-3 py-1 text-sm font-medium text-blue-800"> <Calculator className="h-4 w-4" /> Demo Pricing Mode </div> <h1 className="mt-3 text-3xl font-bold tracking-tight md:text-5xl">Hue Graphics Sign Pricing App</h1> <p className="mt-2 max-w-2xl text-slate-600">Random placeholder prices are loaded so we can test the flow first. Real pricing can be swapped in later.</p> </div> <Button className="rounded-2xl px-6">Save Quote</Button> </div>
+  const inputStyle = {
+    width: "100%",
+    padding: 12,
+    borderRadius: 10,
+    border: "1px solid #ccc",
+    fontSize: 16,
+  };
 
-<div className="grid gap-6 lg:grid-cols-[1.35fr_.9fr]">
-      <Card className="rounded-2xl shadow-sm">
-        <CardContent className="p-5 md:p-6">
-          <Tabs defaultValue="quote" className="space-y-5">
-            <TabsList className="grid w-full grid-cols-3 rounded-2xl">
-              <TabsTrigger value="quote">Quote</TabsTrigger>
-              <TabsTrigger value="fees">Fees</TabsTrigger>
-              <TabsTrigger value="settings">Settings</TabsTrigger>
-            </TabsList>
+  return (
+    <main style={{ fontFamily: "Arial", background: "#f1f5f9", minHeight: "100vh", padding: 20 }}>
+      <div style={{ maxWidth: 1000, margin: "0 auto" }}>
+        <h1>Hue Graphics Sign Pricing App</h1>
+        <p>Demo pricing mode — placeholder prices for testing.</p>
 
-            <TabsContent value="quote" className="space-y-5">
-              <div className="grid gap-4 md:grid-cols-2">
-                <div className="space-y-2 md:col-span-2">
-                  <Label>Sign Type</Label>
-                  <Select value={productKey} onValueChange={handleProductChange}>
-                    <SelectTrigger className="rounded-xl"><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      {Object.entries(PRODUCTS).map(([key, item]) => <SelectItem key={key} value={key}>{item.name}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                  <p className="text-sm text-slate-500">{product.description}</p>
-                </div>
-                <div className="space-y-2"><Label>Quantity</Label><Input className="rounded-xl" type="number" value={quantity} onChange={(e) => setQuantity(e.target.value)} /></div>
-                <div className="space-y-2"><Label>Width Inches</Label><Input className="rounded-xl" type="number" value={width} onChange={(e) => setWidth(e.target.value)} /></div>
-                <div className="space-y-2"><Label>Height Inches</Label><Input className="rounded-xl" type="number" value={height} onChange={(e) => setHeight(e.target.value)} /></div>
-                <div className="flex items-center justify-between rounded-2xl border bg-white p-4 md:col-span-2">
-                  <div><p className="font-semibold">Double-Sided</p><p className="text-sm text-slate-500">Adds print/material coverage for both sides.</p></div>
-                  <Switch checked={doubleSided} onCheckedChange={setDoubleSided} />
-                </div>
-              </div>
-            </TabsContent>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 350px", gap: 20 }}>
+          <section style={{ background: "white", padding: 20, borderRadius: 16 }}>
+            <h2>Quote Details</h2>
 
-            <TabsContent value="fees" className="space-y-5">
-              <div className="grid gap-4 md:grid-cols-2">
-                <div className="space-y-2"><Label>Design Fee</Label><Input className="rounded-xl" type="number" value={designFee} onChange={(e) => setDesignFee(e.target.value)} /></div>
-                <div className="space-y-2"><Label>Setup Fee</Label><Input className="rounded-xl" type="number" value={setupFee} onChange={(e) => setSetupFee(e.target.value)} /></div>
-                <div className="space-y-2"><Label>Hardware / Stakes / Grommets</Label><Input className="rounded-xl" type="number" value={hardwareFee} onChange={(e) => setHardwareFee(e.target.value)} /></div>
-                <div className="space-y-2"><Label>Delivery / Install</Label><Input className="rounded-xl" type="number" value={deliveryFee} onChange={(e) => setDeliveryFee(e.target.value)} /></div>
-                <div className="space-y-2 md:col-span-2"><Label>Rush Fee</Label><Input className="rounded-xl" type="number" value={rushFee} onChange={(e) => setRushFee(e.target.value)} /></div>
-              </div>
-            </TabsContent>
+            <label>Sign Type</label>
+            <select style={inputStyle} value={productKey} onChange={(e) => setProductKey(e.target.value)}>
+              {Object.entries(products).map(([key, p]) => (
+                <option key={key} value={key}>{p.name}</option>
+              ))}
+            </select>
 
-            <TabsContent value="settings" className="space-y-5">
-              <div className="grid gap-4 md:grid-cols-2">
-                <div className="space-y-2"><Label>Target Profit Margin %</Label><Input className="rounded-xl" type="number" value={targetMargin} onChange={(e) => setTargetMargin(e.target.value)} /></div>
-                <div className="space-y-2"><Label>Shop Labor Rate / Hour</Label><Input className="rounded-xl" type="number" value={shopRate} onChange={(e) => setShopRate(e.target.value)} /></div>
-                <div className="space-y-2 md:col-span-2"><Label>Estimated Labor Minutes</Label><Input className="rounded-xl" type="number" value={laborMinutes} onChange={(e) => setLaborMinutes(e.target.value)} /></div>
-              </div>
-            </TabsContent>
-          </Tabs>
-        </CardContent>
-      </Card>
-
-      <div className="space-y-6">
-        <Card className="rounded-2xl bg-slate-950 text-white shadow-sm">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div><p className="text-sm text-slate-300">Suggested Retail</p><p className="mt-1 text-4xl font-bold">{money(calc.retail)}</p></div>
-              <div className="rounded-2xl bg-white/10 p-3"><DollarSign className="h-7 w-7" /></div>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 15, marginTop: 15 }}>
+              <Field label="Quantity" value={quantity} setValue={setQuantity} />
+              <Field label="Width Inches" value={width} setValue={setWidth} />
+              <Field label="Height Inches" value={height} setValue={setHeight} />
+              <Field label="Target Margin %" value={margin} setValue={setMargin} />
+              <Field label="Design Fee" value={designFee} setValue={setDesignFee} />
+              <Field label="Setup Fee" value={setupFee} setValue={setSetupFee} />
+              <Field label="Hardware / Stakes" value={hardware} setValue={setHardware} />
+              <Field label="Delivery / Install" value={delivery} setValue={setDelivery} />
+              <Field label="Rush Fee" value={rush} setValue={setRush} />
+              <Field label="Shop Rate / Hour" value={shopRate} setValue={setShopRate} />
             </div>
-            <div className="mt-5 grid grid-cols-2 gap-3">
-              <div className="rounded-2xl bg-white/10 p-4"><p className="text-xs text-slate-300">Price Each</p><p className="text-xl font-semibold">{money(calc.priceEach)}</p></div>
-              <div className="rounded-2xl bg-white/10 p-4"><p className="text-xs text-slate-300">Profit</p><p className="text-xl font-semibold">{money(calc.profit)}</p></div>
-            </div>
-          </CardContent>
-        </Card>
 
-        <Card className="rounded-2xl shadow-sm">
-          <CardContent className="space-y-4 p-6">
-            <div className="flex items-center gap-2 font-semibold"><FileText className="h-5 w-5" /> Quote Breakdown</div>
-            <div className="space-y-3 text-sm">
-              <Row label="Selected Product" value={product.name} />
-              <Row label="Size Each" value={`${Number(width)}\" x ${Number(height)}\"`} />
-              <Row label="Sq Ft Each" value={calc.sqFtEach.toFixed(2)} />
-              <Row label="Total Print Sq Ft" value={calc.totalSqFt.toFixed(2)} />
-              <Row label="Material Cost" value={money(calc.materialCost)} />
-              <Row label="Print Cost" value={money(calc.printCost)} />
-              <Row label="Labor Cost" value={money(calc.laborCost)} />
-              <Row label="Direct Cost" value={money(calc.directCost)} />
-              <Row label="Actual Margin" value={`${calc.actualMargin.toFixed(1)}%`} />
-            </div>
-          </CardContent>
-        </Card>
+            <label style={{ display: "block", marginTop: 15 }}>
+              <input
+                type="checkbox"
+                checked={doubleSided}
+                onChange={(e) => setDoubleSided(e.target.checked)}
+              />{" "}
+              Double-sided
+            </label>
+          </section>
 
-        <div className="grid grid-cols-2 gap-4">
-          <MiniCard icon={<Wrench className="h-5 w-5" />} label="Hardware" value={money(Number(hardwareFee))} />
-          <MiniCard icon={<Truck className="h-5 w-5" />} label="Delivery" value={money(Number(deliveryFee))} />
-          <MiniCard icon={<Settings className="h-5 w-5" />} label="Setup" value={money(Number(setupFee))} />
-          <MiniCard icon={<FileText className="h-5 w-5" />} label="Design" value={money(Number(designFee))} />
+          <aside style={{ background: "#0f172a", color: "white", padding: 20, borderRadius: 16 }}>
+            <h2>Suggested Retail</h2>
+            <div style={{ fontSize: 42, fontWeight: "bold" }}>{money(calc.retail)}</div>
+            <p>Price Each: <strong>{money(calc.each)}</strong></p>
+            <p>Profit: <strong>{money(calc.profit)}</strong></p>
+            <hr />
+            <p>Total Sq Ft: {calc.totalSqFt.toFixed(2)}</p>
+            <p>Material Cost: {money(calc.materialCost)}</p>
+            <p>Print Cost: {money(calc.printCost)}</p>
+            <p>Labor Cost: {money(calc.laborCost)}</p>
+            <p>Direct Cost: {money(calc.cost)}</p>
+            <p>Actual Margin: {calc.actualMargin.toFixed(1)}%</p>
+          </aside>
         </div>
       </div>
+    </main>
+  );
+}
+
+function Field({ label, value, setValue }) {
+  return (
+    <div>
+      <label>{label}</label>
+      <input
+        type="number"
+        value={value}
+        onChange={(e) => setValue(e.target.value)}
+        style={{
+          width: "100%",
+          padding: 12,
+          borderRadius: 10,
+          border: "1px solid #ccc",
+          fontSize: 16,
+        }}
+      />
     </div>
-  </div>
-</div>
-
-); }
-
-function Row({ label, value }) { return <div className="flex items-center justify-between border-b pb-2 last:border-0"><span className="text-slate-500">{label}</span><span className="font-semibold text-right">{value}</span></div>; }
-
-function MiniCard({ icon, label, value }) { return <Card className="rounded-2xl shadow-sm"><CardContent className="p-4"><div className="flex items-center gap-2 text-slate-500">{icon}<span className="text-sm">{label}</span></div><p className="mt-2 text-xl font-bold">{value}</p></CardContent></Card>; }
+  );
+}
