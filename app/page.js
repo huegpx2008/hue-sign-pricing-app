@@ -38,6 +38,7 @@ const vinylOptions = {
   "3m-premium": { name: "3M IJ-35C Premium Vinyl", cost: 2.99, retail: 10.51 },
   "gf830-auto": { name: "GF830 AutoMark Vehicle Vinyl", cost: 3.99, retail: 14.02 },
   "3m-controltac": { name: "3M Controltac Premium Vehicle Vinyl", cost: 4.99, retail: 17.54 },
+  "low-tac-wall": { name: "Low Tac Wall Vinyl", cost: 3.47, retail: 12.20 },
 };
 
 const coroPricing = {
