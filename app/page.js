@@ -38,7 +38,7 @@ const vinylOptions = {
   "3m-premium": { name: "3M IJ-35C Premium Vinyl", cost: 2.99, retail: 10.51 },
   "gf830-auto": { name: "GF830 AutoMark Vehicle Vinyl", cost: 3.99, retail: 14.02 },
   "3m-controltac": { name: "3M Controltac Premium Vehicle Vinyl", cost: 4.99, retail: 17.54 },
-  "low-tac-wall": { name: "Low Tac Wall Vinyl", cost: 3.47, retail: 12.20 },
+  "low-tac-wall": { name: "Low Tac Wall Vinyl", cost: 3.47, retail: 12.2 },
 };
 
 const coroPricing = {
@@ -91,6 +91,35 @@ function shippingBySize(w, h, sheets) {
   return 199;
 }
 
+function getVinylBillableSqFt(w, h, q, gangVinyl) {
+  const actualEach = (w * h) / 144;
+
+  if (!gangVinyl) {
+    const roundedHeight = Math.ceil(h / 12) * 12;
+    const billableEach = (w * roundedHeight) / 144;
+
+    return {
+      actualEach,
+      billableEach,
+      totalBillable: billableEach * q,
+      mode: "Single piece billing",
+    };
+  }
+
+  const rollWidth = 52;
+  const piecesAcross = Math.max(Math.floor(rollWidth / w), 1);
+  const rows = Math.ceil(q / piecesAcross);
+  const totalHeight = rows * h;
+  const roundedHeight = Math.ceil(totalHeight / 12) * 12;
+
+  return {
+    actualEach,
+    billableEach: actualEach,
+    totalBillable: (rollWidth * roundedHeight) / 144,
+    mode: `Ganged layout: ${piecesAcross} across x ${rows} rows`,
+  };
+}
+
 export default function Page() {
   const [product, setProduct] = useState("coro");
   const [width, setWidth] = useState(24);
@@ -128,6 +157,7 @@ export default function Page() {
   const [vinylLaminate, setVinylLaminate] = useState("Gloss Laminate");
   const [vinylContour, setVinylContour] = useState(false);
   const [vinylRush, setVinylRush] = useState(false);
+  const [gangVinyl, setGangVinyl] = useState(false);
 
   function preset(prod, w, h, double = false) {
     setProduct(prod);
@@ -160,50 +190,52 @@ export default function Page() {
     const sqFtEach = sqInEach / 144;
     const totalSqFt = sqFtEach * q;
 
-   if (product === "vinyl") {
-  const v = vinylOptions[vinylType];
+    if (product === "vinyl") {
+      const v = vinylOptions[vinylType];
+      const vinylSqFt = getVinylBillableSqFt(w, h, q, gangVinyl);
 
-  const materialCost = totalSqFt * v.cost;
-  const shipping = totalSqFt >= 1000 ? 199 : 10;
-  const cost = materialCost + shipping;
+      const actualTotalSqFt = vinylSqFt.actualEach * q;
+      const vinylBillableTotalSqFt = vinylSqFt.totalBillable;
 
-  // Base shop pricing (your real-world pricing)
-  let shopPrice = totalSqFt * v.retail;
+      const materialCost = vinylBillableTotalSqFt * v.cost;
+      const shipping = vinylBillableTotalSqFt >= 1000 ? 199 : 10;
+      const cost = materialCost + shipping;
 
-  // Optional margin-based pricing (backup safety)
-  let costMarginPrice = cost / (1 - m);
+      let shopPrice = vinylBillableTotalSqFt * v.retail;
+      let costMarginPrice = cost / (1 - m);
 
-  // Apply options
-  if (vinylContour) {
-    shopPrice *= 1.1;
-    costMarginPrice *= 1.1;
-  }
+      if (vinylContour) {
+        shopPrice *= 1.1;
+        costMarginPrice *= 1.1;
+      }
 
-  if (vinylRush) {
-    shopPrice *= 2;
-    costMarginPrice *= 2;
-  }
+      if (vinylRush) {
+        shopPrice *= 2;
+        costMarginPrice *= 2;
+      }
 
-  // Choose the better price (protects you on edge cases)
-  const basePrice = Math.max(shopPrice, costMarginPrice);
+      const basePrice = Math.max(shopPrice, costMarginPrice);
+      const retail = (basePrice + fees) * mult;
 
-  const retail = (basePrice + fees) * mult;
-
-  return {
-    label: "Printed Vinyl",
-    retail,
-    each: retail / q,
-    cost,
-    profit: retail - cost,
-    margin: retail ? ((retail - cost) / retail) * 100 : 0,
-    totalSqFt,
-    materialCost,
-    shipping,
-    shopPrice,
-    costMarginPrice,
-    basePrice,
-  };
-}
+      return {
+        label: "Printed Vinyl",
+        retail,
+        each: retail / q,
+        cost,
+        profit: retail - cost,
+        margin: retail ? ((retail - cost) / retail) * 100 : 0,
+        totalSqFt: vinylBillableTotalSqFt,
+        actualTotalSqFt,
+        actualSqFtEach: vinylSqFt.actualEach,
+        billableSqFtEach: vinylSqFt.billableEach,
+        billingMode: vinylSqFt.mode,
+        materialCost,
+        shipping,
+        shopPrice,
+        costMarginPrice,
+        basePrice,
+      };
+    }
 
     if (product === "banner") {
       const b = bannerOptions[bannerType];
@@ -314,12 +346,38 @@ export default function Page() {
       basePrice,
     };
   }, [
-    product, width, height, qty, margin, multiplier,
-    useDesignFee, useSetupFee, designFee, setupFee, delivery,
-    coroDouble, stakes, heavyStakes, grommets, gloss, coroContour, coroRush,
-    bannerType, polePocket, rope, windSlits, bannerRush,
-    acmType, acmSqFtPrice, acmContour, roundedCorners,
-    vinylType, vinylLaminate, vinylContour, vinylRush
+    product,
+    width,
+    height,
+    qty,
+    margin,
+    multiplier,
+    useDesignFee,
+    useSetupFee,
+    designFee,
+    setupFee,
+    delivery,
+    coroDouble,
+    stakes,
+    heavyStakes,
+    grommets,
+    gloss,
+    coroContour,
+    coroRush,
+    bannerType,
+    polePocket,
+    rope,
+    windSlits,
+    bannerRush,
+    acmType,
+    acmSqFtPrice,
+    acmContour,
+    roundedCorners,
+    vinylType,
+    vinylLaminate,
+    vinylContour,
+    vinylRush,
+    gangVinyl,
   ]);
 
   const selectedDetails = {
@@ -340,6 +398,7 @@ export default function Page() {
     options: [
       product === "vinyl" && vinylContour ? "Contour Cut" : null,
       product === "vinyl" && vinylRush ? "Rush Order" : null,
+      product === "vinyl" && gangVinyl ? "Gang Vinyl Layout" : null,
       product === "coro" && stakes ? "Standard Stakes" : null,
       product === "coro" && heavyStakes ? "Heavy Duty Stakes" : null,
       product === "coro" && grommets ? "Grommets" : null,
@@ -504,7 +563,9 @@ export default function Page() {
               <label>Vinyl Type</label>
               <select style={input} value={vinylType} onChange={(e) => setVinylType(e.target.value)}>
                 {Object.entries(vinylOptions).map(([key, v]) => (
-                  <option key={key} value={key}>{v.name} — {money(v.retail)}/sq ft</option>
+                  <option key={key} value={key}>
+                    {v.name} — {money(v.retail)}/sq ft
+                  </option>
                 ))}
               </select>
 
@@ -517,6 +578,7 @@ export default function Page() {
 
               <Check label="Contour Cut (+10%)" value={vinylContour} setValue={setVinylContour} />
               <Check label="Rush Order (2x)" value={vinylRush} setValue={setVinylRush} />
+              <Check label="Gang Vinyl Layout" value={gangVinyl} setValue={setGangVinyl} />
             </Box>
           )}
 
@@ -586,6 +648,19 @@ export default function Page() {
           <hr />
           <p>Product: {calc.label}</p>
           <p>Total Sq Ft: {calc.totalSqFt?.toFixed(2)}</p>
+
+          {calc.actualTotalSqFt !== undefined && (
+            <p>Actual Sq Ft: {calc.actualTotalSqFt.toFixed(2)}</p>
+          )}
+
+          {calc.billableSqFtEach !== undefined && (
+            <p>Billable Sq Ft Each: {calc.billableSqFtEach.toFixed(2)}</p>
+          )}
+
+          {calc.billingMode !== undefined && (
+            <p>Billing Mode: {calc.billingMode}</p>
+          )}
+
           {calc.tierPrice !== undefined && <p>Tier Price Total: {money(calc.tierPrice)}</p>}
           {calc.costMarginPrice !== undefined && <p>Cost + Margin Price: {money(calc.costMarginPrice)}</p>}
           {calc.shopPrice !== undefined && <p>Shop Sq Ft Price: {money(calc.shopPrice)}</p>}
