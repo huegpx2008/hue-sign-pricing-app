@@ -5,6 +5,12 @@ import { useMemo, useState } from "react";
 const money = (n) =>
   Number(n || 0).toLocaleString("en-US", { style: "currency", currency: "USD" });
 
+const num = (v, fallback = 0) => {
+  if (v === "" || v === null || v === undefined) return fallback;
+  const n = Number(v);
+  return Number.isFinite(n) ? n : fallback;
+};
+
 const products = {
   coro: "Coroplast Yard Signs",
   banner: "Vinyl Banners",
@@ -83,9 +89,12 @@ export default function Page() {
   const [qty, setQty] = useState(10);
   const [margin, setMargin] = useState(60);
   const [multiplier, setMultiplier] = useState(1);
-  const [designFee, setDesignFee] = useState(0);
-  const [setupFee, setSetupFee] = useState(0);
-  const [delivery, setDelivery] = useState(0);
+
+  const [useDesignFee, setUseDesignFee] = useState(false);
+  const [useSetupFee, setUseSetupFee] = useState(false);
+  const [designFee, setDesignFee] = useState("");
+  const [setupFee, setSetupFee] = useState("");
+  const [delivery, setDelivery] = useState("");
 
   const [coroDouble, setCoroDouble] = useState(false);
   const [bannerType, setBannerType] = useState("13-single");
@@ -100,16 +109,16 @@ export default function Page() {
   }
 
   const calc = useMemo(() => {
-    const q = Math.max(Number(qty) || 1, 1);
-    const w = Number(width) || 0;
-    const h = Number(height) || 0;
-    const m = Math.min(Number(margin) || 60, 95) / 100;
-    const mult = Number(multiplier) || 1;
+    const q = Math.max(num(qty, 1), 1);
+    const w = num(width);
+    const h = num(height);
+    const m = Math.min(num(margin, 60), 95) / 100;
+    const mult = num(multiplier, 1);
 
     const fees =
-      Number(designFee || 0) +
-      Number(setupFee || 0) +
-      Number(delivery || 0);
+      (useDesignFee ? num(designFee) : 0) +
+      (useSetupFee ? num(setupFee) : 0) +
+      num(delivery);
 
     const sqInEach = w * h;
     const sqFtEach = sqInEach / 144;
@@ -118,8 +127,8 @@ export default function Page() {
     if (product === "banner") {
       const b = bannerOptions[bannerType];
       const materialCost = totalSqFt * b.cost;
-      const retailBase = totalSqFt * b.retail;
-      const retail = (retailBase + fees) * mult;
+      const basePrice = totalSqFt * b.retail;
+      const retail = (basePrice + fees) * mult;
 
       return {
         label: "Banner",
@@ -131,7 +140,7 @@ export default function Page() {
         totalSqFt,
         materialCost,
         shipping: 0,
-        basePrice: retailBase,
+        basePrice,
       };
     }
 
@@ -145,7 +154,7 @@ export default function Page() {
       const cost = materialCost + shipping;
 
       const costMarginPrice = cost / (1 - m);
-      const shopPrice = totalSqFt * Number(acmSqFtPrice || 18);
+      const shopPrice = totalSqFt * num(acmSqFtPrice, 18);
       const basePrice = Math.max(costMarginPrice, shopPrice);
       const retail = (basePrice + fees) * mult;
 
@@ -168,7 +177,7 @@ export default function Page() {
     }
 
     const type = coroDouble ? "double" : "single";
-    const scale = Number(width) === 18 && Number(height) === 12 ? 0.5 : 1;
+    const scale = w === 18 && h === 12 ? 0.5 : 1;
     const tierEach = getTierPrice(q, type) * scale;
     const tierPrice = tierEach * q;
 
@@ -198,7 +207,11 @@ export default function Page() {
       costMarginPrice,
       basePrice,
     };
-  }, [product, width, height, qty, margin, multiplier, designFee, setupFee, delivery, coroDouble, bannerType, acmType, acmSqFtPrice]);
+  }, [
+    product, width, height, qty, margin, multiplier,
+    useDesignFee, useSetupFee, designFee, setupFee, delivery,
+    coroDouble, bannerType, acmType, acmSqFtPrice
+  ]);
 
   return (
     <main style={{ fontFamily: "Arial", background: "#f1f5f9", minHeight: "100vh", padding: 20 }}>
@@ -281,10 +294,24 @@ export default function Page() {
             <Field label="Width Inches" value={width} setValue={setWidth} />
             <Field label="Height Inches" value={height} setValue={setHeight} />
             <Field label="Margin %" value={margin} setValue={setMargin} />
-            <Field label="Design Fee" value={designFee} setValue={setDesignFee} />
-            <Field label="Setup Fee" value={setupFee} setValue={setSetupFee} />
             <Field label="Delivery / Install" value={delivery} setValue={setDelivery} />
             <Field label="Price Multiplier" value={multiplier} setValue={setMultiplier} />
+          </div>
+
+          <div style={feeBox}>
+            <h3>Optional Fees</h3>
+
+            <label style={checkLine}>
+              <input type="checkbox" checked={useDesignFee} onChange={(e) => setUseDesignFee(e.target.checked)} />
+              Add Design Fee
+            </label>
+            {useDesignFee && <Field label="Design Fee" value={designFee} setValue={setDesignFee} />}
+
+            <label style={checkLine}>
+              <input type="checkbox" checked={useSetupFee} onChange={(e) => setUseSetupFee(e.target.checked)} />
+              Add Setup Fee
+            </label>
+            {useSetupFee && <Field label="Setup Fee" value={setupFee} setValue={setSetupFee} />}
           </div>
         </section>
 
@@ -305,7 +332,9 @@ export default function Page() {
           <p>Shipping: {money(calc.shipping)}</p>
           <p>Direct Cost: {money(calc.cost)}</p>
           <p>Actual Margin: {calc.margin.toFixed(1)}%</p>
-          <p>Multiplier: {multiplier}x</p>
+          <p>Multiplier: {num(multiplier, 1)}x</p>
+
+          <ProductVisual product={product} />
         </aside>
       </div>
     </main>
@@ -317,12 +346,124 @@ const summary = { background: "#0f172a", color: "white", padding: 20, borderRadi
 const buttons = { display: "flex", flexWrap: "wrap", gap: 10, marginBottom: 20 };
 const grid = { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 15, marginTop: 15 };
 const input = { width: "100%", padding: 12, borderRadius: 10, border: "1px solid #ccc", fontSize: 16 };
+const feeBox = { marginTop: 20, padding: 15, background: "#f8fafc", borderRadius: 12 };
+const checkLine = { display: "block", marginTop: 12 };
 
 function Field({ label, value, setValue }) {
   return (
     <div>
       <label>{label}</label>
-      <input type="number" value={value} onChange={(e) => setValue(e.target.value)} style={input} />
+      <input
+        type="number"
+        value={value}
+        onChange={(e) => setValue(e.target.value)}
+        placeholder="0"
+        style={input}
+      />
     </div>
   );
 }
+
+function ProductVisual({ product }) {
+  if (product === "coro") {
+    return (
+      <div style={visualBox}>
+        <div style={coroSign}>
+          <div style={signPanel}>CORO</div>
+          <div style={stakeLeft}></div>
+          <div style={stakeRight}></div>
+        </div>
+        <p style={visualLabel}>Coroplast Yard Sign Selected</p>
+      </div>
+    );
+  }
+
+  if (product === "banner") {
+    return (
+      <div style={visualBox}>
+        <div style={bannerVisual}>BANNER</div>
+        <p style={visualLabel}>Vinyl Banner Selected</p>
+      </div>
+    );
+  }
+
+  return (
+    <div style={visualBox}>
+      <div style={acmVisual}>ACM</div>
+      <p style={visualLabel}>ACM / Maxmetal Selected</p>
+    </div>
+  );
+}
+
+const visualBox = {
+  marginTop: 25,
+  padding: 18,
+  borderRadius: 16,
+  background: "rgba(255,255,255,0.08)",
+  textAlign: "center",
+};
+
+const visualLabel = {
+  marginTop: 12,
+  fontSize: 14,
+  color: "#cbd5e1",
+};
+
+const coroSign = {
+  display: "inline-block",
+  position: "relative",
+  height: 120,
+  width: 180,
+};
+
+const signPanel = {
+  background: "white",
+  color: "#0f172a",
+  borderRadius: 8,
+  padding: "28px 10px",
+  fontSize: 30,
+  fontWeight: "bold",
+  border: "4px solid #38bdf8",
+};
+
+const stakeLeft = {
+  position: "absolute",
+  left: 55,
+  top: 80,
+  width: 5,
+  height: 55,
+  background: "#94a3b8",
+};
+
+const stakeRight = {
+  position: "absolute",
+  right: 55,
+  top: 80,
+  width: 5,
+  height: 55,
+  background: "#94a3b8",
+};
+
+const bannerVisual = {
+  display: "inline-block",
+  background: "white",
+  color: "#0f172a",
+  borderRadius: 8,
+  padding: "30px 45px",
+  fontSize: 28,
+  fontWeight: "bold",
+  borderTop: "8px solid #38bdf8",
+  borderBottom: "8px solid #38bdf8",
+};
+
+const acmVisual = {
+  display: "inline-block",
+  background: "linear-gradient(135deg, #e5e7eb, #94a3b8)",
+  color: "#0f172a",
+  borderRadius: 10,
+  padding: "35px 55px",
+  fontSize: 34,
+  fontWeight: "bold",
+  border: "4px solid white",
+  boxShadow: "inset 0 0 20px rgba(0,0,0,.2)",
+};
