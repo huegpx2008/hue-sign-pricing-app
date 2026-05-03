@@ -308,6 +308,7 @@ export default function Page() {
       const perimeterFt = (w * 2 + h * 2) / 12;
       const materialCost = totalSqFt * b.cost;
       let basePrice = totalSqFt * b.retail;
+      const shipping = totalSqFt >= 1000 ? 199 : 10;
 
       if (polePocket) basePrice += perimeterFt * q + 10;
       if (rope) basePrice += perimeterFt * q;
@@ -320,12 +321,12 @@ export default function Page() {
         label: "Banner",
         retail,
         each: retail / q,
-        cost: materialCost,
-        profit: retail - materialCost,
-        margin: retail ? ((retail - materialCost) / retail) * 100 : 0,
+        cost: materialCost + shipping,
+        profit: retail - (materialCost + shipping),
+        margin: retail ? ((retail - (materialCost + shipping)) / retail) * 100 : 0,
         totalSqFt,
         materialCost,
-        shipping: 0,
+        shipping,
         basePrice,
       };
     }
@@ -336,7 +337,7 @@ export default function Page() {
       const materialCost = costEach * q;
       const sheetsUsed = (sqInEach * q) / 4608;
       const sheetsRounded = Math.ceil(sheetsUsed);
-      const shipping = shippingBySize(w, h, sheetsRounded);
+      const shipping = 10;
       const cost = materialCost + shipping;
 
       let costMarginPrice = cost / (1 - m);
