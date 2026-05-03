@@ -344,7 +344,7 @@ export default function Page() {
       const materialCost = costEach * q;
       const sheetsUsed = (sqInEach * q) / 4608;
       const sheetsRounded = Math.ceil(sheetsUsed);
-      const shipping = shippingBySize(w, h, sheetsRounded);
+      const shipping = shippingBySize(w, h, Math.max(sheetsRounded, q));
       const cost = materialCost + shipping;
 
       let costMarginPrice = cost / (1 - m);
