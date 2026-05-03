@@ -76,9 +76,9 @@ function getTierPrice(qty, type) {
   return price;
 }
 
-function getCoroSheetCost(qty, type) {
-  if (qty <= 9) return coroSheetCost[type][0];
-  if (qty <= 50) return coroSheetCost[type][1];
+function getCoroSheetCost(sheetCount, type) {
+  if (sheetCount <= 9) return coroSheetCost[type][0];
+  if (sheetCount <= 50) return coroSheetCost[type][1];
   return coroSheetCost[type][2];
 }
 
@@ -117,6 +117,49 @@ function shippingBySize(w, h, sheets) {
   }
 
   return 199;
+}
+
+function sheetLayoutCount(w, h, qty, allowRotate = true) {
+  const sheetW = 48;
+  const sheetH = 96;
+
+  const normalAcross = Math.max(Math.floor(sheetW / w), 0);
+  const normalDown = Math.max(Math.floor(sheetH / h), 0);
+  const normalPerSheet = Math.max(normalAcross * normalDown, 1);
+
+  const rotatedAcross = Math.max(Math.floor(sheetW / h), 0);
+  const rotatedDown = Math.max(Math.floor(sheetH / w), 0);
+  const rotatedPerSheet = Math.max(rotatedAcross * rotatedDown, 1);
+
+  const useRotated = allowRotate && rotatedPerSheet > normalPerSheet;
+  const piecesPerSheet = useRotated ? rotatedPerSheet : normalPerSheet;
+
+  return {
+    piecesPerSheet,
+    sheetsUsed: qty / piecesPerSheet,
+    sheetsRounded: Math.ceil(qty / piecesPerSheet),
+    rotated: useRotated,
+    across: useRotated ? rotatedAcross : normalAcross,
+    down: useRotated ? rotatedDown : normalDown,
+  };
+}
+
+function calculateLayout(pieceW, pieceH, qty, rollWidth) {
+  const piecesAcross = Math.max(Math.floor(rollWidth / pieceW), 1);
+  const rows = Math.ceil(qty / piecesAcross);
+  const rawHeight = rows * pieceH;
+  const roundedHeight = Math.ceil(rawHeight / 12) * 12;
+  const totalSqFt = (rollWidth * roundedHeight) / 144;
+
+  return {
+    piecesAcross,
+    rows,
+    rawHeight,
+    roundedHeight,
+    totalSqFt,
+    pieceW,
+    pieceH,
+  };
 }
 
 function getVinylBillableSqFt(w, h, qty, gangVinyl, vinylContour, contourPadding, gangWastePercent) {
@@ -189,6 +232,7 @@ export default function Page() {
   const [delivery, setDelivery] = useState("");
 
   const [coroDouble, setCoroDouble] = useState(false);
+  const [coroFlute, setCoroFlute] = useState("vertical");
   const [stakes, setStakes] = useState(false);
   const [heavyStakes, setHeavyStakes] = useState(false);
   const [grommets, setGrommets] = useState(false);
@@ -219,7 +263,10 @@ export default function Page() {
     setProduct(prod);
     setWidth(w);
     setHeight(h);
-    if (prod === "coro") setCoroDouble(double);
+    if (prod === "coro") {
+      setCoroDouble(double);
+      setCoroFlute("vertical");
+    }
   }
 
   function isPresetActive(prod, w, h, double = false) {
@@ -341,10 +388,11 @@ export default function Page() {
     if (product === "acm") {
       const a = acmOptions[acmType];
       const costEach = Math.max(sqInEach * a.costPerSqIn, a.minCost);
+      const layout = sheetLayoutCount(w, h, q, true);
+      const sheetsUsed = layout.sheetsUsed;
+      const sheetsRounded = layout.sheetsRounded;
       const materialCost = costEach * q;
-      const sheetsUsed = (sqInEach * q) / 4608;
-      const sheetsRounded = Math.ceil(sheetsUsed);
-      const shipping = shippingBySize(w, h, Math.max(sheetsRounded, q));
+      const shipping = shippingBySize(w, h, sheetsRounded);
       const cost = materialCost + shipping;
 
       let costMarginPrice = cost / (1 - m);
@@ -375,6 +423,8 @@ export default function Page() {
         shipping,
         sheetsUsed,
         sheetsRounded,
+        piecesPerSheet: layout.piecesPerSheet,
+        sheetLayout: `${layout.across} across x ${layout.down} down${layout.rotated ? " (rotated)" : ""}`,
         costMarginPrice,
         shopPrice,
         basePrice,
@@ -393,10 +443,12 @@ export default function Page() {
     if (coroContour) tierPrice *= 1.1;
     if (coroRush) tierPrice *= 2;
 
-    const sheetsUsed = (sqInEach * q) / 4608;
-    const sheetsRounded = Math.ceil(sheetsUsed);
-    const materialCost = getCoroSheetCost(q, type) * sheetsRounded;
-    const shipping = shippingBySize(w, h, Math.max(sheetsRounded, q));
+    const allowRotate = coroFlute === "best";
+    const layout = sheetLayoutCount(w, h, q, allowRotate);
+    const sheetsUsed = layout.sheetsUsed;
+    const sheetsRounded = layout.sheetsRounded;
+    const materialCost = getCoroSheetCost(sheetsRounded, type) * sheetsRounded;
+    const shipping = shippingBySize(w, h, sheetsRounded);
     const cost = materialCost + shipping;
 
     const costMarginPrice = cost / (1 - m);
@@ -415,6 +467,8 @@ export default function Page() {
       shipping,
       sheetsUsed,
       sheetsRounded,
+      piecesPerSheet: layout.piecesPerSheet,
+      sheetLayout: `${layout.across} across x ${layout.down} down${layout.rotated ? " (rotated)" : ""}`,
       tierPrice,
       costMarginPrice,
       basePrice,
@@ -432,6 +486,7 @@ export default function Page() {
     setupFee,
     delivery,
     coroDouble,
+    coroFlute,
     stakes,
     heavyStakes,
     grommets,
@@ -481,6 +536,7 @@ export default function Page() {
       product === "vinyl" && vinylContour && gangVinyl
         ? `Gang Waste: ${num(gangWastePercent, 0)}%`
         : null,
+      product === "coro" ? `Flute Direction: ${coroFlute}` : null,
       product === "coro" && stakes ? "Standard Stakes" : null,
       product === "coro" && heavyStakes ? "Heavy Duty Stakes" : null,
       product === "coro" && grommets ? "Grommets" : null,
@@ -673,6 +729,13 @@ export default function Page() {
 
           {product === "coro" && (
             <Box title="Coro Options">
+              <label>Flute Direction</label>
+              <select style={input} value={coroFlute} onChange={(e) => setCoroFlute(e.target.value)}>
+                <option value="vertical">Vertical Flutes / Stakes</option>
+                <option value="horizontal">Horizontal Flutes</option>
+                <option value="best">Best Fit / Does Not Matter</option>
+              </select>
+
               <Check label="Double Sided" value={coroDouble} setValue={setCoroDouble} />
               <Check label="Standard Stakes" value={stakes} setValue={setStakes} />
               <Check label="Heavy Duty Stakes" value={heavyStakes} setValue={setHeavyStakes} />
@@ -754,6 +817,8 @@ export default function Page() {
           {calc.shopPrice !== undefined && <p>Shop Sq Ft Price: {money(calc.shopPrice)}</p>}
           {calc.sheetsUsed !== undefined && <p>Sheets Used: {calc.sheetsUsed.toFixed(2)}</p>}
           {calc.sheetsRounded !== undefined && <p>Sheets Rounded: {calc.sheetsRounded}</p>}
+          {calc.piecesPerSheet !== undefined && <p>Pieces Per Sheet: {calc.piecesPerSheet}</p>}
+          {calc.sheetLayout !== undefined && <p>Sheet Layout: {calc.sheetLayout}</p>}
           <p>Material Cost: {money(calc.materialCost)}</p>
           <p>Shipping: {money(calc.shipping)}</p>
           <p>Direct Cost: {money(calc.cost)}</p>
