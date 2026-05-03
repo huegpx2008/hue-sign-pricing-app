@@ -86,30 +86,37 @@ function shippingBySize(w, h, sheets) {
   const max = Math.max(w, h);
   const min = Math.min(w, h);
 
-  if (max <= 36 && min <= 24) return sheets >= 58 ? 199 : 10;
-  if (max <= 48 && min <= 32) return sheets >= 22 ? 199 : 15;
-  if (max <= 48 && min <= 36) return sheets >= 22 ? 199 : 35;
-  if (max <= 48 && min <= 48) return sheets >= 10 ? 199 : sheets >= 6 ? 75 : 50;
-  if ((max <= 72 && min <= 39) || (max <= 96 && min <= 24)) return sheets >= 10 ? 199 : 75;
+  function perGroup(rate, groupSize = 3) {
+    return Math.ceil(sheets / groupSize) * rate;
+  }
+
+  if (max <= 36 && min <= 24) {
+    return sheets >= 58 ? 199 : perGroup(10, 3);
+  }
+
+  if (max <= 48 && min <= 32) {
+    return sheets >= 22 ? 199 : perGroup(15, 3);
+  }
+
+  if (max <= 48 && min <= 36) {
+    return sheets >= 22 ? 199 : perGroup(35, 3);
+  }
+
+  if (max <= 48 && min <= 48) {
+    if (sheets >= 10) return 199;
+    if (sheets >= 6) return 75;
+    return 50;
+  }
+
+  if ((max <= 72 && min <= 39) || (max <= 96 && min <= 24)) {
+    return sheets >= 10 ? 199 : 75;
+  }
+
+  if (max <= 96 && min <= 48) {
+    return 199;
+  }
+
   return 199;
-}
-
-function calculateLayout(pieceW, pieceH, qty, rollWidth) {
-  const piecesAcross = Math.max(Math.floor(rollWidth / pieceW), 1);
-  const rows = Math.ceil(qty / piecesAcross);
-  const rawHeight = rows * pieceH;
-  const roundedHeight = Math.ceil(rawHeight / 12) * 12;
-  const totalSqFt = (rollWidth * roundedHeight) / 144;
-
-  return {
-    piecesAcross,
-    rows,
-    rawHeight,
-    roundedHeight,
-    totalSqFt,
-    pieceW,
-    pieceH,
-  };
 }
 
 function getVinylBillableSqFt(w, h, qty, gangVinyl, vinylContour, contourPadding, gangWastePercent) {
