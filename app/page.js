@@ -396,7 +396,7 @@ export default function Page() {
     const sheetsUsed = (sqInEach * q) / 4608;
     const sheetsRounded = Math.ceil(sheetsUsed);
     const materialCost = getCoroSheetCost(q, type) * sheetsRounded;
-    const shipping = shippingBySize(w, h, sheetsRounded);
+    const shipping = shippingBySize(w, h, Math.max(sheetsRounded, q));
     const cost = materialCost + shipping;
 
     const costMarginPrice = cost / (1 - m);
