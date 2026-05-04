@@ -641,7 +641,7 @@ export default function Page() {
         }
       `}</style>
 
-      <h1>Hue Graphics Pricing App</h1>
+      <h1>Hue Pricing Tool (Test Version)</h1>
       <p>Live quote calculator for coro, banners, ACM, and vinyl.</p>
 
       <div className="layout">
