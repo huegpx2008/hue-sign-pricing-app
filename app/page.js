@@ -308,10 +308,11 @@ export default function Page() {
 
       const materialCost = vinylSqFt.totalBillable * v.cost;
       const shipping = vinylSqFt.totalBillable >= 1000 ? 199 : 10;
-      const cost = materialCost + shipping;
+      const directCost = materialCost + shipping;
+      const marginCostBase = materialCost;
 
       let shopPrice = vinylSqFt.totalBillable * v.retail;
-      let costMarginPrice = materialCost / (1 - m);
+      let costMarginPrice = marginCostBase / (1 - m);
 
       if (vinylContour) {
         shopPrice *= 1.1;
@@ -332,9 +333,9 @@ export default function Page() {
         label: "Printed Vinyl",
         retail,
         each: retail / q,
-        cost,
-        profit: retail - cost,
-        margin: retail ? ((retail - cost) / retail) * 100 : 0,
+        cost: directCost,
+        profit: retail - directCost,
+        margin: retail ? ((retail - directCost) / retail) * 100 : 0,
         totalSqFt: vinylSqFt.totalBillable,
         actualTotalSqFt: vinylSqFt.actualEach * q,
         actualSqFtEach: vinylSqFt.actualEach,
@@ -395,9 +396,10 @@ export default function Page() {
       const sheetsRounded = layout.sheetsRounded;
       const materialCost = costEach * q;
       const shipping = shippingBySize(w, h, sheetsRounded);
-      const cost = materialCost + shipping;
+      const directCost = materialCost + shipping;
+      const marginCostBase = materialCost;
 
-      let costMarginPrice = materialCost / (1 - m);
+      let costMarginPrice = marginCostBase / (1 - m);
       let shopPrice = totalSqFt * num(acmSqFtPrice, 18);
 
       if (acmContour) {
@@ -419,9 +421,9 @@ export default function Page() {
         label: "ACM / Maxmetal",
         retail,
         each: retail / q,
-        cost,
-        profit: retail - cost,
-        margin: retail ? ((retail - cost) / retail) * 100 : 0,
+        cost: directCost,
+        profit: retail - directCost,
+        margin: retail ? ((retail - directCost) / retail) * 100 : 0,
         totalSqFt,
         materialCost,
         shipping,
@@ -454,9 +456,10 @@ export default function Page() {
     const shipping = shippingBySize(w, h, sheetsRounded);
     const stakeRetail = stakes ? q * 2.0 : 0;
     const stakeCost = stakes ? q * 1.25 : 0;
-    const cost = materialCost + shipping + stakeCost;
+    const directCost = materialCost + shipping + stakeCost;
+    const marginCostBase = materialCost;
 
-    const costMarginPrice = materialCost / (1 - m) + shipping;
+    const costMarginPrice = marginCostBase / (1 - m) + shipping;
     const basePrice = Math.max(tierPrice, costMarginPrice);
     const retail = (basePrice + fees) * mult + stakeRetail;
 
@@ -464,9 +467,9 @@ export default function Page() {
       label: "Coroplast",
       retail,
       each: retail / q,
-      cost,
-      profit: retail - cost,
-      margin: retail ? ((retail - cost) / retail) * 100 : 0,
+      cost: directCost,
+      profit: retail - directCost,
+      margin: retail ? ((retail - directCost) / retail) * 100 : 0,
       totalSqFt,
       materialCost,
       shipping,
