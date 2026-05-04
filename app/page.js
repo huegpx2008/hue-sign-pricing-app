@@ -961,6 +961,15 @@ function ProductVisual({ product }) {
     );
   }
 
+  if (product === "poster") {
+    return (
+      <div style={visualBox}>
+        <div style={posterVisual}>POSTER</div>
+        <p style={visualLabel}>Poster Paper Selected</p>
+      </div>
+    );
+  }
+
   return (
     <div style={visualBox}>
       <div style={acmVisual}>ACM</div>
@@ -1086,6 +1095,19 @@ const vinylVisual = {
   fontSize: 28,
   fontWeight: "bold",
   border: "4px dashed #38bdf8",
+};
+
+
+const posterVisual = {
+  display: "inline-block",
+  background: "linear-gradient(135deg, #f8fafc, #cbd5e1)",
+  color: "#0b1f4d",
+  borderRadius: 10,
+  padding: "28px 36px",
+  fontSize: 30,
+  fontWeight: "bold",
+  border: "4px solid rgba(255,255,255,0.9)",
+  boxShadow: "inset 0 0 16px rgba(0,0,0,.12)",
 };
 
 const acmVisual = {
