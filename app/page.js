@@ -435,7 +435,8 @@ export default function Page() {
       const perimeterFt = (w * 2 + h * 2) / 12;
       const supplierRate = totalSqFt >= 5000 ? 0.99 : totalSqFt >= 2500 ? 1.09 : totalSqFt >= 1000 ? 1.49 : 2.44;
       const materialCost = totalSqFt * supplierRate;
-      const shipping = w >= 123 || h >= 123 || totalSqFt >= 1000 ? 199 : 10;
+      const oversizedFreight = w >= 123 && h >= 123;
+      const shipping = totalSqFt >= 1000 || oversizedFreight ? 199 : 10;
       const polePocketCost = meshPolePocket ? perimeterFt * q + 10 : 0;
       const ropeCost = meshRope ? perimeterFt * q : 0;
       const webbingCost = meshWebbing ? perimeterFt * q : 0;
