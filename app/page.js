@@ -17,6 +17,7 @@ const num = (v, fallback = 0) => {
 const products = {
   coro: "Coroplast Yard Signs",
   banner: "Vinyl Banners",
+  meshBanner: "Mesh Banners",
   acm: "ACM / Maxmetal",
   vinyl: "Printed Vinyl",
   poster: "Poster Paper",
@@ -246,6 +247,12 @@ export default function Page() {
   const [rope, setRope] = useState(false);
   const [windSlits, setWindSlits] = useState(false);
   const [bannerRush, setBannerRush] = useState(false);
+  const [meshPolePocket, setMeshPolePocket] = useState(false);
+  const [meshGrommets, setMeshGrommets] = useState(false);
+  const [meshWelding, setMeshWelding] = useState(false);
+  const [meshRope, setMeshRope] = useState(false);
+  const [meshWebbing, setMeshWebbing] = useState(false);
+  const [meshRush, setMeshRush] = useState(false);
 
   const [acmType, setAcmType] = useState("3-single");
   const [acmSqFtPrice, setAcmSqFtPrice] = useState(18);
@@ -424,6 +431,46 @@ export default function Page() {
       };
     }
 
+    if (product === "meshBanner") {
+      const perimeterFt = (w * 2 + h * 2) / 12;
+      const supplierRate = totalSqFt >= 5000 ? 0.99 : totalSqFt >= 2500 ? 1.09 : totalSqFt >= 1000 ? 1.49 : 2.44;
+      const materialCost = totalSqFt * supplierRate;
+      const oversizedFreight = w >= 123 && h >= 123;
+      const shipping = totalSqFt >= 1000 || oversizedFreight ? 199 : 10;
+      const polePocketCost = meshPolePocket ? perimeterFt * q + 10 : 0;
+      const ropeCost = meshRope ? perimeterFt * q : 0;
+      const webbingCost = meshWebbing ? perimeterFt * q : 0;
+      const optionsCost = polePocketCost + ropeCost + webbingCost;
+      const directCost = materialCost + shipping + optionsCost;
+      let costMarginPrice = (materialCost + optionsCost) / (1 - m);
+
+      if (meshRush) costMarginPrice *= 2;
+
+      costMarginPrice += shipping;
+
+      const basePrice = costMarginPrice;
+      const retail = (basePrice + fees) * mult;
+
+      return {
+        label: "Mesh Banner",
+        retail,
+        each: retail / q,
+        cost: directCost,
+        profit: retail - directCost,
+        margin: retail ? ((retail - directCost) / retail) * 100 : 0,
+        totalSqFt,
+        materialCost,
+        shipping,
+        supplierRate,
+        polePocketCost,
+        ropeCost,
+        webbingCost,
+        optionsCost,
+        costMarginPrice,
+        basePrice,
+      };
+    }
+
     if (product === "acm") {
       const a = acmOptions[acmType];
       const costEach = Math.max(sqInEach * a.costPerSqIn, a.minCost);
@@ -544,6 +591,12 @@ export default function Page() {
     rope,
     windSlits,
     bannerRush,
+    meshPolePocket,
+    meshGrommets,
+    meshWelding,
+    meshRope,
+    meshWebbing,
+    meshRush,
     acmType,
     acmSqFtPrice,
     acmContour,
@@ -568,6 +621,8 @@ export default function Page() {
         ? `${vinylOptions[vinylType].name} / ${vinylLaminate}`
         : product === "banner"
         ? bannerOptions[bannerType].name
+        : product === "meshBanner"
+        ? "Mesh Banner Material"
         : product === "acm"
         ? acmOptions[acmType].name
         : product === "poster"
@@ -596,6 +651,12 @@ export default function Page() {
       product === "banner" && rope ? "Rope" : null,
       product === "banner" && windSlits ? "Wind Slits" : null,
       product === "banner" && bannerRush ? "Rush Order" : null,
+      product === "meshBanner" && meshPolePocket ? "Pole Pocket" : null,
+      product === "meshBanner" && meshGrommets ? "Grommets" : null,
+      product === "meshBanner" && meshWelding ? "Welding" : null,
+      product === "meshBanner" && meshRope ? "Rope" : null,
+      product === "meshBanner" && meshWebbing ? "Webbing" : null,
+      product === "meshBanner" && meshRush ? "Rush Order" : null,
       product === "acm" && acmContour ? "Contour Cut" : null,
       product === "acm" && roundedCorners ? "Rounded Corners" : null,
       product === "poster" && posterRush ? "Rush Order" : null,
@@ -727,6 +788,16 @@ export default function Page() {
             <button className={presetClass("acm", 48, 96)} onClick={() => preset("acm", 48, 96)}>48x96</button>
           </div>
 
+          <h3>Mesh Banners</h3>
+          <div className="buttonGrid">
+            <button className={presetClass("meshBanner", 36, 24)} onClick={() => preset("meshBanner", 36, 24)}>24x36</button>
+            <button className={presetClass("meshBanner", 60, 36)} onClick={() => preset("meshBanner", 60, 36)}>36x60</button>
+            <button className={presetClass("meshBanner", 72, 36)} onClick={() => preset("meshBanner", 72, 36)}>36x72</button>
+            <button className={presetClass("meshBanner", 96, 36)} onClick={() => preset("meshBanner", 96, 36)}>36x96</button>
+            <button className={presetClass("meshBanner", 96, 48)} onClick={() => preset("meshBanner", 96, 48)}>48x96</button>
+            <button className={presetClass("meshBanner", 120, 60)} onClick={() => preset("meshBanner", 120, 60)}>60x120</button>
+          </div>
+
           <h3>Printed Vinyl</h3>
           <div className="buttonGrid">
             <button className={presetClass("vinyl", 12, 12)} onClick={() => preset("vinyl", 12, 12)}>12x12</button>
@@ -832,6 +903,17 @@ export default function Page() {
               <Field label="Shop $ Per Sq Ft" value={acmSqFtPrice} setValue={setAcmSqFtPrice} />
               <Check label="Contour Cut (+10%)" value={acmContour} setValue={setAcmContour} />
               <Check label="Rounded Corners (+$5)" value={roundedCorners} setValue={setRoundedCorners} />
+            </Box>
+          )}
+
+          {product === "meshBanner" && (
+            <Box title="Mesh Banner Options">
+              <Check label="Pole Pocket (+$1/linear ft + $10 setup)" value={meshPolePocket} setValue={setMeshPolePocket} />
+              <Check label="Grommets (No additional cost)" value={meshGrommets} setValue={setMeshGrommets} />
+              <Check label="Welding (No additional cost)" value={meshWelding} setValue={setMeshWelding} />
+              <Check label="Rope (+$1/linear ft)" value={meshRope} setValue={setMeshRope} />
+              <Check label="Webbing (+$1/linear ft)" value={meshWebbing} setValue={setMeshWebbing} />
+              <Check label="Rush Order (2x)" value={meshRush} setValue={setMeshRush} />
             </Box>
           )}
 
@@ -970,12 +1052,25 @@ function ProductVisual({ product }) {
     );
   }
 
-  return (
-    <div style={visualBox}>
-      <div style={acmVisual}>ACM</div>
-      <p style={visualLabel}>ACM / Maxmetal Selected</p>
-    </div>
-  );
+  if (product === "meshBanner") {
+    return (
+      <div style={visualBox}>
+        <div style={meshBannerVisual}>MESH</div>
+        <p style={visualLabel}>Mesh Banner Selected</p>
+      </div>
+    );
+  }
+
+  if (product === "acm") {
+    return (
+      <div style={visualBox}>
+        <div style={acmVisual}>ACM</div>
+        <p style={visualLabel}>ACM / Maxmetal Selected</p>
+      </div>
+    );
+  }
+
+  return null;
 }
 
 function VinylLayoutPreview({ calc }) {
@@ -1120,4 +1215,15 @@ const acmVisual = {
   fontWeight: "bold",
   border: "4px solid white",
   boxShadow: "inset 0 0 20px rgba(0,0,0,.2)",
+};
+
+const meshBannerVisual = {
+  display: "inline-block",
+  background: "repeating-linear-gradient(45deg, #dbeafe, #dbeafe 8px, #bfdbfe 8px, #bfdbfe 16px)",
+  color: "#0f172a",
+  borderRadius: 8,
+  padding: "30px 45px",
+  fontSize: 28,
+  fontWeight: "bold",
+  border: "4px solid #38bdf8",
 };
