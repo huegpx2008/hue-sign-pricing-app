@@ -19,6 +19,7 @@ const products = {
   banner: "Vinyl Banners",
   acm: "ACM / Maxmetal",
   vinyl: "Printed Vinyl",
+  poster: "Poster Paper",
 };
 
 const bannerOptions = {
@@ -259,6 +260,8 @@ export default function Page() {
   const [contourPadding, setContourPadding] = useState(0.5);
   const [gangWastePercent, setGangWastePercent] = useState(15);
 
+  const [posterRush, setPosterRush] = useState(false);
+
   function preset(prod, w, h, double = false) {
     setProduct(prod);
     setWidth(w);
@@ -355,6 +358,39 @@ export default function Page() {
         materialCost,
         shipping,
         shopPrice,
+        costMarginPrice,
+        basePrice,
+      };
+    }
+
+
+    if (product === "poster") {
+      const rate = totalSqFt >= 5000 ? 1 : totalSqFt >= 1000 ? 1.5 : 2;
+      const materialCost = totalSqFt * rate;
+      const shipping = w >= 123 || h >= 123 || totalSqFt >= 1000 ? 199 : 10;
+      const directCost = materialCost + shipping;
+      const marginCostBase = materialCost;
+
+      let costMarginPrice = marginCostBase / (1 - m);
+
+      if (posterRush) costMarginPrice *= 2;
+
+      costMarginPrice += shipping;
+
+      const basePrice = costMarginPrice;
+      const retail = (basePrice + fees) * mult;
+
+      return {
+        label: "Poster Paper",
+        retail,
+        each: retail / q,
+        cost: directCost,
+        profit: retail - directCost,
+        margin: retail ? ((retail - directCost) / retail) * 100 : 0,
+        totalSqFt,
+        materialCost,
+        shipping,
+        supplierRate: rate,
         costMarginPrice,
         basePrice,
       };
@@ -519,6 +555,7 @@ export default function Page() {
     gangVinyl,
     contourPadding,
     gangWastePercent,
+    posterRush,
   ]);
 
   const selectedDetails = {
@@ -533,6 +570,8 @@ export default function Page() {
         ? bannerOptions[bannerType].name
         : product === "acm"
         ? acmOptions[acmType].name
+        : product === "poster"
+        ? "Poster Paper"
         : coroDouble
         ? "4mm Double-Sided Coroplast"
         : "4mm Single-Sided Coroplast",
@@ -559,6 +598,7 @@ export default function Page() {
       product === "banner" && bannerRush ? "Rush Order" : null,
       product === "acm" && acmContour ? "Contour Cut" : null,
       product === "acm" && roundedCorners ? "Rounded Corners" : null,
+      product === "poster" && posterRush ? "Rush Order" : null,
       useDesignFee ? `Design Fee: ${money(num(designFee))}` : null,
       useSetupFee ? `Setup Fee: ${money(num(setupFee))}` : null,
       num(delivery) > 0 ? `Delivery/Install: ${money(num(delivery))}` : null,
@@ -652,7 +692,7 @@ export default function Page() {
       `}</style>
 
       <h1>Hue Pricing Tool (Test Version)</h1>
-      <p>Live quote calculator for coro, banners, ACM, and vinyl.</p>
+      <p>Live quote calculator for coro, banners, ACM, vinyl, and poster paper.</p>
 
       <div className="layout">
         <section className="card">
@@ -695,6 +735,16 @@ export default function Page() {
             <button className={presetClass("vinyl", 36, 24)} onClick={() => preset("vinyl", 36, 24)}>24x36</button>
             <button className={presetClass("vinyl", 48, 24)} onClick={() => preset("vinyl", 48, 24)}>24x48</button>
             <button className={presetClass("vinyl", 96, 48)} onClick={() => preset("vinyl", 96, 48)}>48x96</button>
+          </div>
+
+          <h3>Poster Paper</h3>
+          <div className="buttonGrid">
+            <button className={presetClass("poster", 17, 11)} onClick={() => preset("poster", 17, 11)}>11x17</button>
+            <button className={presetClass("poster", 24, 18)} onClick={() => preset("poster", 24, 18)}>18x24</button>
+            <button className={presetClass("poster", 36, 24)} onClick={() => preset("poster", 36, 24)}>24x36</button>
+            <button className={presetClass("poster", 48, 36)} onClick={() => preset("poster", 48, 36)}>36x48</button>
+            <button className={presetClass("poster", 72, 48)} onClick={() => preset("poster", 72, 48)}>48x72</button>
+            <button className={presetClass("poster", 96, 48)} onClick={() => preset("poster", 96, 48)}>48x96</button>
           </div>
 
           <h2>Quote Details</h2>
@@ -782,6 +832,12 @@ export default function Page() {
               <Field label="Shop $ Per Sq Ft" value={acmSqFtPrice} setValue={setAcmSqFtPrice} />
               <Check label="Contour Cut (+10%)" value={acmContour} setValue={setAcmContour} />
               <Check label="Rounded Corners (+$5)" value={roundedCorners} setValue={setRoundedCorners} />
+            </Box>
+          )}
+
+          {product === "poster" && (
+            <Box title="Poster Paper Options">
+              <Check label="Rush Order (2x)" value={posterRush} setValue={setPosterRush} />
             </Box>
           )}
 
@@ -901,6 +957,15 @@ function ProductVisual({ product }) {
       <div style={visualBox}>
         <div style={vinylVisual}>VINYL</div>
         <p style={visualLabel}>Printed Vinyl Selected</p>
+      </div>
+    );
+  }
+
+  if (product === "poster") {
+    return (
+      <div style={visualBox}>
+        <div style={posterVisual}>POSTER</div>
+        <p style={visualLabel}>Poster Paper Selected</p>
       </div>
     );
   }
@@ -1030,6 +1095,19 @@ const vinylVisual = {
   fontSize: 28,
   fontWeight: "bold",
   border: "4px dashed #38bdf8",
+};
+
+
+const posterVisual = {
+  display: "inline-block",
+  background: "linear-gradient(135deg, #f8fafc, #cbd5e1)",
+  color: "#0b1f4d",
+  borderRadius: 10,
+  padding: "28px 36px",
+  fontSize: 30,
+  fontWeight: "bold",
+  border: "4px solid rgba(255,255,255,0.9)",
+  boxShadow: "inset 0 0 16px rgba(0,0,0,.12)",
 };
 
 const acmVisual = {
