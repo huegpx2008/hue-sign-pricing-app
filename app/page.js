@@ -311,7 +311,7 @@ export default function Page() {
       const cost = materialCost + shipping;
 
       let shopPrice = vinylSqFt.totalBillable * v.retail;
-      let costMarginPrice = cost / (1 - m);
+      let costMarginPrice = materialCost / (1 - m);
 
       if (vinylContour) {
         shopPrice *= 1.1;
@@ -322,6 +322,8 @@ export default function Page() {
         shopPrice *= 2;
         costMarginPrice *= 2;
       }
+
+      costMarginPrice += shipping;
 
       const basePrice = Math.max(shopPrice, costMarginPrice);
       const retail = (basePrice + fees) * mult;
@@ -395,7 +397,7 @@ export default function Page() {
       const shipping = shippingBySize(w, h, sheetsRounded);
       const cost = materialCost + shipping;
 
-      let costMarginPrice = cost / (1 - m);
+      let costMarginPrice = materialCost / (1 - m);
       let shopPrice = totalSqFt * num(acmSqFtPrice, 18);
 
       if (acmContour) {
@@ -407,6 +409,8 @@ export default function Page() {
         costMarginPrice += 5;
         shopPrice += 5;
       }
+
+      costMarginPrice += shipping;
 
       const basePrice = Math.max(costMarginPrice, shopPrice);
       const retail = (basePrice + fees) * mult;
@@ -452,7 +456,7 @@ export default function Page() {
     const stakeCost = stakes ? q * 1.25 : 0;
     const cost = materialCost + shipping + stakeCost;
 
-    const costMarginPrice = (materialCost + shipping) / (1 - m);
+    const costMarginPrice = materialCost / (1 - m) + shipping;
     const basePrice = Math.max(tierPrice, costMarginPrice);
     const retail = (basePrice + fees) * mult + stakeRetail;
 
