@@ -436,7 +436,7 @@ export default function Page() {
     const tierEach = getTierPrice(q, type) * scale;
     let tierPrice = tierEach * q;
 
-    if (stakes) tierPrice += q * 1.25;
+    if (stakes) tierPrice += q * 2.0;
     if (heavyStakes) tierPrice += q * 2.25;
     if (grommets) tierPrice += q * 0.25 + 15;
     if (gloss) tierPrice += q * 4;
@@ -449,7 +449,8 @@ export default function Page() {
     const sheetsRounded = layout.sheetsRounded;
     const materialCost = getCoroSheetCost(sheetsRounded, type) * sheetsRounded;
     const shipping = shippingBySize(w, h, sheetsRounded);
-    const cost = materialCost + shipping;
+    const stakeCost = stakes ? q * 1.25 : 0;
+    const cost = materialCost + shipping + stakeCost;
 
     const costMarginPrice = cost / (1 - m);
     const basePrice = Math.max(tierPrice, costMarginPrice);
@@ -465,6 +466,7 @@ export default function Page() {
       totalSqFt,
       materialCost,
       shipping,
+      stakeCost,
       sheetsUsed,
       sheetsRounded,
       piecesPerSheet: layout.piecesPerSheet,
