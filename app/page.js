@@ -270,6 +270,7 @@ export default function Page() {
   const [posterRush, setPosterRush] = useState(false);
   const [theme, setTheme] = useState("light");
   const [showBreakdown, setShowBreakdown] = useState(false);
+  const [presetProduct, setPresetProduct] = useState("coro");
 
 
   useEffect(() => {
@@ -309,6 +310,37 @@ export default function Page() {
   function presetClass(prod, w, h, double = false) {
     return isPresetActive(prod, w, h, double) ? "presetBtn activePreset" : "presetBtn";
   }
+
+
+  const presetGroups = {
+    coro: [
+      { label: "18x24 Single", w: 24, h: 18, double: false },
+      { label: "18x24 Double", w: 24, h: 18, double: true },
+      { label: "12x18 Single", w: 18, h: 12, double: false },
+      { label: "12x18 Double", w: 18, h: 12, double: true },
+    ],
+    banner: [
+      { label: "24x36", w: 36, h: 24 }, { label: "36x60", w: 60, h: 36 }, { label: "36x72", w: 72, h: 36 },
+      { label: "36x96", w: 96, h: 36 }, { label: "48x96", w: 96, h: 48 },
+    ],
+    acm: [
+      { label: "18x24", w: 24, h: 18 }, { label: "24x36", w: 24, h: 36 }, { label: "24x48", w: 24, h: 48 },
+      { label: "32x48", w: 32, h: 48 }, { label: "36x48", w: 36, h: 48 }, { label: "48x48", w: 48, h: 48 },
+      { label: "24x96", w: 24, h: 96 }, { label: "48x96", w: 48, h: 96 },
+    ],
+    meshBanner: [
+      { label: "24x36", w: 36, h: 24 }, { label: "36x60", w: 60, h: 36 }, { label: "36x72", w: 72, h: 36 },
+      { label: "36x96", w: 96, h: 36 }, { label: "48x96", w: 96, h: 48 }, { label: "60x120", w: 120, h: 60 },
+    ],
+    vinyl: [
+      { label: "12x12", w: 12, h: 12 }, { label: "12x24", w: 24, h: 12 }, { label: "24x24", w: 24, h: 24 },
+      { label: "24x36", w: 36, h: 24 }, { label: "24x48", w: 48, h: 24 }, { label: "48x96", w: 96, h: 48 },
+    ],
+    poster: [
+      { label: "11x17", w: 17, h: 11 }, { label: "18x24", w: 24, h: 18 }, { label: "24x36", w: 36, h: 24 },
+      { label: "36x48", w: 48, h: 36 }, { label: "48x72", w: 72, h: 48 }, { label: "48x96", w: 96, h: 48 },
+    ],
+  };
 
   const calc = useMemo(() => {
     const q = Math.max(num(qty, 1), 1);
@@ -833,65 +865,24 @@ export default function Page() {
 
       <div className="layout">
         <section className="card">
-          <h2>Quick Presets</h2>
+          <h2>Custom Presets</h2>
+          <label>Preset Product</label>
+          <select style={input} value={presetProduct} onChange={(e) => setPresetProduct(e.target.value)}>
+            {Object.entries(products).map(([key, name]) => (
+              <option key={key} value={key}>{name}</option>
+            ))}
+          </select>
 
-          <h3>Coro Yard Signs</h3>
-          <div className="buttonGrid">
-            <button className={presetClass("coro", 24, 18, false)} onClick={() => preset("coro", 24, 18, false)}>18x24 Single</button>
-            <button className={presetClass("coro", 24, 18, true)} onClick={() => preset("coro", 24, 18, true)}>18x24 Double</button>
-            <button className={presetClass("coro", 18, 12, false)} onClick={() => preset("coro", 18, 12, false)}>12x18 Single</button>
-            <button className={presetClass("coro", 18, 12, true)} onClick={() => preset("coro", 18, 12, true)}>12x18 Double</button>
-          </div>
-
-          <h3>Banners</h3>
-          <div className="buttonGrid">
-            <button className={presetClass("banner", 36, 24)} onClick={() => preset("banner", 36, 24)}>24x36</button>
-            <button className={presetClass("banner", 60, 36)} onClick={() => preset("banner", 60, 36)}>36x60</button>
-            <button className={presetClass("banner", 72, 36)} onClick={() => preset("banner", 72, 36)}>36x72</button>
-            <button className={presetClass("banner", 96, 36)} onClick={() => preset("banner", 96, 36)}>36x96</button>
-            <button className={presetClass("banner", 96, 48)} onClick={() => preset("banner", 96, 48)}>48x96</button>
-          </div>
-
-          <h3>ACM / Maxmetal</h3>
-          <div className="buttonGrid">
-            <button className={presetClass("acm", 24, 18)} onClick={() => preset("acm", 24, 18)}>18x24</button>
-            <button className={presetClass("acm", 24, 36)} onClick={() => preset("acm", 24, 36)}>24x36</button>
-            <button className={presetClass("acm", 24, 48)} onClick={() => preset("acm", 24, 48)}>24x48</button>
-            <button className={presetClass("acm", 32, 48)} onClick={() => preset("acm", 32, 48)}>32x48</button>
-            <button className={presetClass("acm", 36, 48)} onClick={() => preset("acm", 36, 48)}>36x48</button>
-            <button className={presetClass("acm", 48, 48)} onClick={() => preset("acm", 48, 48)}>48x48</button>
-            <button className={presetClass("acm", 24, 96)} onClick={() => preset("acm", 24, 96)}>24x96</button>
-            <button className={presetClass("acm", 48, 96)} onClick={() => preset("acm", 48, 96)}>48x96</button>
-          </div>
-
-          <h3>Mesh Banners</h3>
-          <div className="buttonGrid">
-            <button className={presetClass("meshBanner", 36, 24)} onClick={() => preset("meshBanner", 36, 24)}>24x36</button>
-            <button className={presetClass("meshBanner", 60, 36)} onClick={() => preset("meshBanner", 60, 36)}>36x60</button>
-            <button className={presetClass("meshBanner", 72, 36)} onClick={() => preset("meshBanner", 72, 36)}>36x72</button>
-            <button className={presetClass("meshBanner", 96, 36)} onClick={() => preset("meshBanner", 96, 36)}>36x96</button>
-            <button className={presetClass("meshBanner", 96, 48)} onClick={() => preset("meshBanner", 96, 48)}>48x96</button>
-            <button className={presetClass("meshBanner", 120, 60)} onClick={() => preset("meshBanner", 120, 60)}>60x120</button>
-          </div>
-
-          <h3>Printed Vinyl</h3>
-          <div className="buttonGrid">
-            <button className={presetClass("vinyl", 12, 12)} onClick={() => preset("vinyl", 12, 12)}>12x12</button>
-            <button className={presetClass("vinyl", 24, 12)} onClick={() => preset("vinyl", 24, 12)}>12x24</button>
-            <button className={presetClass("vinyl", 24, 24)} onClick={() => preset("vinyl", 24, 24)}>24x24</button>
-            <button className={presetClass("vinyl", 36, 24)} onClick={() => preset("vinyl", 36, 24)}>24x36</button>
-            <button className={presetClass("vinyl", 48, 24)} onClick={() => preset("vinyl", 48, 24)}>24x48</button>
-            <button className={presetClass("vinyl", 96, 48)} onClick={() => preset("vinyl", 96, 48)}>48x96</button>
-          </div>
-
-          <h3>Poster Paper</h3>
-          <div className="buttonGrid">
-            <button className={presetClass("poster", 17, 11)} onClick={() => preset("poster", 17, 11)}>11x17</button>
-            <button className={presetClass("poster", 24, 18)} onClick={() => preset("poster", 24, 18)}>18x24</button>
-            <button className={presetClass("poster", 36, 24)} onClick={() => preset("poster", 36, 24)}>24x36</button>
-            <button className={presetClass("poster", 48, 36)} onClick={() => preset("poster", 48, 36)}>36x48</button>
-            <button className={presetClass("poster", 72, 48)} onClick={() => preset("poster", 72, 48)}>48x72</button>
-            <button className={presetClass("poster", 96, 48)} onClick={() => preset("poster", 96, 48)}>48x96</button>
+          <div className="buttonGrid" style={{ marginTop: 12 }}>
+            {presetGroups[presetProduct].map((p) => (
+              <button
+                key={`${presetProduct}-${p.label}`}
+                className={presetClass(presetProduct, p.w, p.h, p.double || false)}
+                onClick={() => preset(presetProduct, p.w, p.h, p.double || false)}
+              >
+                {p.label}
+              </button>
+            ))}
           </div>
 
           <h2>Quote Details</h2>
