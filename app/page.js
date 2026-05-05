@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 const money = (n) =>
   Number(n || 0).toLocaleString("en-US", {
@@ -268,6 +268,29 @@ export default function Page() {
   const [gangWastePercent, setGangWastePercent] = useState(15);
 
   const [posterRush, setPosterRush] = useState(false);
+  const [theme, setTheme] = useState("light");
+  const [showBreakdown, setShowBreakdown] = useState(false);
+
+
+  useEffect(() => {
+    const savedTheme = typeof window !== "undefined" ? localStorage.getItem("hue-theme") : null;
+    if (savedTheme === "dark") setTheme("dark");
+  }, []);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") localStorage.setItem("hue-theme", theme);
+  }, [theme]);
+
+  function resetAll() {
+    setProduct("coro"); setWidth(24); setHeight(18); setQty(10); setMargin(60); setMultiplier(1);
+    setUseDesignFee(false); setUseSetupFee(false); setDesignFee(""); setSetupFee(""); setDelivery("");
+    setCoroDouble(false); setCoroFlute("vertical"); setStakes(false); setHeavyStakes(false); setGrommets(false); setGloss(false); setCoroContour(false); setCoroRush(false);
+    setBannerType("13-single"); setPolePocket(false); setRope(false); setWindSlits(false); setBannerRush(false);
+    setMeshPolePocket(false); setMeshGrommets(false); setMeshWelding(false); setMeshRope(false); setMeshWebbing(false); setMeshRush(false);
+    setAcmType("3-single"); setAcmSqFtPrice(18); setAcmContour(false); setRoundedCorners(false);
+    setVinylType("gf-standard"); setVinylLaminate("Gloss Laminate"); setVinylContour(false); setVinylRush(false); setGangVinyl(false); setContourPadding(0.5); setGangWastePercent(15);
+    setPosterRush(false);
+  }
 
   function preset(prod, w, h, double = false) {
     setProduct(prod);
@@ -668,7 +691,7 @@ export default function Page() {
   };
 
   return (
-    <main style={{ fontFamily: "Arial", background: "#f1f5f9", minHeight: "100vh", padding: 20 }}>
+    <main className={`appRoot ${theme}`} style={{ fontFamily: "Inter, Arial", minHeight: "100vh", padding: 20 }}>
       <style>{`
         .layout {
           display: grid;
@@ -676,17 +699,26 @@ export default function Page() {
           gap: 20px;
         }
 
+        .themeToggle{display:flex;gap:10px;align-items:center;margin:8px 0 14px;}
+        .modeBtn{padding:8px 12px;border-radius:999px;border:1px solid #94a3b8;background:linear-gradient(180deg,#fff,#e2e8f0);cursor:pointer;box-shadow:0 3px 8px rgba(15,23,42,.12);}
+        .modeBtn.active{background:linear-gradient(180deg,#1d4ed8,#1e293b);color:#fff;border-color:#60a5fa;box-shadow:inset 0 2px 6px rgba(0,0,0,.35),0 0 0 2px rgba(96,165,250,.3);}
+        .appRoot.light{background:linear-gradient(160deg,#eff6ff,#f8fafc 45%,#fff);color:#0f172a;}
+        .appRoot.dark{background:linear-gradient(160deg,#0b1220,#111827 52%,#1f2937);color:#e2e8f0;}
         .summary {
-          background: #0f172a;
+          background: linear-gradient(160deg,#0f172a,#1e293b);
           color: white;
+          box-shadow:0 18px 35px rgba(2,6,23,.35);
           padding: 20px;
           border-radius: 16px;
+          box-shadow:0 10px 30px rgba(15,23,42,.09);
         }
 
+        .summary.sticky{position:sticky;top:16px;align-self:start;}
         .card {
-          background: white;
+          background: rgba(255,255,255,.92);
           padding: 20px;
           border-radius: 16px;
+          box-shadow:0 10px 30px rgba(15,23,42,.09);
         }
 
         .buttonGrid {
@@ -696,22 +728,30 @@ export default function Page() {
           margin-bottom: 20px;
         }
 
+        .presetBtn, button {
+          transition:all .18s ease;
+        }
         .presetBtn {
           padding: 8px 10px;
           border-radius: 8px;
           border: 1px solid #ccc;
-          background: white;
+          background: rgba(255,255,255,.92);
           font-size: 14px;
         }
 
+        .presetBtn:hover{transform:translateY(-1px); box-shadow:0 8px 16px rgba(30,64,175,.18);}
+        .presetBtn:active{transform:translateY(1px);}
         .activePreset {
-          background: #0f172a;
+          background: linear-gradient(160deg,#0f172a,#1e293b);
           color: white;
+          box-shadow:0 18px 35px rgba(2,6,23,.35);
           border-color: #38bdf8;
           box-shadow: 0 0 0 2px #38bdf8;
           font-weight: 700;
         }
 
+        .resetBtn{margin-top:14px;padding:10px 14px;border-radius:10px;border:1px solid #1e3a8a;background:linear-gradient(180deg,#2563eb,#1d4ed8);color:#fff;font-weight:700;cursor:pointer;}
+        .mobilePrice{display:none;}
         input, select {
           box-sizing: border-box;
         }
@@ -731,16 +771,26 @@ export default function Page() {
             flex-direction: column;
           }
 
-          .summary {
+          .themeToggle{display:flex;gap:10px;align-items:center;margin:8px 0 14px;}
+        .modeBtn{padding:8px 12px;border-radius:999px;border:1px solid #94a3b8;background:linear-gradient(180deg,#fff,#e2e8f0);cursor:pointer;box-shadow:0 3px 8px rgba(15,23,42,.12);}
+        .modeBtn.active{background:linear-gradient(180deg,#1d4ed8,#1e293b);color:#fff;border-color:#60a5fa;box-shadow:inset 0 2px 6px rgba(0,0,0,.35),0 0 0 2px rgba(96,165,250,.3);}
+        .appRoot.light{background:linear-gradient(160deg,#eff6ff,#f8fafc 45%,#fff);color:#0f172a;}
+        .appRoot.dark{background:linear-gradient(160deg,#0b1220,#111827 52%,#1f2937);color:#e2e8f0;}
+        .summary {
             order: -1;
           }
+          .summary.sticky{position:static;}
+          .mobilePrice{display:flex;position:fixed;left:10px;right:10px;bottom:10px;z-index:30;background:#0f172a;color:#fff;padding:10px 14px;border-radius:12px;justify-content:space-between;align-items:center;box-shadow:0 10px 20px rgba(0,0,0,.35);}
 
           .buttonGrid {
             display: grid;
             grid-template-columns: 1fr 1fr;
           }
 
-          .presetBtn {
+          .presetBtn, button {
+          transition:all .18s ease;
+        }
+        .presetBtn {
             width: 100%;
             font-size: 15px;
             padding: 10px;
@@ -753,6 +803,10 @@ export default function Page() {
       `}</style>
 
       <h1>Hue Pricing Tool (Test Version)</h1>
+      <div className="themeToggle">
+        <button className={`modeBtn ${theme === "light" ? "active" : ""}`} onClick={() => setTheme("light")}>Light Mode</button>
+        <button className={`modeBtn ${theme === "dark" ? "active" : ""}`} onClick={() => setTheme("dark")}>Dark Mode</button>
+      </div>
       <p>Live quote calculator for coro, banners, ACM, vinyl, and poster paper.</p>
 
       <div className="layout">
@@ -932,6 +986,8 @@ export default function Page() {
             <Field label="Price Multiplier" value={multiplier} setValue={setMultiplier} />
           </div>
 
+          <button className="resetBtn" onClick={resetAll}>Reset to Defaults</button>
+
           <Box title="Optional Fees">
             <Check label="Add Design Fee" value={useDesignFee} setValue={setUseDesignFee} />
             {useDesignFee && <Field label="Design Fee" value={designFee} setValue={setDesignFee} />}
@@ -940,7 +996,7 @@ export default function Page() {
           </Box>
         </section>
 
-        <aside className="summary">
+        <aside className="summary sticky">
           <h2>Suggested Retail</h2>
           <div style={{ fontSize: 42, fontWeight: "bold" }}>{money(calc.retail)}</div>
           <p>Each: <strong>{money(calc.each)}</strong></p>
@@ -949,24 +1005,26 @@ export default function Page() {
           <p>Product: {calc.label}</p>
           <p>Total Sq Ft: {calc.totalSqFt?.toFixed(2)}</p>
 
-          {calc.actualTotalSqFt !== undefined && <p>Actual Sq Ft: {calc.actualTotalSqFt.toFixed(2)}</p>}
-          {calc.effectiveSqFtEach !== undefined && <p>Effective Sq Ft Each: {calc.effectiveSqFtEach.toFixed(2)}</p>}
-          {calc.billableSqFtEach !== undefined && <p>Billable Sq Ft Each: {calc.billableSqFtEach.toFixed(2)}</p>}
-          {calc.layoutWidth !== undefined && calc.layoutHeight !== undefined && (
-            <p>Layout Size: {calc.layoutWidth}" x {calc.layoutHeight}"</p>
+          <button className="modeBtn" style={{marginBottom:10}} onClick={() => setShowBreakdown((v) => !v)}>{showBreakdown ? "Hide" : "Show"} Detailed Breakdown</button>
+
+          {showBreakdown && calc.actualTotalSqFt !== undefined && <p>Actual Sq Ft: {calc.actualTotalSqFt.toFixed(2)}</p>}
+          {showBreakdown && calc.effectiveSqFtEach !== undefined && <p>Effective Sq Ft Each: {showBreakdown && calc.effectiveSqFtEach.toFixed(2)}</p>}
+          {showBreakdown && calc.billableSqFtEach !== undefined && <p>Billable Sq Ft Each: {showBreakdown && calc.billableSqFtEach.toFixed(2)}</p>}
+          {showBreakdown && calc.layoutWidth !== undefined && calc.layoutHeight !== undefined && (
+            <p>Layout Size: {showBreakdown && calc.layoutWidth}" x {calc.layoutHeight}"</p>
           )}
-          {calc.rawBillableSqFt !== undefined && <p>Raw Gang Sq Ft: {calc.rawBillableSqFt.toFixed(2)}</p>}
-          {calc.billingMode !== undefined && <p>Billing Mode: {calc.billingMode}</p>}
-          {calc.normalSqFt !== undefined && <p>Normal Layout Sq Ft: {calc.normalSqFt.toFixed(2)}</p>}
+          {showBreakdown && calc.rawBillableSqFt !== undefined && <p>Raw Gang Sq Ft: {showBreakdown && calc.rawBillableSqFt.toFixed(2)}</p>}
+          {showBreakdown && calc.billingMode !== undefined && <p>Billing Mode: {showBreakdown && calc.billingMode}</p>}
+          {showBreakdown && calc.normalSqFt !== undefined && <p>Normal Layout Sq Ft: {showBreakdown && calc.normalSqFt.toFixed(2)}</p>}
           {calc.rotatedSqFt !== undefined && <p>Rotated Layout Sq Ft: {calc.rotatedSqFt.toFixed(2)}</p>}
 
-          {calc.tierPrice !== undefined && <p>Tier Price Total: {money(calc.tierPrice)}</p>}
-          {calc.costMarginPrice !== undefined && <p>Cost + Margin Price: {money(calc.costMarginPrice)}</p>}
-          {calc.shopPrice !== undefined && <p>Shop Sq Ft Price: {money(calc.shopPrice)}</p>}
-          {calc.sheetsUsed !== undefined && <p>Sheets Used: {calc.sheetsUsed.toFixed(2)}</p>}
-          {calc.sheetsRounded !== undefined && <p>Sheets Rounded: {calc.sheetsRounded}</p>}
-          {calc.piecesPerSheet !== undefined && <p>Pieces Per Sheet: {calc.piecesPerSheet}</p>}
-          {calc.sheetLayout !== undefined && <p>Sheet Layout: {calc.sheetLayout}</p>}
+          {showBreakdown && calc.tierPrice !== undefined && <p>Tier Price Total: {money(calc.tierPrice)}</p>}
+          {showBreakdown && calc.costMarginPrice !== undefined && <p>Cost + Margin Price: {money(calc.costMarginPrice)}</p>}
+          {showBreakdown && calc.shopPrice !== undefined && <p>Shop Sq Ft Price: {money(calc.shopPrice)}</p>}
+          {showBreakdown && calc.sheetsUsed !== undefined && <p>Sheets Used: {showBreakdown && calc.sheetsUsed.toFixed(2)}</p>}
+          {showBreakdown && calc.sheetsRounded !== undefined && <p>Sheets Rounded: {showBreakdown && calc.sheetsRounded}</p>}
+          {showBreakdown && calc.piecesPerSheet !== undefined && <p>Pieces Per Sheet: {showBreakdown && calc.piecesPerSheet}</p>}
+          {showBreakdown && calc.sheetLayout !== undefined && <p>Sheet Layout: {showBreakdown && calc.sheetLayout}</p>}
           <p>Material Cost: {money(calc.materialCost)}</p>
           <p>Shipping: {money(calc.shipping)}</p>
           <p>Direct Cost: {money(calc.cost)}</p>
@@ -978,6 +1036,7 @@ export default function Page() {
           <SelectedDetails details={selectedDetails} />
         </aside>
       </div>
+      <div className="mobilePrice"><span>Suggested Retail</span><strong>{money(calc.retail)}</strong></div>
     </main>
   );
 }
@@ -1110,7 +1169,7 @@ function VinylLayoutPreview({ calc }) {
         ))}
       </div>
 
-      <p style={{ marginTop: 10, fontSize: 13 }}>{calc.billingMode}</p>
+      <p style={{ marginTop: 10, fontSize: 13 }}>{showBreakdown && calc.billingMode}</p>
     </div>
   );
 }
