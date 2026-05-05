@@ -1064,8 +1064,8 @@ export default function Page() {
         </aside>
       </div>
       <div className="mobilePrice">
-        <div className="mobilePriceTop"><span>Suggested Retail</span><strong>{money(calc.retail)}</strong></div>
-        <div className="mobileMeta">{products[product]} • {num(width)}&quot; x {num(height)}&quot;</div>
+        <div className="mobilePriceTop"><span>Suggested Retail</span><strong>{money(calc.retail).replace("$", "$ ")}</strong></div>
+        <div className="mobileMeta">{products[product]} • {num(width)}&quot; x {num(height)}&quot; • Qty {num(qty, 1)}</div>
       </div>
     </main>
   );
