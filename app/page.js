@@ -787,7 +787,9 @@ export default function Page() {
         }
 
         .resetBtn{margin-top:14px;padding:10px 14px;border-radius:10px;border:1px solid #1e3a8a;background:linear-gradient(180deg,#2563eb,#1d4ed8);color:#fff;font-weight:700;cursor:pointer;}
-        .mobilePrice{display:none;}
+        .mobilePrice{display:none;flex-direction:column;gap:2px;}
+        .mobilePriceTop{display:flex;justify-content:space-between;align-items:center;}
+        .mobileMeta{font-size:12px;opacity:.9;}
         .optionBox{background:#f8fafc;border:1px solid #e2e8f0;}
         .appRoot.dark .card{background:rgba(15,23,42,.85);color:#e5e7eb;border:1px solid rgba(96,165,250,.25);}
         .appRoot.dark .card h2, .appRoot.dark .card h3, .appRoot.dark .card label, .appRoot.dark .card p{color:#e5e7eb;}
@@ -1061,7 +1063,10 @@ export default function Page() {
           <SelectedDetails details={selectedDetails} />
         </aside>
       </div>
-      <div className="mobilePrice"><span>Suggested Retail</span><strong>{money(calc.retail)}</strong></div>
+      <div className="mobilePrice">
+        <div className="mobilePriceTop"><span>Suggested Retail</span><strong>{money(calc.retail)}</strong></div>
+        <div className="mobileMeta">{products[product]} • {num(width)}&quot; x {num(height)}&quot;</div>
+      </div>
     </main>
   );
 }
