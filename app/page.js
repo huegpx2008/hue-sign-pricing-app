@@ -22,6 +22,7 @@ const products = {
   acrylic: "Acrylic",
   vinyl: "Printed Vinyl",
   poster: "Poster Paper",
+  foamcore: "Foamcore",
 };
 
 const acrylicOption = { name: "Acrylic", costPerSqIn: 0.1, minCost: 14.4 };
@@ -41,7 +42,7 @@ const productCategories = [
       { id: "meshBanner", label: "Mesh Banners", calculator: "meshBanner" },
       { id: "acm", label: "ACM / Maxmetal", calculator: "acm" },
       { id: "poster", label: "Poster Paper", calculator: "poster" },
-      { id: "acrylic", label: "Acrylic", calculator: "acrylic" }, { id: "foamcore", label: "Foamcore" },
+      { id: "acrylic", label: "Acrylic", calculator: "acrylic" }, { id: "foamcore", label: "Foamcore", calculator: "foamcore" },
       { id: "pvc", label: "PVC" }, { id: "polystyrene", label: "Polystyrene" },
       { id: "aluminum", label: "Aluminum" }, { id: "backlit", label: "Backlit" },
       { id: "vehicleMagnets", label: "Vehicle Magnets" },
@@ -127,6 +128,24 @@ const coroSheetCost = {
   double: [55, 44, 40],
 };
 
+
+const foamcoreSheetPricing = {
+  single: [
+    { max: 9, price: 70 },
+    { max: 50, price: 55 },
+    { max: Infinity, price: 50 },
+  ],
+  double: [
+    { max: 9, price: 80 },
+    { max: 50, price: 65 },
+    { max: Infinity, price: 60 },
+  ],
+};
+
+function getFoamcoreSheetPrice(sheetCount, doubleSided) {
+  const tiers = doubleSided ? foamcoreSheetPricing.double : foamcoreSheetPricing.single;
+  return tiers.find((tier) => sheetCount <= tier.max)?.price || tiers[tiers.length - 1].price;
+}
 function getTierPrice(qty, type) {
   let price = coroPricing[type][0].price;
   for (let t of coroPricing[type]) {
@@ -330,6 +349,11 @@ export default function Page() {
   const [gangWastePercent, setGangWastePercent] = useState(15);
 
   const [posterRush, setPosterRush] = useState(false);
+  const [foamcoreDouble, setFoamcoreDouble] = useState(false);
+  const [foamcoreContour, setFoamcoreContour] = useState(false);
+  const [foamcoreGloss, setFoamcoreGloss] = useState(false);
+  const [foamcoreRush, setFoamcoreRush] = useState(false);
+  const [foamcoreCustomCut, setFoamcoreCustomCut] = useState(false);
   const [theme, setTheme] = useState("light");
   const [showBreakdown, setShowBreakdown] = useState(false);
   const [presetProduct, setPresetProduct] = useState("coro");
@@ -361,6 +385,7 @@ export default function Page() {
     setAcrylicContour(false); setAcrylicRoundedCorners(false); setAcrylicStandOffs(false); setAcrylicStandOffQty(4); setAcrylicStandOffColor("silver");
     setVinylType("gf-standard"); setVinylLaminate("Gloss Laminate"); setVinylContour(false); setVinylRush(false); setGangVinyl(false); setContourPadding(0.5); setGangWastePercent(15);
     setPosterRush(false);
+    setFoamcoreDouble(false); setFoamcoreContour(false); setFoamcoreGloss(false); setFoamcoreRush(false); setFoamcoreCustomCut(false);
   }
 
   function preset(prod, w, h, double = false) {
@@ -414,6 +439,10 @@ export default function Page() {
     poster: [
       { label: "11x17", w: 17, h: 11 }, { label: "18x24", w: 24, h: 18 }, { label: "24x36", w: 36, h: 24 },
       { label: "36x48", w: 48, h: 36 }, { label: "48x72", w: 72, h: 48 }, { label: "48x96", w: 96, h: 48 },
+    ],
+    foamcore: [
+      { label: "12x18", w: 12, h: 18 }, { label: "18x24", w: 18, h: 24 }, { label: "24x36", w: 24, h: 36 },
+      { label: "24x48", w: 24, h: 48 }, { label: "32x48", w: 32, h: 48 },
     ],
   };
 
@@ -695,6 +724,47 @@ export default function Page() {
       };
     }
 
+    if (product === "foamcore") {
+      const layout = sheetLayoutCount(w, h, q, true);
+      const sheetsUsed = Math.max(layout.sheetsUsed, 1);
+      const sheetsRounded = Math.max(layout.sheetsRounded, 1);
+      const sheetPrice = getFoamcoreSheetPrice(sheetsRounded, foamcoreDouble);
+      const materialCost = sheetsRounded * sheetPrice;
+      const shipping = shippingBySize(w, h, sheetsRounded);
+      const directCost = materialCost + shipping;
+      const marginCostBase = materialCost;
+      const costPerPiece = materialCost / q;
+
+      let costMarginPrice = marginCostBase / (1 - m);
+      if (foamcoreContour) costMarginPrice *= 1.1;
+      if (foamcoreGloss) costMarginPrice += q * 4;
+      if (foamcoreRush) costMarginPrice *= 2;
+      costMarginPrice += shipping;
+
+      const basePrice = costMarginPrice;
+      const retail = (basePrice + fees) * mult;
+
+      return {
+        label: "Foamcore",
+        retail,
+        each: retail / q,
+        cost: directCost,
+        profit: retail - directCost,
+        margin: retail ? ((retail - directCost) / retail) * 100 : 0,
+        totalSqFt,
+        materialCost,
+        shipping,
+        sheetsUsed,
+        sheetsRounded,
+        piecesPerSheet: layout.piecesPerSheet,
+        sheetLayout: `${layout.across} across x ${layout.down} down${layout.rotated ? " (rotated)" : ""}`,
+        sheetPrice,
+        costPerPiece,
+        costMarginPrice,
+        basePrice,
+      };
+    }
+
     const type = coroDouble ? "double" : "single";
     const scale = w === 18 && h === 12 ? 0.5 : 1;
     const tierEach = getTierPrice(q, type) * scale;
@@ -789,6 +859,11 @@ export default function Page() {
     contourPadding,
     gangWastePercent,
     posterRush,
+    foamcoreDouble,
+    foamcoreContour,
+    foamcoreGloss,
+    foamcoreRush,
+    foamcoreCustomCut,
   ]);
 
   const selectedDetails = {
@@ -809,6 +884,8 @@ export default function Page() {
         ? "Poster Paper"
         : activeProduct === "acrylic"
         ? "Acrylic"
+        : activeProduct === "foamcore"
+        ? foamcoreDouble ? "Foamcore Double-Sided" : "Foamcore Single-Sided"
         : coroDouble
         ? "4mm Double-Sided Coroplast"
         : activeProduct === "coro"
@@ -855,6 +932,11 @@ export default function Page() {
         ? `Stand-Offs: ${Math.max(num(acrylicStandOffQty, 0), 0)} ${acrylicStandOffOptions[acrylicStandOffColor].name}`
         : null,
       activeProduct === "poster" && posterRush ? "Rush Order" : null,
+      activeProduct === "foamcore" ? (foamcoreDouble ? "Foamcore: Double-Sided" : "Foamcore: Single-Sided") : null,
+      activeProduct === "foamcore" && foamcoreContour ? "Contour Cut" : null,
+      activeProduct === "foamcore" && foamcoreGloss ? "Gloss Finish" : null,
+      activeProduct === "foamcore" && foamcoreRush ? "Rush Order" : null,
+      activeProduct === "foamcore" && foamcoreCustomCut ? "Custom Cut" : null,
       useDesignFee ? `Design Fee: ${money(num(designFee))}` : null,
       useSetupFee ? `Setup Fee: ${money(num(setupFee))}` : null,
       num(delivery) > 0 ? `Delivery/Install: ${money(num(delivery))}` : null,
@@ -1184,6 +1266,16 @@ export default function Page() {
             </Box>
           )}
 
+          {activeProduct === "foamcore" && (
+            <Box title="Foamcore Options">
+              <Check label="Double-Sided" value={foamcoreDouble} setValue={setFoamcoreDouble} />
+              <Check label="Contour Cut (+10%)" value={foamcoreContour} setValue={setFoamcoreContour} />
+              <Check label="Gloss Finish (+$4 each)" value={foamcoreGloss} setValue={setFoamcoreGloss} />
+              <Check label="Rush Order (2x)" value={foamcoreRush} setValue={setFoamcoreRush} />
+              <Check label="Custom Cut (No additional cost)" value={foamcoreCustomCut} setValue={setFoamcoreCustomCut} />
+            </Box>
+          )}
+
           <div className="formGrid" style={grid}>
             <Field label="Quantity" value={qty} setValue={setQty} />
             <Field label="Width Inches" value={width} setValue={setWidth} />
@@ -1232,6 +1324,7 @@ export default function Page() {
           {showBreakdown && calc.sheetsRounded !== undefined && <p>Sheets Rounded: {showBreakdown && calc.sheetsRounded}</p>}
           {showBreakdown && calc.piecesPerSheet !== undefined && <p>Pieces Per Sheet: {showBreakdown && calc.piecesPerSheet}</p>}
           {showBreakdown && calc.sheetLayout !== undefined && <p>Sheet Layout: {showBreakdown && calc.sheetLayout}</p>}
+          {showBreakdown && calc.costPerPiece !== undefined && <p>Cost Per Piece: {money(calc.costPerPiece)}</p>}
           <p>Material Cost: {money(calc.materialCost)}</p>
           {calc.standOffQty !== undefined && calc.standOffQty > 0 && (
             <>
@@ -1247,6 +1340,7 @@ export default function Page() {
 
           <ProductVisual product={activeProduct || product} comingSoon={!activeProduct} />
           {activeProduct === "vinyl" && <VinylLayoutPreview calc={calc} />}
+          {activeProduct === "foamcore" && <SheetLayoutPreview calc={calc} />}
           <SelectedDetails details={selectedDetails} />
         </aside>
       </div>
@@ -1349,6 +1443,15 @@ function ProductVisual({ product, comingSoon }) {
       </div>
     );
   }
+  if (product === "foamcore") {
+    return (
+      <div style={visualBox}>
+        <div style={foamcoreVisual}>FOAMCORE</div>
+        <p style={visualLabel}>Foamcore Selected</p>
+      </div>
+    );
+  }
+
   if (product === "acrylic") {
     return (
       <div style={visualBox}>
@@ -1399,6 +1502,23 @@ function VinylLayoutPreview({ calc }) {
       </div>
 
       <p style={{ marginTop: 10, fontSize: 13 }}>{calc.billingMode}</p>
+    </div>
+  );
+}
+
+
+function SheetLayoutPreview({ calc }) {
+  if (!calc.piecesPerSheet || !calc.sheetLayout) return null;
+
+  return (
+    <div style={previewBox}>
+      <h4 style={{ marginTop: 0, marginBottom: 10 }}>Sheet Layout Preview</h4>
+      <div style={{ fontSize: 12, marginBottom: 8, color: "#cbd5e1" }}>
+        48" x 96" sheet • {calc.sheetLayout}
+      </div>
+      <p style={{ margin: "6px 0", fontSize: 13 }}>Pieces per sheet: {calc.piecesPerSheet}</p>
+      <p style={{ margin: "6px 0", fontSize: 13 }}>Sheets used: {calc.sheetsUsed?.toFixed(2)}</p>
+      <p style={{ margin: "6px 0", fontSize: 13 }}>Sheets rounded: {calc.sheetsRounded}</p>
     </div>
   );
 }
@@ -1514,6 +1634,17 @@ const meshBannerVisual = {
   fontSize: 28,
   fontWeight: "bold",
   border: "4px solid #38bdf8",
+};
+
+const foamcoreVisual = {
+  display: "inline-block",
+  background: "linear-gradient(135deg, #fef3c7, #fde68a)",
+  color: "#422006",
+  borderRadius: 10,
+  padding: "32px 42px",
+  fontSize: 28,
+  fontWeight: "bold",
+  border: "4px solid #f59e0b",
 };
 
 const acrylicVisual = {
