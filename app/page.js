@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 const money = (n) =>
   Number(n || 0).toLocaleString("en-US", {
@@ -223,7 +223,7 @@ export default function Page() {
   const [product, setProduct] = useState("coro");
   const [width, setWidth] = useState(24);
   const [height, setHeight] = useState(18);
-  const [qty, setQty] = useState(10);
+  const [qty, setQty] = useState(1);
   const [margin, setMargin] = useState(60);
   const [multiplier, setMultiplier] = useState(1);
 
@@ -268,6 +268,34 @@ export default function Page() {
   const [gangWastePercent, setGangWastePercent] = useState(15);
 
   const [posterRush, setPosterRush] = useState(false);
+  const [theme, setTheme] = useState("light");
+  const [showBreakdown, setShowBreakdown] = useState(false);
+  const [presetProduct, setPresetProduct] = useState("coro");
+
+
+  useEffect(() => {
+    const savedTheme = typeof window !== "undefined" ? localStorage.getItem("hue-theme") : null;
+    if (savedTheme === "dark") setTheme("dark");
+  }, []);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") localStorage.setItem("hue-theme", theme);
+  }, [theme]);
+
+  useEffect(() => {
+    setPresetProduct(product);
+  }, [product]);
+
+  function resetAll() {
+    setProduct("coro"); setWidth(24); setHeight(18); setQty(1); setMargin(60); setMultiplier(1);
+    setUseDesignFee(false); setUseSetupFee(false); setDesignFee(""); setSetupFee(""); setDelivery("");
+    setCoroDouble(false); setCoroFlute("vertical"); setStakes(false); setHeavyStakes(false); setGrommets(false); setGloss(false); setCoroContour(false); setCoroRush(false);
+    setBannerType("13-single"); setPolePocket(false); setRope(false); setWindSlits(false); setBannerRush(false);
+    setMeshPolePocket(false); setMeshGrommets(false); setMeshWelding(false); setMeshRope(false); setMeshWebbing(false); setMeshRush(false);
+    setAcmType("3-single"); setAcmSqFtPrice(18); setAcmContour(false); setRoundedCorners(false);
+    setVinylType("gf-standard"); setVinylLaminate("Gloss Laminate"); setVinylContour(false); setVinylRush(false); setGangVinyl(false); setContourPadding(0.5); setGangWastePercent(15);
+    setPosterRush(false);
+  }
 
   function preset(prod, w, h, double = false) {
     setProduct(prod);
@@ -286,6 +314,37 @@ export default function Page() {
   function presetClass(prod, w, h, double = false) {
     return isPresetActive(prod, w, h, double) ? "presetBtn activePreset" : "presetBtn";
   }
+
+
+  const presetGroups = {
+    coro: [
+      { label: "18x24 Single", w: 24, h: 18, double: false },
+      { label: "18x24 Double", w: 24, h: 18, double: true },
+      { label: "12x18 Single", w: 18, h: 12, double: false },
+      { label: "12x18 Double", w: 18, h: 12, double: true },
+    ],
+    banner: [
+      { label: "24x36", w: 36, h: 24 }, { label: "36x60", w: 60, h: 36 }, { label: "36x72", w: 72, h: 36 },
+      { label: "36x96", w: 96, h: 36 }, { label: "48x96", w: 96, h: 48 },
+    ],
+    acm: [
+      { label: "18x24", w: 24, h: 18 }, { label: "24x36", w: 24, h: 36 }, { label: "24x48", w: 24, h: 48 },
+      { label: "32x48", w: 32, h: 48 }, { label: "36x48", w: 36, h: 48 }, { label: "48x48", w: 48, h: 48 },
+      { label: "24x96", w: 24, h: 96 }, { label: "48x96", w: 48, h: 96 },
+    ],
+    meshBanner: [
+      { label: "24x36", w: 36, h: 24 }, { label: "36x60", w: 60, h: 36 }, { label: "36x72", w: 72, h: 36 },
+      { label: "36x96", w: 96, h: 36 }, { label: "48x96", w: 96, h: 48 }, { label: "60x120", w: 120, h: 60 },
+    ],
+    vinyl: [
+      { label: "12x12", w: 12, h: 12 }, { label: "12x24", w: 24, h: 12 }, { label: "24x24", w: 24, h: 24 },
+      { label: "24x36", w: 36, h: 24 }, { label: "24x48", w: 48, h: 24 }, { label: "48x96", w: 96, h: 48 },
+    ],
+    poster: [
+      { label: "11x17", w: 17, h: 11 }, { label: "18x24", w: 24, h: 18 }, { label: "24x36", w: 36, h: 24 },
+      { label: "36x48", w: 48, h: 36 }, { label: "48x72", w: 72, h: 48 }, { label: "48x96", w: 96, h: 48 },
+    ],
+  };
 
   const calc = useMemo(() => {
     const q = Math.max(num(qty, 1), 1);
@@ -631,6 +690,11 @@ export default function Page() {
         ? "4mm Double-Sided Coroplast"
         : "4mm Single-Sided Coroplast",
     options: [
+      product === "vinyl" ? `Vinyl Type: ${vinylOptions[vinylType].name}` : null,
+      product === "vinyl" ? `Laminate: ${vinylLaminate}` : null,
+      product === "banner" ? `Banner Type: ${bannerOptions[bannerType].name}` : null,
+      product === "acm" ? `ACM Type: ${acmOptions[acmType].name}` : null,
+      product === "coro" ? (coroDouble ? "Coro: Double-Sided" : "Coro: Single-Sided") : null,
       product === "vinyl" && vinylContour ? "Contour Cut" : null,
       product === "vinyl" && vinylRush ? "Rush Order" : null,
       product === "vinyl" && gangVinyl ? "Gang Vinyl Layout" : null,
@@ -668,7 +732,7 @@ export default function Page() {
   };
 
   return (
-    <main style={{ fontFamily: "Arial", background: "#f1f5f9", minHeight: "100vh", padding: 20 }}>
+    <main className={`appRoot ${theme}`} style={{ fontFamily: "Inter, Arial", minHeight: "100vh", padding: 20 }}>
       <style>{`
         .layout {
           display: grid;
@@ -676,17 +740,26 @@ export default function Page() {
           gap: 20px;
         }
 
+        .themeToggle{display:flex;gap:10px;align-items:center;margin:8px 0 14px;}
+        .modeBtn{padding:8px 12px;border-radius:999px;border:1px solid #94a3b8;background:linear-gradient(180deg,#fff,#e2e8f0);cursor:pointer;box-shadow:0 3px 8px rgba(15,23,42,.12);}
+        .modeBtn.active{background:linear-gradient(180deg,#1d4ed8,#1e293b);color:#fff;border-color:#60a5fa;box-shadow:inset 0 2px 6px rgba(0,0,0,.35),0 0 0 2px rgba(96,165,250,.3);}
+        .appRoot.light{background:linear-gradient(160deg,#eff6ff,#f8fafc 45%,#fff);color:#0f172a;}
+        .appRoot.dark{background:linear-gradient(160deg,#0b1220,#111827 52%,#1f2937);color:#e2e8f0;}
         .summary {
-          background: #0f172a;
+          background: linear-gradient(160deg,#0f172a,#1e293b);
           color: white;
+          box-shadow:0 18px 35px rgba(2,6,23,.35);
           padding: 20px;
           border-radius: 16px;
+          box-shadow:0 10px 30px rgba(15,23,42,.09);
         }
 
+        .summary.sticky{position:sticky;top:16px;align-self:start;}
         .card {
-          background: white;
+          background: rgba(255,255,255,.92);
           padding: 20px;
           border-radius: 16px;
+          box-shadow:0 10px 30px rgba(15,23,42,.09);
         }
 
         .buttonGrid {
@@ -696,20 +769,53 @@ export default function Page() {
           margin-bottom: 20px;
         }
 
+        .presetBtn, button {
+          transition:all .18s ease;
+        }
         .presetBtn {
           padding: 8px 10px;
           border-radius: 8px;
           border: 1px solid #ccc;
-          background: white;
+          background: rgba(255,255,255,.92);
           font-size: 14px;
         }
 
+        .presetBtn:hover{transform:translateY(-1px); box-shadow:0 8px 16px rgba(30,64,175,.18);}
+        .presetBtn:active{transform:translateY(1px);}
         .activePreset {
-          background: #0f172a;
+          background: linear-gradient(160deg,#0f172a,#1e293b);
           color: white;
+          box-shadow:0 18px 35px rgba(2,6,23,.35);
           border-color: #38bdf8;
           box-shadow: 0 0 0 2px #38bdf8;
           font-weight: 700;
+        }
+
+        .resetBtn{margin-top:14px;padding:10px 14px;border-radius:10px;border:1px solid #1e3a8a;background:linear-gradient(180deg,#2563eb,#1d4ed8);color:#fff;font-weight:700;cursor:pointer;}
+        .mobilePrice{display:none;flex-direction:column;gap:2px;}
+        .mobilePriceTop{display:flex;justify-content:space-between;align-items:center;}
+        .mobileMeta{font-size:12px;opacity:.95;line-height:1.25;}
+        .mobileOptions{font-size:11px;opacity:.88;line-height:1.25;}
+        .optionBox{background:#f8fafc;border:1px solid #e2e8f0;}
+        .appRoot.dark .card{background:rgba(15,23,42,.85);color:#e5e7eb;border:1px solid rgba(96,165,250,.25);}
+        .appRoot.dark .card h2, .appRoot.dark .card h3, .appRoot.dark .card label, .appRoot.dark .card p{color:#e5e7eb;}
+        .appRoot.dark .optionBox{background:rgba(30,41,59,.85);border-color:rgba(148,163,184,.35);}
+        .appRoot.dark input, .appRoot.dark select{background:#0f172a;color:#e5e7eb;border:1px solid #334155;}
+        .appRoot.dark input::placeholder{color:#94a3b8;}
+        .appRoot.dark .presetBtn{background:linear-gradient(180deg,#0f172a,#1e293b);color:#e2e8f0;border-color:#334155;}
+        .appRoot.dark .mobilePrice{background:linear-gradient(160deg,#0b1738,#0f172a);color:#f8fafc;border:1px solid rgba(96,165,250,.35);}
+
+        .appRoot.dark .activePreset{
+          background:linear-gradient(180deg,#60a5fa,#3b82f6);
+          color:#0b1120;
+          border-color:#bfdbfe;
+          box-shadow:0 0 0 2px rgba(191,219,254,.95),0 10px 20px rgba(59,130,246,.45);
+        }
+        .appRoot.dark .modeBtn.active{
+          background:linear-gradient(180deg,#93c5fd,#60a5fa);
+          color:#0b1120;
+          border-color:#dbeafe;
+          box-shadow:0 0 0 2px rgba(147,197,253,.85), inset 0 1px 2px rgba(255,255,255,.35);
         }
 
         input, select {
@@ -731,16 +837,26 @@ export default function Page() {
             flex-direction: column;
           }
 
-          .summary {
+          .themeToggle{display:flex;gap:10px;align-items:center;margin:8px 0 14px;}
+        .modeBtn{padding:8px 12px;border-radius:999px;border:1px solid #94a3b8;background:linear-gradient(180deg,#fff,#e2e8f0);cursor:pointer;box-shadow:0 3px 8px rgba(15,23,42,.12);}
+        .modeBtn.active{background:linear-gradient(180deg,#1d4ed8,#1e293b);color:#fff;border-color:#60a5fa;box-shadow:inset 0 2px 6px rgba(0,0,0,.35),0 0 0 2px rgba(96,165,250,.3);}
+        .appRoot.light{background:linear-gradient(160deg,#eff6ff,#f8fafc 45%,#fff);color:#0f172a;}
+        .appRoot.dark{background:linear-gradient(160deg,#0b1220,#111827 52%,#1f2937);color:#e2e8f0;}
+        .summary {
             order: -1;
           }
+          .summary.sticky{position:static;}
+          .mobilePrice{display:flex;position:fixed;left:10px;right:10px;bottom:10px;z-index:30;background:#0f172a;color:#fff;padding:10px 14px;border-radius:12px;justify-content:space-between;align-items:center;box-shadow:0 10px 20px rgba(0,0,0,.35);}
 
           .buttonGrid {
             display: grid;
             grid-template-columns: 1fr 1fr;
           }
 
-          .presetBtn {
+          .presetBtn, button {
+          transition:all .18s ease;
+        }
+        .presetBtn {
             width: 100%;
             font-size: 15px;
             padding: 10px;
@@ -753,69 +869,40 @@ export default function Page() {
       `}</style>
 
       <h1>Hue Pricing Tool (Test Version)</h1>
+      <div className="themeToggle">
+        <button className={`modeBtn ${theme === "light" ? "active" : ""}`} onClick={() => setTheme("light")}>Light Mode</button>
+        <button className={`modeBtn ${theme === "dark" ? "active" : ""}`} onClick={() => setTheme("dark")}>Dark Mode</button>
+      </div>
       <p>Live quote calculator for coro, banners, ACM, vinyl, and poster paper.</p>
 
       <div className="layout">
         <section className="card">
-          <h2>Quick Presets</h2>
+          <h2>Custom Presets</h2>
+          <label>Preset Product</label>
+          <select
+            style={input}
+            value={presetProduct}
+            onChange={(e) => {
+              const nextProduct = e.target.value;
+              setPresetProduct(nextProduct);
+              setProduct(nextProduct);
+            }}
+          >
+            {Object.entries(products).map(([key, name]) => (
+              <option key={key} value={key}>{name}</option>
+            ))}
+          </select>
 
-          <h3>Coro Yard Signs</h3>
-          <div className="buttonGrid">
-            <button className={presetClass("coro", 24, 18, false)} onClick={() => preset("coro", 24, 18, false)}>18x24 Single</button>
-            <button className={presetClass("coro", 24, 18, true)} onClick={() => preset("coro", 24, 18, true)}>18x24 Double</button>
-            <button className={presetClass("coro", 18, 12, false)} onClick={() => preset("coro", 18, 12, false)}>12x18 Single</button>
-            <button className={presetClass("coro", 18, 12, true)} onClick={() => preset("coro", 18, 12, true)}>12x18 Double</button>
-          </div>
-
-          <h3>Banners</h3>
-          <div className="buttonGrid">
-            <button className={presetClass("banner", 36, 24)} onClick={() => preset("banner", 36, 24)}>24x36</button>
-            <button className={presetClass("banner", 60, 36)} onClick={() => preset("banner", 60, 36)}>36x60</button>
-            <button className={presetClass("banner", 72, 36)} onClick={() => preset("banner", 72, 36)}>36x72</button>
-            <button className={presetClass("banner", 96, 36)} onClick={() => preset("banner", 96, 36)}>36x96</button>
-            <button className={presetClass("banner", 96, 48)} onClick={() => preset("banner", 96, 48)}>48x96</button>
-          </div>
-
-          <h3>ACM / Maxmetal</h3>
-          <div className="buttonGrid">
-            <button className={presetClass("acm", 24, 18)} onClick={() => preset("acm", 24, 18)}>18x24</button>
-            <button className={presetClass("acm", 24, 36)} onClick={() => preset("acm", 24, 36)}>24x36</button>
-            <button className={presetClass("acm", 24, 48)} onClick={() => preset("acm", 24, 48)}>24x48</button>
-            <button className={presetClass("acm", 32, 48)} onClick={() => preset("acm", 32, 48)}>32x48</button>
-            <button className={presetClass("acm", 36, 48)} onClick={() => preset("acm", 36, 48)}>36x48</button>
-            <button className={presetClass("acm", 48, 48)} onClick={() => preset("acm", 48, 48)}>48x48</button>
-            <button className={presetClass("acm", 24, 96)} onClick={() => preset("acm", 24, 96)}>24x96</button>
-            <button className={presetClass("acm", 48, 96)} onClick={() => preset("acm", 48, 96)}>48x96</button>
-          </div>
-
-          <h3>Mesh Banners</h3>
-          <div className="buttonGrid">
-            <button className={presetClass("meshBanner", 36, 24)} onClick={() => preset("meshBanner", 36, 24)}>24x36</button>
-            <button className={presetClass("meshBanner", 60, 36)} onClick={() => preset("meshBanner", 60, 36)}>36x60</button>
-            <button className={presetClass("meshBanner", 72, 36)} onClick={() => preset("meshBanner", 72, 36)}>36x72</button>
-            <button className={presetClass("meshBanner", 96, 36)} onClick={() => preset("meshBanner", 96, 36)}>36x96</button>
-            <button className={presetClass("meshBanner", 96, 48)} onClick={() => preset("meshBanner", 96, 48)}>48x96</button>
-            <button className={presetClass("meshBanner", 120, 60)} onClick={() => preset("meshBanner", 120, 60)}>60x120</button>
-          </div>
-
-          <h3>Printed Vinyl</h3>
-          <div className="buttonGrid">
-            <button className={presetClass("vinyl", 12, 12)} onClick={() => preset("vinyl", 12, 12)}>12x12</button>
-            <button className={presetClass("vinyl", 24, 12)} onClick={() => preset("vinyl", 24, 12)}>12x24</button>
-            <button className={presetClass("vinyl", 24, 24)} onClick={() => preset("vinyl", 24, 24)}>24x24</button>
-            <button className={presetClass("vinyl", 36, 24)} onClick={() => preset("vinyl", 36, 24)}>24x36</button>
-            <button className={presetClass("vinyl", 48, 24)} onClick={() => preset("vinyl", 48, 24)}>24x48</button>
-            <button className={presetClass("vinyl", 96, 48)} onClick={() => preset("vinyl", 96, 48)}>48x96</button>
-          </div>
-
-          <h3>Poster Paper</h3>
-          <div className="buttonGrid">
-            <button className={presetClass("poster", 17, 11)} onClick={() => preset("poster", 17, 11)}>11x17</button>
-            <button className={presetClass("poster", 24, 18)} onClick={() => preset("poster", 24, 18)}>18x24</button>
-            <button className={presetClass("poster", 36, 24)} onClick={() => preset("poster", 36, 24)}>24x36</button>
-            <button className={presetClass("poster", 48, 36)} onClick={() => preset("poster", 48, 36)}>36x48</button>
-            <button className={presetClass("poster", 72, 48)} onClick={() => preset("poster", 72, 48)}>48x72</button>
-            <button className={presetClass("poster", 96, 48)} onClick={() => preset("poster", 96, 48)}>48x96</button>
+          <div className="buttonGrid" style={{ marginTop: 12 }}>
+            {presetGroups[presetProduct].map((p) => (
+              <button
+                key={`${presetProduct}-${p.label}`}
+                className={presetClass(presetProduct, p.w, p.h, p.double || false)}
+                onClick={() => preset(presetProduct, p.w, p.h, p.double || false)}
+              >
+                {p.label}
+              </button>
+            ))}
           </div>
 
           <h2>Quote Details</h2>
@@ -932,6 +1019,8 @@ export default function Page() {
             <Field label="Price Multiplier" value={multiplier} setValue={setMultiplier} />
           </div>
 
+          <button className="resetBtn" onClick={resetAll}>Reset to Defaults</button>
+
           <Box title="Optional Fees">
             <Check label="Add Design Fee" value={useDesignFee} setValue={setUseDesignFee} />
             {useDesignFee && <Field label="Design Fee" value={designFee} setValue={setDesignFee} />}
@@ -940,7 +1029,7 @@ export default function Page() {
           </Box>
         </section>
 
-        <aside className="summary">
+        <aside className="summary sticky">
           <h2>Suggested Retail</h2>
           <div style={{ fontSize: 42, fontWeight: "bold" }}>{money(calc.retail)}</div>
           <p>Each: <strong>{money(calc.each)}</strong></p>
@@ -949,24 +1038,26 @@ export default function Page() {
           <p>Product: {calc.label}</p>
           <p>Total Sq Ft: {calc.totalSqFt?.toFixed(2)}</p>
 
-          {calc.actualTotalSqFt !== undefined && <p>Actual Sq Ft: {calc.actualTotalSqFt.toFixed(2)}</p>}
-          {calc.effectiveSqFtEach !== undefined && <p>Effective Sq Ft Each: {calc.effectiveSqFtEach.toFixed(2)}</p>}
-          {calc.billableSqFtEach !== undefined && <p>Billable Sq Ft Each: {calc.billableSqFtEach.toFixed(2)}</p>}
-          {calc.layoutWidth !== undefined && calc.layoutHeight !== undefined && (
-            <p>Layout Size: {calc.layoutWidth}" x {calc.layoutHeight}"</p>
+          <button className="modeBtn" style={{marginBottom:10}} onClick={() => setShowBreakdown((v) => !v)}>{showBreakdown ? "Hide" : "Show"} Detailed Breakdown</button>
+
+          {showBreakdown && calc.actualTotalSqFt !== undefined && <p>Actual Sq Ft: {calc.actualTotalSqFt.toFixed(2)}</p>}
+          {showBreakdown && calc.effectiveSqFtEach !== undefined && <p>Effective Sq Ft Each: {showBreakdown && calc.effectiveSqFtEach.toFixed(2)}</p>}
+          {showBreakdown && calc.billableSqFtEach !== undefined && <p>Billable Sq Ft Each: {showBreakdown && calc.billableSqFtEach.toFixed(2)}</p>}
+          {showBreakdown && calc.layoutWidth !== undefined && calc.layoutHeight !== undefined && (
+            <p>Layout Size: {showBreakdown && calc.layoutWidth}" x {calc.layoutHeight}"</p>
           )}
-          {calc.rawBillableSqFt !== undefined && <p>Raw Gang Sq Ft: {calc.rawBillableSqFt.toFixed(2)}</p>}
-          {calc.billingMode !== undefined && <p>Billing Mode: {calc.billingMode}</p>}
-          {calc.normalSqFt !== undefined && <p>Normal Layout Sq Ft: {calc.normalSqFt.toFixed(2)}</p>}
+          {showBreakdown && calc.rawBillableSqFt !== undefined && <p>Raw Gang Sq Ft: {showBreakdown && calc.rawBillableSqFt.toFixed(2)}</p>}
+          {showBreakdown && calc.billingMode !== undefined && <p>Billing Mode: {showBreakdown && calc.billingMode}</p>}
+          {showBreakdown && calc.normalSqFt !== undefined && <p>Normal Layout Sq Ft: {showBreakdown && calc.normalSqFt.toFixed(2)}</p>}
           {calc.rotatedSqFt !== undefined && <p>Rotated Layout Sq Ft: {calc.rotatedSqFt.toFixed(2)}</p>}
 
-          {calc.tierPrice !== undefined && <p>Tier Price Total: {money(calc.tierPrice)}</p>}
-          {calc.costMarginPrice !== undefined && <p>Cost + Margin Price: {money(calc.costMarginPrice)}</p>}
-          {calc.shopPrice !== undefined && <p>Shop Sq Ft Price: {money(calc.shopPrice)}</p>}
-          {calc.sheetsUsed !== undefined && <p>Sheets Used: {calc.sheetsUsed.toFixed(2)}</p>}
-          {calc.sheetsRounded !== undefined && <p>Sheets Rounded: {calc.sheetsRounded}</p>}
-          {calc.piecesPerSheet !== undefined && <p>Pieces Per Sheet: {calc.piecesPerSheet}</p>}
-          {calc.sheetLayout !== undefined && <p>Sheet Layout: {calc.sheetLayout}</p>}
+          {showBreakdown && calc.tierPrice !== undefined && <p>Tier Price Total: {money(calc.tierPrice)}</p>}
+          {showBreakdown && calc.costMarginPrice !== undefined && <p>Cost + Margin Price: {money(calc.costMarginPrice)}</p>}
+          {showBreakdown && calc.shopPrice !== undefined && <p>Shop Sq Ft Price: {money(calc.shopPrice)}</p>}
+          {showBreakdown && calc.sheetsUsed !== undefined && <p>Sheets Used: {showBreakdown && calc.sheetsUsed.toFixed(2)}</p>}
+          {showBreakdown && calc.sheetsRounded !== undefined && <p>Sheets Rounded: {showBreakdown && calc.sheetsRounded}</p>}
+          {showBreakdown && calc.piecesPerSheet !== undefined && <p>Pieces Per Sheet: {showBreakdown && calc.piecesPerSheet}</p>}
+          {showBreakdown && calc.sheetLayout !== undefined && <p>Sheet Layout: {showBreakdown && calc.sheetLayout}</p>}
           <p>Material Cost: {money(calc.materialCost)}</p>
           <p>Shipping: {money(calc.shipping)}</p>
           <p>Direct Cost: {money(calc.cost)}</p>
@@ -977,6 +1068,11 @@ export default function Page() {
           {product === "vinyl" && <VinylLayoutPreview calc={calc} />}
           <SelectedDetails details={selectedDetails} />
         </aside>
+      </div>
+      <div className="mobilePrice">
+        <div className="mobilePriceTop"><strong>Suggested Retail {money(calc.retail).replace("$", "$ ")}</strong></div>
+        <div className="mobileMeta">{products[product]} • {num(width)}&quot; x {num(height)}&quot; • Qty {num(qty, 1)}</div>
+        <div className="mobileOptions">{selectedDetails.options.length ? `Options: ${selectedDetails.options.join(", ")}` : "Options: None"}</div>
       </div>
     </main>
   );
@@ -1004,7 +1100,7 @@ function Check({ label, value, setValue }) {
 
 function Box({ title, children }) {
   return (
-    <div style={{ marginTop: 20, padding: 15, background: "#f8fafc", borderRadius: 12 }}>
+    <div className="optionBox" style={{ marginTop: 20, padding: 15, borderRadius: 12 }}>
       <h3>{title}</h3>
       {children}
     </div>
