@@ -758,6 +758,11 @@ export default function Page() {
         sheetsRounded,
         piecesPerSheet: layout.piecesPerSheet,
         sheetLayout: `${layout.across} across x ${layout.down} down${layout.rotated ? " (rotated)" : ""}`,
+        sheetAcross: layout.across,
+        sheetDown: layout.down,
+        sheetRotated: layout.rotated,
+        previewPieceW: layout.rotated ? h : w,
+        previewPieceH: layout.rotated ? w : h,
         sheetPrice,
         costPerPiece,
         costMarginPrice,
@@ -1507,20 +1512,69 @@ function VinylLayoutPreview({ calc }) {
 }
 
 
-function SheetLayoutPreview({ calc }) {
-  if (!calc.piecesPerSheet || !calc.sheetLayout) return null;
+function FullSheetLayoutPreview({ calc, sheetW = 48, sheetH = 96, title = "Sheet Layout Preview" }) {
+  if (!calc.sheetAcross || !calc.sheetDown || !calc.previewPieceW || !calc.previewPieceH) return null;
+
+  const scale = 3;
+  const boardW = sheetW * scale;
+  const boardH = sheetH * scale;
+  const pieceW = calc.previewPieceW * scale;
+  const pieceH = calc.previewPieceH * scale;
+
+  const maxPreviewHeight = 240;
+  const fitScale = boardH > maxPreviewHeight ? maxPreviewHeight / boardH : 1;
 
   return (
     <div style={previewBox}>
-      <h4 style={{ marginTop: 0, marginBottom: 10 }}>Sheet Layout Preview</h4>
+      <h4 style={{ marginTop: 0, marginBottom: 10 }}>{title}</h4>
       <div style={{ fontSize: 12, marginBottom: 8, color: "#cbd5e1" }}>
-        48" x 96" sheet • {calc.sheetLayout}
+        {sheetW}" x {sheetH}" sheet • {calc.sheetLayout}
       </div>
+
+      <div style={{ maxWidth: "100%", overflowX: "auto", border: "2px solid #38bdf8", padding: 6 }}>
+        <div
+          style={{
+            width: boardW * fitScale,
+            height: boardH * fitScale,
+            margin: "0 auto",
+            background: "rgba(255,255,255,0.06)",
+            border: "2px solid rgba(148,163,184,0.9)",
+            display: "grid",
+            gridTemplateColumns: `repeat(${calc.sheetAcross}, ${pieceW * fitScale}px)`,
+            gridAutoRows: `${pieceH * fitScale}px`,
+            justifyContent: "start",
+            alignContent: "start",
+            gap: 0,
+          }}
+        >
+          {Array.from({ length: calc.sheetAcross * calc.sheetDown }).map((_, i) => (
+            <div
+              key={i}
+              title={`${calc.previewPieceW}" x ${calc.previewPieceH}"`}
+              style={{
+                width: pieceW * fitScale,
+                height: pieceH * fitScale,
+                border: "1px dashed #94a3b8",
+                background: "rgba(255,255,255,0.1)",
+                boxSizing: "border-box",
+              }}
+            />
+          ))}
+        </div>
+      </div>
+
       <p style={{ margin: "6px 0", fontSize: 13 }}>Pieces per sheet: {calc.piecesPerSheet}</p>
       <p style={{ margin: "6px 0", fontSize: 13 }}>Sheets used: {calc.sheetsUsed?.toFixed(2)}</p>
       <p style={{ margin: "6px 0", fontSize: 13 }}>Sheets rounded: {calc.sheetsRounded}</p>
+      <p style={{ margin: "6px 0", fontSize: 13 }}>
+        Piece orientation: {calc.previewPieceW}" × {calc.previewPieceH}"{calc.sheetRotated ? " (rotated)" : ""}
+      </p>
     </div>
   );
+}
+
+function SheetLayoutPreview({ calc }) {
+  return <FullSheetLayoutPreview calc={calc} sheetW={48} sheetH={96} title="Sheet Layout Preview" />;
 }
 
 function SelectedDetails({ details }) {
