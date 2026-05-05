@@ -752,6 +752,15 @@ export default function Page() {
 
         .resetBtn{margin-top:14px;padding:10px 14px;border-radius:10px;border:1px solid #1e3a8a;background:linear-gradient(180deg,#2563eb,#1d4ed8);color:#fff;font-weight:700;cursor:pointer;}
         .mobilePrice{display:none;}
+        .optionBox{background:#f8fafc;border:1px solid #e2e8f0;}
+        .appRoot.dark .card{background:rgba(15,23,42,.85);color:#e5e7eb;border:1px solid rgba(96,165,250,.25);}
+        .appRoot.dark .card h2, .appRoot.dark .card h3, .appRoot.dark .card label, .appRoot.dark .card p{color:#e5e7eb;}
+        .appRoot.dark .optionBox{background:rgba(30,41,59,.85);border-color:rgba(148,163,184,.35);}
+        .appRoot.dark input, .appRoot.dark select{background:#0f172a;color:#e5e7eb;border:1px solid #334155;}
+        .appRoot.dark input::placeholder{color:#94a3b8;}
+        .appRoot.dark .presetBtn{background:linear-gradient(180deg,#0f172a,#1e293b);color:#e2e8f0;border-color:#334155;}
+        .appRoot.dark .mobilePrice{background:linear-gradient(160deg,#0b1738,#0f172a);color:#f8fafc;border:1px solid rgba(96,165,250,.35);}
+
         input, select {
           box-sizing: border-box;
         }
@@ -1063,7 +1072,7 @@ function Check({ label, value, setValue }) {
 
 function Box({ title, children }) {
   return (
-    <div style={{ marginTop: 20, padding: 15, background: "#f8fafc", borderRadius: 12 }}>
+    <div className="optionBox" style={{ marginTop: 20, padding: 15, borderRadius: 12 }}>
       <h3>{title}</h3>
       {children}
     </div>
@@ -1169,7 +1178,7 @@ function VinylLayoutPreview({ calc }) {
         ))}
       </div>
 
-      <p style={{ marginTop: 10, fontSize: 13 }}>{showBreakdown && calc.billingMode}</p>
+      <p style={{ marginTop: 10, fontSize: 13 }}>{calc.billingMode}</p>
     </div>
   );
 }
