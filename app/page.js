@@ -690,6 +690,11 @@ export default function Page() {
         ? "4mm Double-Sided Coroplast"
         : "4mm Single-Sided Coroplast",
     options: [
+      product === "vinyl" ? `Vinyl Type: ${vinylOptions[vinylType].name}` : null,
+      product === "vinyl" ? `Laminate: ${vinylLaminate}` : null,
+      product === "banner" ? `Banner Type: ${bannerOptions[bannerType].name}` : null,
+      product === "acm" ? `ACM Type: ${acmOptions[acmType].name}` : null,
+      product === "coro" ? (coroDouble ? "Coro: Double-Sided" : "Coro: Single-Sided") : null,
       product === "vinyl" && vinylContour ? "Contour Cut" : null,
       product === "vinyl" && vinylRush ? "Rush Order" : null,
       product === "vinyl" && gangVinyl ? "Gang Vinyl Layout" : null,
