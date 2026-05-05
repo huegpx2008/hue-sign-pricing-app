@@ -746,6 +746,7 @@ export default function Page() {
 
       return {
         label: "Foamcore",
+        quantity: q,
         retail,
         each: retail / q,
         cost: directCost,
@@ -1523,6 +1524,8 @@ function FullSheetLayoutPreview({ calc, sheetW = 48, sheetH = 96, title = "Sheet
 
   const maxPreviewHeight = 240;
   const fitScale = boardH > maxPreviewHeight ? maxPreviewHeight / boardH : 1;
+  const totalSlots = calc.sheetAcross * calc.sheetDown;
+  const usedSlots = Math.min(Math.max(num(calc.quantity, 0), 0), totalSlots);
 
   return (
     <div style={previewBox}>
@@ -1555,7 +1558,7 @@ function FullSheetLayoutPreview({ calc, sheetW = 48, sheetH = 96, title = "Sheet
                 width: pieceW * fitScale,
                 height: pieceH * fitScale,
                 border: "1px dashed #94a3b8",
-                background: "rgba(255,255,255,0.1)",
+                background: i < usedSlots ? "rgba(56,189,248,0.35)" : "rgba(255,255,255,0.06)",
                 boxSizing: "border-box",
               }}
             />
@@ -1568,6 +1571,9 @@ function FullSheetLayoutPreview({ calc, sheetW = 48, sheetH = 96, title = "Sheet
       <p style={{ margin: "6px 0", fontSize: 13 }}>Sheets rounded: {calc.sheetsRounded}</p>
       <p style={{ margin: "6px 0", fontSize: 13 }}>
         Piece orientation: {calc.previewPieceW}" × {calc.previewPieceH}"{calc.sheetRotated ? " (rotated)" : ""}
+      </p>
+      <p style={{ margin: "6px 0", fontSize: 12, color: "#cbd5e1" }}>
+        Showing first sheet layout: {usedSlots} of {totalSlots} available slots used
       </p>
     </div>
   );
