@@ -70,6 +70,7 @@ const productCategories = [
 ];
 
 const productMap = Object.fromEntries(productCategories.flatMap((c) => c.items.map((i) => [i.id, i])));
+const allProducts = productCategories.flatMap((c) => c.items.map((i) => ({ ...i, category: c.name })));
 
 const bannerOptions = {
   "13-single": { name: "13oz Single-Sided", cost: 1.25, retail: 5 },
@@ -333,8 +334,9 @@ export default function Page() {
   }, [theme]);
 
   useEffect(() => {
-    setPresetProduct(product);
-  }, [product]);
+    const linked = activeProduct && presetGroups[activeProduct] ? activeProduct : "coro";
+    setPresetProduct(linked);
+  }, [activeProduct]);
 
   function resetAll() {
     setProduct("coro"); setWidth(24); setHeight(18); setQty(1); setMargin(60); setMultiplier(1);
@@ -742,7 +744,9 @@ export default function Page() {
         ? "Poster Paper"
         : coroDouble
         ? "4mm Double-Sided Coroplast"
-        : "4mm Single-Sided Coroplast",
+        : activeProduct === "coro"
+        ? "4mm Single-Sided Coroplast"
+        : "Pricing coming soon",
     options: [
       activeProduct === "vinyl" ? `Vinyl Type: ${vinylOptions[vinylType].name}` : null,
       activeProduct === "vinyl" ? `Laminate: ${vinylLaminate}` : null,
@@ -966,7 +970,7 @@ export default function Page() {
           </select>
 
           <div className="buttonGrid" style={{ marginTop: 12 }}>
-            {presetGroups[presetProduct].map((p) => (
+            {(presetGroups[presetProduct] || []).map((p) => (
               <button
                 key={`${presetProduct}-${p.label}`}
                 className={presetClass(presetProduct, p.w, p.h, p.double || false)}
@@ -980,9 +984,15 @@ export default function Page() {
           <h2>Quote Details</h2>
 
           <label>Product</label>
-          <select style={input} value={activeProduct || ""} onChange={(e) => setProduct(e.target.value)}>
-            {Object.entries(products).map(([key, name]) => (
-              <option key={key} value={key}>{name}</option>
+          <select style={input} value={product} onChange={(e) => setProduct(e.target.value)}>
+            {productCategories.map((category) => (
+              <optgroup key={category.name} label={category.name}>
+                {category.items.map((item) => (
+                  <option key={item.id} value={item.id}>
+                    {item.label}{item.calculator ? "" : " (Coming Soon)"}
+                  </option>
+                ))}
+              </optgroup>
             ))}
           </select>
 
