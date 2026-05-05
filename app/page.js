@@ -19,8 +19,16 @@ const products = {
   banner: "Vinyl Banners",
   meshBanner: "Mesh Banners",
   acm: "ACM / Maxmetal",
+  acrylic: "Acrylic",
   vinyl: "Printed Vinyl",
   poster: "Poster Paper",
+};
+
+const acrylicOption = { name: "Acrylic", costPerSqIn: 0.1, minCost: 14.4 };
+
+const acrylicStandOffOptions = {
+  silver: { name: "Silver", directEach: 2.5, retailEach: 4 },
+  black: { name: "Black", directEach: 3.5, retailEach: 5 },
 };
 
 const productCategories = [
@@ -33,7 +41,7 @@ const productCategories = [
       { id: "meshBanner", label: "Mesh Banners", calculator: "meshBanner" },
       { id: "acm", label: "ACM / Maxmetal", calculator: "acm" },
       { id: "poster", label: "Poster Paper", calculator: "poster" },
-      { id: "acrylic", label: "Acrylic" }, { id: "foamcore", label: "Foamcore" },
+      { id: "acrylic", label: "Acrylic", calculator: "acrylic" }, { id: "foamcore", label: "Foamcore" },
       { id: "pvc", label: "PVC" }, { id: "polystyrene", label: "Polystyrene" },
       { id: "aluminum", label: "Aluminum" }, { id: "backlit", label: "Backlit" },
       { id: "vehicleMagnets", label: "Vehicle Magnets" },
@@ -307,6 +315,11 @@ export default function Page() {
   const [acmSqFtPrice, setAcmSqFtPrice] = useState(18);
   const [acmContour, setAcmContour] = useState(false);
   const [roundedCorners, setRoundedCorners] = useState(false);
+  const [acrylicContour, setAcrylicContour] = useState(false);
+  const [acrylicRoundedCorners, setAcrylicRoundedCorners] = useState(false);
+  const [acrylicStandOffs, setAcrylicStandOffs] = useState(false);
+  const [acrylicStandOffQty, setAcrylicStandOffQty] = useState(4);
+  const [acrylicStandOffColor, setAcrylicStandOffColor] = useState("silver");
 
   const [vinylType, setVinylType] = useState("gf-standard");
   const [vinylLaminate, setVinylLaminate] = useState("Gloss Laminate");
@@ -345,6 +358,7 @@ export default function Page() {
     setBannerType("13-single"); setPolePocket(false); setRope(false); setWindSlits(false); setBannerRush(false);
     setMeshPolePocket(false); setMeshGrommets(false); setMeshWelding(false); setMeshRope(false); setMeshWebbing(false); setMeshRush(false);
     setAcmType("3-single"); setAcmSqFtPrice(18); setAcmContour(false); setRoundedCorners(false);
+    setAcrylicContour(false); setAcrylicRoundedCorners(false); setAcrylicStandOffs(false); setAcrylicStandOffQty(4); setAcrylicStandOffColor("silver");
     setVinylType("gf-standard"); setVinylLaminate("Gloss Laminate"); setVinylContour(false); setVinylRush(false); setGangVinyl(false); setContourPadding(0.5); setGangWastePercent(15);
     setPosterRush(false);
   }
@@ -383,6 +397,11 @@ export default function Page() {
       { label: "18x24", w: 24, h: 18 }, { label: "24x36", w: 24, h: 36 }, { label: "24x48", w: 24, h: 48 },
       { label: "32x48", w: 32, h: 48 }, { label: "36x48", w: 36, h: 48 }, { label: "48x48", w: 48, h: 48 },
       { label: "24x96", w: 24, h: 96 }, { label: "48x96", w: 48, h: 96 },
+    ],
+    acrylic: [
+      { label: "12x18", w: 12, h: 18 }, { label: "18x24", w: 18, h: 24 }, { label: "24x36", w: 24, h: 36 },
+      { label: "24x48", w: 24, h: 48 }, { label: "32x48", w: 32, h: 48 }, { label: "36x48", w: 36, h: 48 },
+      { label: "48x48", w: 48, h: 48 },
     ],
     meshBanner: [
       { label: "24x36", w: 36, h: 24 }, { label: "36x60", w: 60, h: 36 }, { label: "36x72", w: 72, h: 36 },
@@ -634,6 +653,47 @@ export default function Page() {
         basePrice,
       };
     }
+    if (product === "acrylic") {
+      const costEach = Math.max(sqInEach * acrylicOption.costPerSqIn, acrylicOption.minCost);
+      const layout = sheetLayoutCount(w, h, q, true);
+      const sheetsRounded = layout.sheetsRounded;
+      const materialCost = costEach * q;
+      const shipping = shippingBySize(w, h, sheetsRounded);
+      const standOff = acrylicStandOffOptions[acrylicStandOffColor];
+      const standOffQty = acrylicStandOffs ? Math.max(num(acrylicStandOffQty, 0), 0) : 0;
+      const standOffDirectCost = standOffQty * standOff.directEach;
+      const standOffRetailCharge = standOffQty * standOff.retailEach;
+      const directCost = materialCost + standOffDirectCost + shipping;
+
+      let costMarginPrice = materialCost / (1 - m);
+      if (acrylicContour) costMarginPrice *= 1.1;
+      if (acrylicRoundedCorners) costMarginPrice += 5;
+      costMarginPrice += shipping;
+
+      const retail = (costMarginPrice + standOffRetailCharge + fees) * mult;
+
+      return {
+        label: "Acrylic",
+        retail,
+        each: retail / q,
+        cost: directCost,
+        profit: retail - directCost,
+        margin: retail ? ((retail - directCost) / retail) * 100 : 0,
+        totalSqFt,
+        materialCost,
+        shipping,
+        sheetsUsed: layout.sheetsUsed,
+        sheetsRounded,
+        piecesPerSheet: layout.piecesPerSheet,
+        sheetLayout: `${layout.across} across x ${layout.down} down${layout.rotated ? " (rotated)" : ""}`,
+        standOffQty,
+        standOffColor: standOff.name,
+        standOffDirectCost,
+        standOffRetailCharge,
+        costMarginPrice,
+        basePrice: costMarginPrice + standOffRetailCharge,
+      };
+    }
 
     const type = coroDouble ? "double" : "single";
     const scale = w === 18 && h === 12 ? 0.5 : 1;
@@ -716,6 +776,11 @@ export default function Page() {
     acmSqFtPrice,
     acmContour,
     roundedCorners,
+    acrylicContour,
+    acrylicRoundedCorners,
+    acrylicStandOffs,
+    acrylicStandOffQty,
+    acrylicStandOffColor,
     vinylType,
     vinylLaminate,
     vinylContour,
@@ -742,6 +807,8 @@ export default function Page() {
         ? acmOptions[acmType].name
         : activeProduct === "poster"
         ? "Poster Paper"
+        : activeProduct === "acrylic"
+        ? "Acrylic"
         : coroDouble
         ? "4mm Double-Sided Coroplast"
         : activeProduct === "coro"
@@ -752,6 +819,7 @@ export default function Page() {
       activeProduct === "vinyl" ? `Laminate: ${vinylLaminate}` : null,
       activeProduct === "banner" ? `Banner Type: ${bannerOptions[bannerType].name}` : null,
       activeProduct === "acm" ? `ACM Type: ${acmOptions[acmType].name}` : null,
+      activeProduct === "acrylic" ? "Acrylic Type: Standard" : null,
       activeProduct === "coro" ? (coroDouble ? "Coro: Double-Sided" : "Coro: Single-Sided") : null,
       activeProduct === "vinyl" && vinylContour ? "Contour Cut" : null,
       activeProduct === "vinyl" && vinylRush ? "Rush Order" : null,
@@ -781,6 +849,11 @@ export default function Page() {
       activeProduct === "meshBanner" && meshRush ? "Rush Order" : null,
       activeProduct === "acm" && acmContour ? "Contour Cut" : null,
       activeProduct === "acm" && roundedCorners ? "Rounded Corners" : null,
+      activeProduct === "acrylic" && acrylicContour ? "Contour Cut" : null,
+      activeProduct === "acrylic" && acrylicRoundedCorners ? "Rounded Corners" : null,
+      activeProduct === "acrylic" && acrylicStandOffs
+        ? `Stand-Offs: ${Math.max(num(acrylicStandOffQty, 0), 0)} ${acrylicStandOffOptions[acrylicStandOffColor].name}`
+        : null,
       activeProduct === "poster" && posterRush ? "Rush Order" : null,
       useDesignFee ? `Design Fee: ${money(num(designFee))}` : null,
       useSetupFee ? `Setup Fee: ${money(num(setupFee))}` : null,
@@ -1074,6 +1147,25 @@ export default function Page() {
               <Check label="Rounded Corners (+$5)" value={roundedCorners} setValue={setRoundedCorners} />
             </Box>
           )}
+          {activeProduct === "acrylic" && (
+            <Box title="Acrylic Options">
+              <Check label="Contour Cut (+10%)" value={acrylicContour} setValue={setAcrylicContour} />
+              <Check label="Rounded Corners (+$5)" value={acrylicRoundedCorners} setValue={setAcrylicRoundedCorners} />
+              <Check label="Enable Stand-Offs" value={acrylicStandOffs} setValue={setAcrylicStandOffs} />
+              {acrylicStandOffs && (
+                <div className="formGrid" style={grid}>
+                  <Field label="Stand-Off Quantity" value={acrylicStandOffQty} setValue={setAcrylicStandOffQty} />
+                  <div>
+                    <label>Stand-Off Color</label>
+                    <select style={input} value={acrylicStandOffColor} onChange={(e) => setAcrylicStandOffColor(e.target.value)}>
+                      <option value="silver">Silver</option>
+                      <option value="black">Black</option>
+                    </select>
+                  </div>
+                </div>
+              )}
+            </Box>
+          )}
 
           {activeProduct === "meshBanner" && (
             <Box title="Mesh Banner Options">
@@ -1141,6 +1233,13 @@ export default function Page() {
           {showBreakdown && calc.piecesPerSheet !== undefined && <p>Pieces Per Sheet: {showBreakdown && calc.piecesPerSheet}</p>}
           {showBreakdown && calc.sheetLayout !== undefined && <p>Sheet Layout: {showBreakdown && calc.sheetLayout}</p>}
           <p>Material Cost: {money(calc.materialCost)}</p>
+          {calc.standOffQty !== undefined && calc.standOffQty > 0 && (
+            <>
+              <p>Stand-Off Qty: {calc.standOffQty} ({calc.standOffColor})</p>
+              <p>Stand-Off Direct Cost: {money(calc.standOffDirectCost)}</p>
+              <p>Stand-Off Retail Charge: {money(calc.standOffRetailCharge)}</p>
+            </>
+          )}
           <p>Shipping: {money(calc.shipping)}</p>
           <p>Direct Cost: {money(calc.cost)}</p>
           <p>Actual Margin: {calc.margin.toFixed(1)}%</p>
@@ -1247,6 +1346,14 @@ function ProductVisual({ product, comingSoon }) {
       <div style={visualBox}>
         <div style={acmVisual}>ACM</div>
         <p style={visualLabel}>ACM / Maxmetal Selected</p>
+      </div>
+    );
+  }
+  if (product === "acrylic") {
+    return (
+      <div style={visualBox}>
+        <div style={acrylicVisual}>ACRYLIC</div>
+        <p style={visualLabel}>Acrylic Selected</p>
       </div>
     );
   }
@@ -1407,4 +1514,16 @@ const meshBannerVisual = {
   fontSize: 28,
   fontWeight: "bold",
   border: "4px solid #38bdf8",
+};
+
+const acrylicVisual = {
+  display: "inline-block",
+  background: "linear-gradient(135deg, rgba(186,230,253,.8), rgba(224,242,254,.45))",
+  color: "#0f172a",
+  borderRadius: 10,
+  padding: "34px 44px",
+  fontSize: 30,
+  fontWeight: "bold",
+  border: "3px solid rgba(125,211,252,.9)",
+  boxShadow: "inset 0 0 18px rgba(14,116,144,.18)",
 };
