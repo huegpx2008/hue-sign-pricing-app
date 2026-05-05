@@ -867,7 +867,15 @@ export default function Page() {
         <section className="card">
           <h2>Custom Presets</h2>
           <label>Preset Product</label>
-          <select style={input} value={presetProduct} onChange={(e) => setPresetProduct(e.target.value)}>
+          <select
+            style={input}
+            value={presetProduct}
+            onChange={(e) => {
+              const nextProduct = e.target.value;
+              setPresetProduct(nextProduct);
+              setProduct(nextProduct);
+            }}
+          >
             {Object.entries(products).map(([key, name]) => (
               <option key={key} value={key}>{name}</option>
             ))}
