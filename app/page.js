@@ -223,7 +223,7 @@ export default function Page() {
   const [product, setProduct] = useState("coro");
   const [width, setWidth] = useState(24);
   const [height, setHeight] = useState(18);
-  const [qty, setQty] = useState(10);
+  const [qty, setQty] = useState(1);
   const [margin, setMargin] = useState(60);
   const [multiplier, setMultiplier] = useState(1);
 
@@ -282,8 +282,12 @@ export default function Page() {
     if (typeof window !== "undefined") localStorage.setItem("hue-theme", theme);
   }, [theme]);
 
+  useEffect(() => {
+    setPresetProduct(product);
+  }, [product]);
+
   function resetAll() {
-    setProduct("coro"); setWidth(24); setHeight(18); setQty(10); setMargin(60); setMultiplier(1);
+    setProduct("coro"); setWidth(24); setHeight(18); setQty(1); setMargin(60); setMultiplier(1);
     setUseDesignFee(false); setUseSetupFee(false); setDesignFee(""); setSetupFee(""); setDelivery("");
     setCoroDouble(false); setCoroFlute("vertical"); setStakes(false); setHeavyStakes(false); setGrommets(false); setGloss(false); setCoroContour(false); setCoroRush(false);
     setBannerType("13-single"); setPolePocket(false); setRope(false); setWindSlits(false); setBannerRush(false);
