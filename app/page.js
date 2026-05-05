@@ -927,7 +927,7 @@ export default function Page() {
         }
       `}</style>
 
-      <h1>Hue Pricing Tool (Test Version)</h1>
+      <h1>Hue Graphics Pricing App — Test Build</h1>
       <div className="themeToggle">
         <button className={`modeBtn ${theme === "light" ? "active" : ""}`} onClick={() => setTheme("light")}>Light Mode</button>
         <button className={`modeBtn ${theme === "dark" ? "active" : ""}`} onClick={() => setTheme("dark")}>Dark Mode</button>
