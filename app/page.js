@@ -23,6 +23,55 @@ const products = {
   poster: "Poster Paper",
 };
 
+const productCategories = [
+  {
+    name: "Signs & Banners",
+    items: [
+      { id: "coro", label: "Coroplast Yard Signs", calculator: "coro" },
+      { id: "coroSigns", label: "Coro Signs", calculator: "coro" },
+      { id: "banner", label: "Vinyl Banners", calculator: "banner" },
+      { id: "meshBanner", label: "Mesh Banners", calculator: "meshBanner" },
+      { id: "acm", label: "ACM / Maxmetal", calculator: "acm" },
+      { id: "poster", label: "Poster Paper", calculator: "poster" },
+      { id: "acrylic", label: "Acrylic" }, { id: "foamcore", label: "Foamcore" },
+      { id: "pvc", label: "PVC" }, { id: "polystyrene", label: "Polystyrene" },
+      { id: "aluminum", label: "Aluminum" }, { id: "backlit", label: "Backlit" },
+      { id: "vehicleMagnets", label: "Vehicle Magnets" },
+    ],
+  },
+  {
+    name: "Vinyl / Decals",
+    items: [
+      { id: "vinyl", label: "Printed Vinyl", calculator: "vinyl" },
+      { id: "footprints", label: "FootPrints Vinyl" }, { id: "bootprints", label: "BootPrints Vinyl" },
+      { id: "reflective", label: "Reflective Vinyl" }, { id: "wallVinyl", label: "Wall Vinyl" },
+      { id: "windowPerf", label: "Window Perforated Vinyl" }, { id: "staticCling", label: "Static Cling" },
+      { id: "decals", label: "Decals / Stickers" },
+    ],
+  },
+  {
+    name: "Apparel",
+    items: [
+      { id: "apparelItem", label: "Apparel Item" },
+      { id: "dtfTransfers", label: "DTF Transfers" },
+      { id: "embroidery", label: "Embroidery" },
+    ],
+  },
+  {
+    name: "Paper Printing",
+    items: [
+      { id: "businessCards", label: "Business Cards" },
+      { id: "carbonless", label: "Carbonless Forms" },
+      { id: "doorHangers", label: "Door Hangers" },
+      { id: "notepads", label: "Notepads" },
+      { id: "envelopes", label: "Envelopes" },
+    ],
+  },
+];
+
+const productMap = Object.fromEntries(productCategories.flatMap((c) => c.items.map((i) => [i.id, i])));
+const allProducts = productCategories.flatMap((c) => c.items.map((i) => ({ ...i, category: c.name })));
+
 const bannerOptions = {
   "13-single": { name: "13oz Single-Sided", cost: 1.25, retail: 5 },
   "13-double": { name: "13oz Double-Sided", cost: 1.25, retail: 8 },
@@ -272,6 +321,8 @@ export default function Page() {
   const [showBreakdown, setShowBreakdown] = useState(false);
   const [presetProduct, setPresetProduct] = useState("coro");
 
+  const activeProduct = productMap[product]?.calculator || null;
+
 
   useEffect(() => {
     const savedTheme = typeof window !== "undefined" ? localStorage.getItem("hue-theme") : null;
@@ -283,8 +334,9 @@ export default function Page() {
   }, [theme]);
 
   useEffect(() => {
-    setPresetProduct(product);
-  }, [product]);
+    const linked = activeProduct && presetGroups[activeProduct] ? activeProduct : "coro";
+    setPresetProduct(linked);
+  }, [activeProduct]);
 
   function resetAll() {
     setProduct("coro"); setWidth(24); setHeight(18); setQty(1); setMargin(60); setMultiplier(1);
@@ -359,6 +411,10 @@ export default function Page() {
       num(delivery);
 
     const sqInEach = w * h;
+
+    if (!activeProduct) {
+      return { label: productMap[product]?.label || "Coming Soon", retail: 0, each: 0, cost: 0, profit: 0, margin: 0, totalSqFt: 0, materialCost: 0, shipping: 0, comingSoon: true };
+    }
     const sqFtEach = sqInEach / 144;
     const totalSqFt = sqFtEach * q;
 
@@ -672,58 +728,60 @@ export default function Page() {
 
   const selectedDetails = {
     product,
-    productName: products[product],
+    productName: productMap[product]?.label || products[activeProduct] || "Unknown Product",
     size: `${num(width)}" x ${num(height)}"`,
     qty: num(qty, 1),
     material:
-      product === "vinyl"
+      activeProduct === "vinyl"
         ? `${vinylOptions[vinylType].name} / ${vinylLaminate}`
-        : product === "banner"
+        : activeProduct === "banner"
         ? bannerOptions[bannerType].name
-        : product === "meshBanner"
+        : activeProduct === "meshBanner"
         ? "Mesh Banner Material"
-        : product === "acm"
+        : activeProduct === "acm"
         ? acmOptions[acmType].name
-        : product === "poster"
+        : activeProduct === "poster"
         ? "Poster Paper"
         : coroDouble
         ? "4mm Double-Sided Coroplast"
-        : "4mm Single-Sided Coroplast",
+        : activeProduct === "coro"
+        ? "4mm Single-Sided Coroplast"
+        : "Pricing coming soon",
     options: [
-      product === "vinyl" ? `Vinyl Type: ${vinylOptions[vinylType].name}` : null,
-      product === "vinyl" ? `Laminate: ${vinylLaminate}` : null,
-      product === "banner" ? `Banner Type: ${bannerOptions[bannerType].name}` : null,
-      product === "acm" ? `ACM Type: ${acmOptions[acmType].name}` : null,
-      product === "coro" ? (coroDouble ? "Coro: Double-Sided" : "Coro: Single-Sided") : null,
-      product === "vinyl" && vinylContour ? "Contour Cut" : null,
-      product === "vinyl" && vinylRush ? "Rush Order" : null,
-      product === "vinyl" && gangVinyl ? "Gang Vinyl Layout" : null,
-      product === "vinyl" && vinylContour && gangVinyl
+      activeProduct === "vinyl" ? `Vinyl Type: ${vinylOptions[vinylType].name}` : null,
+      activeProduct === "vinyl" ? `Laminate: ${vinylLaminate}` : null,
+      activeProduct === "banner" ? `Banner Type: ${bannerOptions[bannerType].name}` : null,
+      activeProduct === "acm" ? `ACM Type: ${acmOptions[acmType].name}` : null,
+      activeProduct === "coro" ? (coroDouble ? "Coro: Double-Sided" : "Coro: Single-Sided") : null,
+      activeProduct === "vinyl" && vinylContour ? "Contour Cut" : null,
+      activeProduct === "vinyl" && vinylRush ? "Rush Order" : null,
+      activeProduct === "vinyl" && gangVinyl ? "Gang Vinyl Layout" : null,
+      activeProduct === "vinyl" && vinylContour && gangVinyl
         ? `Contour Padding: ${num(contourPadding, 0.5)}"`
         : null,
-      product === "vinyl" && vinylContour && gangVinyl
+      activeProduct === "vinyl" && vinylContour && gangVinyl
         ? `Gang Waste: ${num(gangWastePercent, 0)}%`
         : null,
-      product === "coro" ? `Flute Direction: ${coroFlute}` : null,
-      product === "coro" && stakes ? "Standard Stakes" : null,
-      product === "coro" && heavyStakes ? "Heavy Duty Stakes" : null,
-      product === "coro" && grommets ? "Grommets" : null,
-      product === "coro" && gloss ? "Gloss Finish" : null,
-      product === "coro" && coroContour ? "Contour Cut" : null,
-      product === "coro" && coroRush ? "Rush Order" : null,
-      product === "banner" && polePocket ? "Pole Pocket" : null,
-      product === "banner" && rope ? "Rope" : null,
-      product === "banner" && windSlits ? "Wind Slits" : null,
-      product === "banner" && bannerRush ? "Rush Order" : null,
-      product === "meshBanner" && meshPolePocket ? "Pole Pocket" : null,
-      product === "meshBanner" && meshGrommets ? "Grommets" : null,
-      product === "meshBanner" && meshWelding ? "Welding" : null,
-      product === "meshBanner" && meshRope ? "Rope" : null,
-      product === "meshBanner" && meshWebbing ? "Webbing" : null,
-      product === "meshBanner" && meshRush ? "Rush Order" : null,
-      product === "acm" && acmContour ? "Contour Cut" : null,
-      product === "acm" && roundedCorners ? "Rounded Corners" : null,
-      product === "poster" && posterRush ? "Rush Order" : null,
+      activeProduct === "coro" ? `Flute Direction: ${coroFlute}` : null,
+      activeProduct === "coro" && stakes ? "Standard Stakes" : null,
+      activeProduct === "coro" && heavyStakes ? "Heavy Duty Stakes" : null,
+      activeProduct === "coro" && grommets ? "Grommets" : null,
+      activeProduct === "coro" && gloss ? "Gloss Finish" : null,
+      activeProduct === "coro" && coroContour ? "Contour Cut" : null,
+      activeProduct === "coro" && coroRush ? "Rush Order" : null,
+      activeProduct === "banner" && polePocket ? "Pole Pocket" : null,
+      activeProduct === "banner" && rope ? "Rope" : null,
+      activeProduct === "banner" && windSlits ? "Wind Slits" : null,
+      activeProduct === "banner" && bannerRush ? "Rush Order" : null,
+      activeProduct === "meshBanner" && meshPolePocket ? "Pole Pocket" : null,
+      activeProduct === "meshBanner" && meshGrommets ? "Grommets" : null,
+      activeProduct === "meshBanner" && meshWelding ? "Welding" : null,
+      activeProduct === "meshBanner" && meshRope ? "Rope" : null,
+      activeProduct === "meshBanner" && meshWebbing ? "Webbing" : null,
+      activeProduct === "meshBanner" && meshRush ? "Rush Order" : null,
+      activeProduct === "acm" && acmContour ? "Contour Cut" : null,
+      activeProduct === "acm" && roundedCorners ? "Rounded Corners" : null,
+      activeProduct === "poster" && posterRush ? "Rush Order" : null,
       useDesignFee ? `Design Fee: ${money(num(designFee))}` : null,
       useSetupFee ? `Setup Fee: ${money(num(setupFee))}` : null,
       num(delivery) > 0 ? `Delivery/Install: ${money(num(delivery))}` : null,
@@ -782,6 +840,7 @@ export default function Page() {
 
         .presetBtn:hover{transform:translateY(-1px); box-shadow:0 8px 16px rgba(30,64,175,.18);}
         .presetBtn:active{transform:translateY(1px);}
+        .comingSoonBtn{opacity:.7;border-style:dashed;}
         .activePreset {
           background: linear-gradient(160deg,#0f172a,#1e293b);
           color: white;
@@ -873,10 +932,27 @@ export default function Page() {
         <button className={`modeBtn ${theme === "light" ? "active" : ""}`} onClick={() => setTheme("light")}>Light Mode</button>
         <button className={`modeBtn ${theme === "dark" ? "active" : ""}`} onClick={() => setTheme("dark")}>Dark Mode</button>
       </div>
-      <p>Live quote calculator for coro, banners, ACM, vinyl, and poster paper.</p>
+      <p>Live quote calculator for signs, banners, ACM, vinyl, and poster paper.</p>
 
       <div className="layout">
         <section className="card">
+          <h2>Product Categories</h2>
+          {productCategories.map((category) => (
+            <Box key={category.name} title={category.name}>
+              <div className="buttonGrid">
+                {category.items.map((item) => (
+                  <button
+                    key={item.id}
+                    className={`presetBtn ${product === item.id ? "activePreset" : ""} ${item.calculator ? "" : "comingSoonBtn"}`}
+                    onClick={() => setProduct(item.id)}
+                  >
+                    {item.label} {!item.calculator ? "• Coming Soon" : ""}
+                  </button>
+                ))}
+              </div>
+            </Box>
+          ))}
+
           <h2>Custom Presets</h2>
           <label>Preset Product</label>
           <select
@@ -894,7 +970,7 @@ export default function Page() {
           </select>
 
           <div className="buttonGrid" style={{ marginTop: 12 }}>
-            {presetGroups[presetProduct].map((p) => (
+            {(presetGroups[presetProduct] || []).map((p) => (
               <button
                 key={`${presetProduct}-${p.label}`}
                 className={presetClass(presetProduct, p.w, p.h, p.double || false)}
@@ -909,12 +985,18 @@ export default function Page() {
 
           <label>Product</label>
           <select style={input} value={product} onChange={(e) => setProduct(e.target.value)}>
-            {Object.entries(products).map(([key, name]) => (
-              <option key={key} value={key}>{name}</option>
+            {productCategories.map((category) => (
+              <optgroup key={category.name} label={category.name}>
+                {category.items.map((item) => (
+                  <option key={item.id} value={item.id}>
+                    {item.label}{item.calculator ? "" : " (Coming Soon)"}
+                  </option>
+                ))}
+              </optgroup>
             ))}
           </select>
 
-          {product === "vinyl" && (
+          {activeProduct === "vinyl" && (
             <Box title="Printed Vinyl Options">
               <label>Vinyl Type</label>
               <select style={input} value={vinylType} onChange={(e) => setVinylType(e.target.value)}>
@@ -945,7 +1027,7 @@ export default function Page() {
             </Box>
           )}
 
-          {product === "coro" && (
+          {activeProduct === "coro" && (
             <Box title="Coro Options">
               <label>Flute Direction</label>
               <select style={input} value={coroFlute} onChange={(e) => setCoroFlute(e.target.value)}>
@@ -964,7 +1046,7 @@ export default function Page() {
             </Box>
           )}
 
-          {product === "banner" && (
+          {activeProduct === "banner" && (
             <Box title="Banner Options">
               <label>Banner Material</label>
               <select style={input} value={bannerType} onChange={(e) => setBannerType(e.target.value)}>
@@ -979,7 +1061,7 @@ export default function Page() {
             </Box>
           )}
 
-          {product === "acm" && (
+          {activeProduct === "acm" && (
             <Box title="ACM Options">
               <label>ACM Type</label>
               <select style={input} value={acmType} onChange={(e) => setAcmType(e.target.value)}>
@@ -993,7 +1075,7 @@ export default function Page() {
             </Box>
           )}
 
-          {product === "meshBanner" && (
+          {activeProduct === "meshBanner" && (
             <Box title="Mesh Banner Options">
               <Check label="Pole Pocket (+$1/linear ft + $10 setup)" value={meshPolePocket} setValue={setMeshPolePocket} />
               <Check label="Grommets (No additional cost)" value={meshGrommets} setValue={setMeshGrommets} />
@@ -1004,7 +1086,7 @@ export default function Page() {
             </Box>
           )}
 
-          {product === "poster" && (
+          {activeProduct === "poster" && (
             <Box title="Poster Paper Options">
               <Check label="Rush Order (2x)" value={posterRush} setValue={setPosterRush} />
             </Box>
@@ -1064,14 +1146,14 @@ export default function Page() {
           <p>Actual Margin: {calc.margin.toFixed(1)}%</p>
           <p>Multiplier: {num(multiplier, 1)}x</p>
 
-          <ProductVisual product={product} />
-          {product === "vinyl" && <VinylLayoutPreview calc={calc} />}
+          <ProductVisual product={activeProduct || product} comingSoon={!activeProduct} />
+          {activeProduct === "vinyl" && <VinylLayoutPreview calc={calc} />}
           <SelectedDetails details={selectedDetails} />
         </aside>
       </div>
       <div className="mobilePrice">
         <div className="mobilePriceTop"><strong>Suggested Retail {money(calc.retail).replace("$", "$ ")}</strong></div>
-        <div className="mobileMeta">{products[product]} • {num(width)}&quot; x {num(height)}&quot; • Qty {num(qty, 1)}</div>
+        <div className="mobileMeta">{productMap[product]?.label || products[activeProduct]} • {num(width)}&quot; x {num(height)}&quot; • Qty {num(qty, 1)}</div>
         <div className="mobileOptions">{selectedDetails.options.length ? `Options: ${selectedDetails.options.join(", ")}` : "Options: None"}</div>
       </div>
     </main>
@@ -1107,7 +1189,10 @@ function Box({ title, children }) {
   );
 }
 
-function ProductVisual({ product }) {
+function ProductVisual({ product, comingSoon }) {
+  if (comingSoon) {
+    return <div style={visualBox}><p style={visualLabel}>Pricing coming soon for this product.</p></div>;
+  }
   if (product === "coro") {
     return (
       <div style={visualBox}>
