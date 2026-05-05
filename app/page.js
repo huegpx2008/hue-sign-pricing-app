@@ -761,6 +761,19 @@ export default function Page() {
         .appRoot.dark .presetBtn{background:linear-gradient(180deg,#0f172a,#1e293b);color:#e2e8f0;border-color:#334155;}
         .appRoot.dark .mobilePrice{background:linear-gradient(160deg,#0b1738,#0f172a);color:#f8fafc;border:1px solid rgba(96,165,250,.35);}
 
+        .appRoot.dark .activePreset{
+          background:linear-gradient(180deg,#60a5fa,#3b82f6);
+          color:#0b1120;
+          border-color:#bfdbfe;
+          box-shadow:0 0 0 2px rgba(191,219,254,.95),0 10px 20px rgba(59,130,246,.45);
+        }
+        .appRoot.dark .modeBtn.active{
+          background:linear-gradient(180deg,#93c5fd,#60a5fa);
+          color:#0b1120;
+          border-color:#dbeafe;
+          box-shadow:0 0 0 2px rgba(147,197,253,.85), inset 0 1px 2px rgba(255,255,255,.35);
+        }
+
         input, select {
           box-sizing: border-box;
         }
