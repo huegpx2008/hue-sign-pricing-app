@@ -35,8 +35,8 @@ export const productCategories = [
     { id: "windowPerf", label: "Window Perforated Vinyl" }, { id: "staticCling", label: "Static Cling" },
     { id: "decals", label: "Decals / Stickers" },
   ] },
-  { name: "Apparel", items: [
-    { id: "apparelItem", label: "Apparel Item" },
+  { name: "Screen Printing", items: [
+    { id: "screenPrinting", label: "Screen Printing", calculator: "screenPrinting" },
     { id: "dtfTransfers", label: "DTF Transfers", calculator: "dtfTransfers" },
     { id: "embroidery", label: "Embroidery" },
   ] },

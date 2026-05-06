@@ -20,7 +20,8 @@ export default function PricingSummary({
   dtfSummary,
 }) {
   const isDtf = activeProduct === "dtfTransfers" && dtfSummary;
-  const summaryCalc = isDtf ? dtfSummary : calc;
+  const isScreenPrint = activeProduct === "screenPrinting" && dtfSummary;
+  const summaryCalc = (isDtf || isScreenPrint) ? dtfSummary : calc;
 
   return (
     <>
@@ -30,8 +31,8 @@ export default function PricingSummary({
         <p>Each: <strong>{money(summaryCalc.each)}</strong></p>
         <p>Profit: <strong>{money(summaryCalc.profit)}</strong></p>
         <hr />
-        <p>Product: {isDtf ? "DTF Transfers" : calc.label}</p>
-        {!isDtf && <p>Total Sq Ft: {calc.totalSqFt?.toFixed(2)}</p>}
+        <p>Product: {isDtf ? "DTF Transfers" : isScreenPrint ? "Screen Printing" : calc.label}</p>
+        {!isDtf && !isScreenPrint && <p>Total Sq Ft: {calc.totalSqFt?.toFixed(2)}</p>}
 
         <button className="modeBtn" style={{ marginBottom: 10 }} onClick={() => setShowBreakdown((v) => !v)}>{showBreakdown ? "Hide" : "Show"} Detailed Breakdown</button>
 
@@ -91,7 +92,7 @@ export default function PricingSummary({
           </>
         )}
 
-        {!isDtf && <ProductVisual product={activeProduct || product} comingSoon={!activeProduct} />}
+        {!isDtf && !isScreenPrint && <ProductVisual product={activeProduct || product} comingSoon={!activeProduct} />}
         {!isDtf && activeProduct === "vinyl" && <VinylLayoutPreview calc={calc} />}
         {!isDtf && (activeProduct === "foamcore" || activeProduct === "pvc") && <SheetLayoutPreview calc={calc} />}
         {isDtf ? (
@@ -106,6 +107,23 @@ export default function PricingSummary({
             <p><strong>Transfer Count:</strong> {dtfSummary.transferCount}</p>
             <p><strong>Size Upcharges:</strong> {money(dtfSummary.sizeUpchargeTotal)}</p>
           </div>
+        ) : isScreenPrint ? (
+          <>
+        {isScreenPrint && (
+          <div style={{ marginTop: 16, padding: 16, borderRadius: 16, background: "rgba(255,255,255,0.08)", color: "#e5e7eb", fontSize: 14, lineHeight: 1.35 }}>
+            <h3 style={{ marginTop: 0 }}>Screen Printing Summary</h3>
+            <p><strong>Total Garments:</strong> {dtfSummary.totalGarments}</p>
+            <p><strong>Apparel Direct Cost:</strong> {money(dtfSummary.apparelDirectCost)}</p>
+            <p><strong>Apparel Retail Subtotal:</strong> {money(dtfSummary.apparelRetailSubtotal)}</p>
+            <p><strong>Print Charge Subtotal:</strong> {money(dtfSummary.printChargeSubtotal)}</p>
+            <p><strong>Setup/Artwork Fee:</strong> {money(dtfSummary.setupFee)}</p>
+            <p><strong>Final Retail:</strong> {money(dtfSummary.retail)}</p>
+            <p><strong>Price Per Shirt:</strong> {money(dtfSummary.each)}</p>
+            <p><strong>Profit:</strong> {money(dtfSummary.profit)}</p>
+          </div>
+        )}
+
+          </>
         ) : <SelectedDetails details={selectedDetails} />}
       </aside>
 

@@ -481,6 +481,8 @@ export default function Page() {
                     <ProductOptions
             activeProduct={activeProduct}
             onDtfSummaryChange={setDtfSummary}
+            margin={margin}
+            multiplier={multiplier}
             grid={grid}
             vinylType={vinylType}
             setVinylType={setVinylType}

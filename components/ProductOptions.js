@@ -2,6 +2,7 @@ import { Box, Check, Field, input } from "./FormControls";
 import { acrylicStandOffOptions, acmOptions, bannerOptions, pvcOptions, vinylOptions } from "../data/productConfig";
 import { money } from "../utils/pricingHelpers";
 import DTFTransfers from "./products/DTFTransfers";
+import ScreenPrinting from "./products/ScreenPrinting";
 
 export default function ProductOptions(props) {
   const {
@@ -98,6 +99,8 @@ export default function ProductOptions(props) {
     pvcCustomCut,
     setPvcCustomCut,
     onDtfSummaryChange,
+    margin,
+    multiplier,
   } = props;
 
   return (
@@ -229,6 +232,8 @@ export default function ProductOptions(props) {
         </Box>
       )}
 
+
+      {activeProduct === "screenPrinting" && <ScreenPrinting margin={margin} multiplier={multiplier} onSummaryChange={onDtfSummaryChange} />}
 
       {activeProduct === "dtfTransfers" && <DTFTransfers onSummaryChange={onDtfSummaryChange} />}
 
