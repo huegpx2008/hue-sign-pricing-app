@@ -37,6 +37,140 @@ function toNumber(value) {
   return Number.isFinite(parsed) ? parsed : 0;
 }
 
+function layoutTransfers(items, rollWidth, padding, allowRotate) {
+  const usableItems = items
+    .map((item) => {
+      const baseW = toNumber(item.width);
+      const baseH = toNumber(item.height);
+      const rotatedW = baseH;
+      const rotatedH = baseW;
+
+      let width = baseW;
+      let height = baseH;
+      let rotated = false;
+
+      if (allowRotate) {
+        const fitsBase = baseW <= rollWidth;
+        const fitsRotated = rotatedW <= rollWidth;
+
+        if (!fitsBase && fitsRotated) {
+          width = rotatedW;
+          height = rotatedH;
+          rotated = true;
+        } else if (fitsBase && fitsRotated && rotatedH < baseH) {
+          width = rotatedW;
+          height = rotatedH;
+          rotated = true;
+        }
+      }
+
+      return {
+        ...item,
+        width,
+        height,
+        rotated,
+      };
+    })
+    .filter((item) => item.width > 0 && item.height > 0 && item.width <= rollWidth)
+    .sort((a, b) => b.height - a.height || b.width - a.width);
+
+  const rows = [];
+  for (const item of usableItems) {
+    const footprintW = item.width + padding;
+    const footprintH = item.height + padding;
+    let placed = false;
+
+    for (const row of rows) {
+      if (row.usedWidth + footprintW <= rollWidth + 0.0001) {
+        row.items.push({ ...item, x: row.usedWidth, y: row.y, footprintW, footprintH });
+        row.usedWidth += footprintW;
+        row.height = Math.max(row.height, footprintH);
+        placed = true;
+        break;
+      }
+    }
+
+    if (!placed) {
+      const y = rows.reduce((sum, row) => sum + row.height, 0);
+      rows.push({
+        y,
+        height: footprintH,
+        usedWidth: footprintW,
+        items: [{ ...item, x: 0, y, footprintW, footprintH }],
+      });
+    }
+  }
+
+  const rollLengthUsed = rows.reduce((sum, row) => sum + row.height, 0);
+  const placements = rows.flatMap((row) => row.items);
+  const rotationUsed = placements.some((p) => p.rotated);
+
+  return {
+    placements,
+    rows,
+    rollWidth,
+    rollLengthUsed,
+    totalTransfers: placements.length,
+    linearInches: rollLengthUsed,
+    rotationUsed,
+  };
+}
+
+function DtfRollPreview({ layout, padding }) {
+  if (!layout.totalTransfers) {
+    return <p style={{ margin: 0, opacity: 0.8 }}>Add transfers and quantity to generate a DTF roll preview.</p>;
+  }
+
+  const maxCanvasWidth = 700;
+  const pxPerInch = Math.max(8, Math.min(20, maxCanvasWidth / layout.rollWidth));
+  const canvasWidth = layout.rollWidth * pxPerInch;
+  const canvasHeight = Math.max(120, layout.rollLengthUsed * pxPerInch);
+  const colorMap = {
+    front: "rgba(59,130,246,0.4)",
+    back: "rgba(16,185,129,0.4)",
+    leftSleeve: "rgba(250,204,21,0.4)",
+    rightSleeve: "rgba(236,72,153,0.4)",
+  };
+
+  return (
+    <div>
+      <div style={{ fontSize: 12, marginBottom: 8, color: "#cbd5e1" }}>
+        22&quot; roll width • {layout.rollLengthUsed.toFixed(2)}&quot; long • padding {padding.toFixed(2)}&quot;
+      </div>
+      <div style={{ maxWidth: "100%", overflowX: "auto", border: "2px solid #38bdf8", borderRadius: 10, padding: 6 }}>
+        <div style={{ width: canvasWidth, height: canvasHeight, position: "relative", background: "rgba(15,23,42,0.7)" }}>
+          {layout.placements.map((item, index) => (
+            <div
+              key={`${item.type}-${index}`}
+              title={`${item.label}: ${item.width.toFixed(2)}\" × ${item.height.toFixed(2)}\"${item.rotated ? " (rotated)" : ""}`}
+              style={{
+                position: "absolute",
+                left: item.x * pxPerInch,
+                top: item.y * pxPerInch,
+                width: item.width * pxPerInch,
+                height: item.height * pxPerInch,
+                border: "1px dashed #cbd5e1",
+                background: colorMap[item.type] || "rgba(148,163,184,0.3)",
+                color: "#f8fafc",
+                fontSize: 10,
+                lineHeight: 1.2,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                textAlign: "center",
+                padding: 2,
+                boxSizing: "border-box",
+              }}
+            >
+              {item.label}
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function DTFTransfers() {
   const DEFAULT_MARGIN_PERCENT = 60;
   const FRONT_PRESETS = {
@@ -140,6 +274,37 @@ export default function DTFTransfers() {
     + (rightSleeve ? 1 : 0);
 
   const totalTransferCount = transferCountPerGarment * totalGarmentQty;
+
+  const dtfTransferItems = useMemo(() => {
+    if (!totalGarmentQty) return [];
+    const items = [];
+    const repeat = Math.max(0, Math.floor(totalGarmentQty));
+    const pushRepeated = (transfer) => {
+      for (let i = 0; i < repeat; i += 1) items.push({ ...transfer, id: `${transfer.type}-${i}` });
+    };
+
+    if (frontSelected && resolvedFrontSize) {
+      pushRepeated({ type: "front", label: "Front", width: resolvedFrontSize.width, height: resolvedFrontSize.height });
+    }
+    if (backSelected && resolvedBackSize) {
+      pushRepeated({ type: "back", label: "Back", width: resolvedBackSize.width, height: resolvedBackSize.height });
+    }
+    if (leftSleeve) {
+      pushRepeated({ type: "leftSleeve", label: "Left Sleeve", width: resolvedLeftSleeveSize.width, height: resolvedLeftSleeveSize.height });
+    }
+    if (rightSleeve) {
+      pushRepeated({ type: "rightSleeve", label: "Right Sleeve", width: resolvedRightSleeveSize.width, height: resolvedRightSleeveSize.height });
+    }
+    return items;
+  }, [totalGarmentQty, frontSelected, backSelected, leftSleeve, rightSleeve, resolvedFrontSize, resolvedBackSize, resolvedLeftSleeveSize.width, resolvedLeftSleeveSize.height, resolvedRightSleeveSize.width, resolvedRightSleeveSize.height]);
+
+  const dtfLayout = useMemo(() => {
+    const rollWidth = 22;
+    const safePadding = Math.max(0, toNumber(padding));
+    const noRotation = layoutTransfers(dtfTransferItems, rollWidth, safePadding, false);
+    const withRotation = layoutTransfers(dtfTransferItems, rollWidth, safePadding, true);
+    return withRotation.rollLengthUsed < noRotation.rollLengthUsed ? withRotation : noRotation;
+  }, [dtfTransferItems, padding]);
 
   const loadedRef = useRef(false);
 
@@ -387,7 +552,7 @@ export default function DTFTransfers() {
         </div>
       </Box>
 
-      <Box title="DTF Roll Layout Preview"><p style={{ margin: 0, opacity: 0.8 }}>Placeholder: DTF roll nesting/layout preview will appear here.</p></Box>
+      <Box title="DTF Roll Layout Preview"><DtfRollPreview layout={dtfLayout} padding={Math.max(0, toNumber(padding))} /></Box>
       <Box title="DTF Pricing Summary">
         <div style={{ display: "grid", gap: 6 }}>
           <div><strong>Base apparel cost used:</strong> ${baseApparelCostUsed.toFixed(2)} {manualApparelCost ? "(manual override)" : "(SanMar CASE_PRICE)"}</div>
@@ -402,6 +567,10 @@ export default function DTFTransfers() {
           <div><strong>Right sleeve:</strong> {rightSleeve ? `Selected (${resolvedRightSleeveSize.width}\" x ${resolvedRightSleeveSize.height}\")` : "None"}</div>
           <div><strong>Transfer padding:</strong> {toNumber(padding)}"</div>
           <div><strong>Total transfer count:</strong> {totalTransferCount}</div>
+          <div><strong>Roll width:</strong> {dtfLayout.rollWidth}"</div>
+          <div><strong>Roll length used:</strong> {dtfLayout.rollLengthUsed.toFixed(2)}"</div>
+          <div><strong>Rotation used:</strong> {dtfLayout.rotationUsed ? "Yes" : "No"}</div>
+          <div><strong>Estimated linear inches:</strong> {dtfLayout.linearInches.toFixed(2)}"</div>
         </div>
       </Box>
     </>
