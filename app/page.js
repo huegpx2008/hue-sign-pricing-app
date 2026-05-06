@@ -577,7 +577,7 @@ export default function Page() {
           />
 
 
-          {activeProduct !== "dtfTransfers" && (
+          {activeProduct !== "dtfTransfers" && activeProduct !== "screenPrinting" && (
             <div className="formGrid" style={grid}>
               <Field label="Quantity" value={qty} setValue={setQty} />
               <Field label="Width Inches" value={width} setValue={setWidth} />
@@ -590,12 +590,12 @@ export default function Page() {
 
           <button className="resetBtn" onClick={resetAll}>Reset to Defaults</button>
 
-          <Box title="Optional Fees">
+          {activeProduct !== "screenPrinting" && <Box title="Optional Fees">
             <Check label="Add Design Fee" value={useDesignFee} setValue={setUseDesignFee} />
             {useDesignFee && <Field label="Design Fee" value={designFee} setValue={setDesignFee} />}
             <Check label="Add Setup Fee" value={useSetupFee} setValue={setUseSetupFee} />
             {useSetupFee && <Field label="Setup Fee" value={setupFee} setValue={setSetupFee} />}
-          </Box>
+          </Box>}
         </section>
 
         <PricingSummary
