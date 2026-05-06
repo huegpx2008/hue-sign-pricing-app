@@ -20,18 +20,19 @@ export default function PricingSummary({
   dtfSummary,
 }) {
   const isDtf = activeProduct === "dtfTransfers" && dtfSummary;
-  const summaryCalc = isDtf ? dtfSummary : calc;
+  const isScreenPrint = activeProduct === "screenPrinting" && dtfSummary;
+  const summaryCalc = (isDtf || isScreenPrint) ? dtfSummary : calc;
 
   return (
     <>
       <aside className="summary sticky">
         <h2>Suggested Retail</h2>
         <div style={{ fontSize: 42, fontWeight: "bold" }}>{money(summaryCalc.retail)}</div>
-        <p>Each: <strong>{money(summaryCalc.each)}</strong></p>
+        {!(isScreenPrint && (dtfSummary.lineItems || []).length > 1) && <p>Each: <strong>{money(summaryCalc.each)}</strong></p>}
         <p>Profit: <strong>{money(summaryCalc.profit)}</strong></p>
         <hr />
-        <p>Product: {isDtf ? "DTF Transfers" : calc.label}</p>
-        {!isDtf && <p>Total Sq Ft: {calc.totalSqFt?.toFixed(2)}</p>}
+        <p>Product: {isDtf ? "DTF Transfers" : isScreenPrint ? "Screen Printing" : calc.label}</p>
+        {!isDtf && !isScreenPrint && <p>Total Sq Ft: {calc.totalSqFt?.toFixed(2)}</p>}
 
         <button className="modeBtn" style={{ marginBottom: 10 }} onClick={() => setShowBreakdown((v) => !v)}>{showBreakdown ? "Hide" : "Show"} Detailed Breakdown</button>
 
@@ -91,7 +92,7 @@ export default function PricingSummary({
           </>
         )}
 
-        {!isDtf && <ProductVisual product={activeProduct || product} comingSoon={!activeProduct} />}
+        {!isDtf && !isScreenPrint && <ProductVisual product={activeProduct || product} comingSoon={!activeProduct} />}
         {!isDtf && activeProduct === "vinyl" && <VinylLayoutPreview calc={calc} />}
         {!isDtf && (activeProduct === "foamcore" || activeProduct === "pvc") && <SheetLayoutPreview calc={calc} />}
         {isDtf ? (
@@ -106,13 +107,57 @@ export default function PricingSummary({
             <p><strong>Transfer Count:</strong> {dtfSummary.transferCount}</p>
             <p><strong>Size Upcharges:</strong> {money(dtfSummary.sizeUpchargeTotal)}</p>
           </div>
+        ) : isScreenPrint ? (
+          <div style={{ marginTop: 16, padding: 16, borderRadius: 16, background: "rgba(255,255,255,0.08)", color: "#e5e7eb", fontSize: 14, lineHeight: 1.35 }}>
+            <h3 style={{ marginTop: 0 }}>Screen Printing Details</h3>
+            <p><strong>Product:</strong> Screen Printing</p>
+            {(dtfSummary.lineItems || []).map((li, idx) => (
+              <div key={`${li.id}-${idx}`} style={{ marginBottom: 10, paddingBottom: 8, borderBottom: "1px solid rgba(148,163,184,0.35)" }}>
+                <p><strong>Line {idx + 1}:</strong> {li.style} — {li.title || ""}</p>
+                <p><strong>Color:</strong> {li.color || "Not selected"}</p>
+                <p><strong>Sizes:</strong> {Object.entries(li.sizeQty || {}).filter(([,v]) => Number(v) > 0).map(([k,v]) => `${k}:${v}`).join(", ") || "None"}</p>
+                <p><strong>Total Qty:</strong> {li.totalQty}</p>
+                <p><strong>CASE_PRICE (avg):</strong> {money(li.casePrice || 0)}</p>
+                <p><strong>Product Markup %:</strong> {li.productMarkupPercent || dtfSummary.productMarkupPercent}%</p>
+                <p><strong>Marked-up Garment Price:</strong> {money(li.markedUpGarmentPrice || 0)} /shirt</p>
+                <p><strong>Garment Direct:</strong> {money(li.garmentCost)}</p>
+                <p><strong>Garment Retail:</strong> {money(li.garmentRetail)}</p>
+                <p><strong>Print Charge Allocation:</strong> {money(li.printChargeAllocated || 0)}</p>
+                <p><strong>Setup Fee Allocation:</strong> Separate fee</p>
+                <p><strong>Final Retail Subtotal:</strong> {money(li.finalRetailSubtotal || 0)}</p>
+                <p><strong>Print Charge Per Shirt:</strong> {money(li.printChargePerShirt || 0)}</p>
+                <p><strong>Final Retail Per Shirt:</strong> {money(li.retailPerShirt || 0)}</p>
+              </div>
+            ))}
+            <p><strong>Total Garments:</strong> {dtfSummary.totalGarments}</p>
+            {(dtfSummary.printLines || []).map((pl, idx) => (
+              <p key={`${pl.id}-${idx}`}><strong>{pl.name}:</strong> {pl.colors} colors • {pl.pricingType} • {money(pl.pricePerPrint)}/print • {money(pl.subtotal)}</p>
+            ))}
+            <p><strong>Artwork/Setup Fee:</strong> {money(dtfSummary.setupFee)}</p>
+            <p><strong>Apparel Direct Cost:</strong> {money(dtfSummary.apparelDirectCost)}</p>
+            <p><strong>Apparel Retail Subtotal:</strong> {money(dtfSummary.apparelRetailSubtotal)}</p>
+            <p><strong>Print Charge Subtotal:</strong> {money(dtfSummary.printChargeSubtotal)}</p>
+            <p><strong>Direct Cost:</strong> {money(dtfSummary.cost)}</p>
+            <p><strong>Final Retail:</strong> {money(dtfSummary.retail)}</p>
+            <p><strong>Average price per shirt:</strong> {money(dtfSummary.averagePricePerShirt || dtfSummary.each)}</p>
+            <p><strong>Profit:</strong> {money(dtfSummary.profit)}</p>
+          </div>
         ) : <SelectedDetails details={selectedDetails} />}
       </aside>
 
       <div className="mobilePrice">
-        <div className="mobilePriceTop"><strong>Suggested Retail {money(calc.retail).replace("$", "$ ")}</strong></div>
-        <div className="mobileMeta">{productMap[product]?.label || products[activeProduct]} • {num(width)}&quot; x {num(height)}&quot; • Qty {num(qty, 1)}</div>
-        <div className="mobileOptions">{selectedDetails.options.length ? `Options: ${selectedDetails.options.join(", ")}` : "Options: None"}</div>
+        <div className="mobilePriceTop"><strong>Suggested Retail {money(summaryCalc.retail).replace("$", "$ ")}</strong></div>
+        {isScreenPrint ? (
+          <>
+            <div className="mobileMeta">Screen Printing • {dtfSummary.totalGarments || 0} garments • {(dtfSummary.lineItems || []).filter((li) => li.totalQty > 0).length} style(s)</div>
+            <div className="mobileOptions">{(dtfSummary.printLines || []).length ? (dtfSummary.printLines || []).map((pl) => `${pl.name} ${pl.colors}-color`).join(" • ") : "No print locations selected"} • Total: {money(dtfSummary.retail)}</div>
+          </>
+        ) : (
+          <>
+            <div className="mobileMeta">{productMap[product]?.label || products[activeProduct]} • {num(width)}&quot; x {num(height)}&quot; • Qty {num(qty, 1)}</div>
+            <div className="mobileOptions">{selectedDetails.options.length ? `Options: ${selectedDetails.options.join(", ")}` : "Options: None"}</div>
+          </>
+        )}
       </div>
     </>
   );
