@@ -78,6 +78,15 @@ export default function ProductVisual({ product, comingSoon }) {
     );
   }
 
+  if (product === "dtfTransfers") {
+    return (
+      <div style={visualBox}>
+        <div style={dtfVisual}>DTF</div>
+        <p style={visualLabel}>DTF Transfers Selected</p>
+      </div>
+    );
+  }
+
   if (product === "acrylic") {
     return (
       <div style={visualBox}>
@@ -206,4 +215,16 @@ const pvcVisual = {
   fontSize: 30,
   fontWeight: "bold",
   border: "3px solid #0ea5e9",
+};
+
+
+const dtfVisual = {
+  display: "inline-block",
+  background: "linear-gradient(135deg, #ecfccb, #bbf7d0)",
+  color: "#14532d",
+  borderRadius: 10,
+  padding: "34px 44px",
+  fontSize: 30,
+  fontWeight: "bold",
+  border: "3px solid #22c55e",
 };

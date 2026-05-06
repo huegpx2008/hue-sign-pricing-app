@@ -1,6 +1,7 @@
 import { Box, Check, Field, input } from "./FormControls";
 import { acrylicStandOffOptions, acmOptions, bannerOptions, pvcOptions, vinylOptions } from "../data/productConfig";
 import { money } from "../utils/pricingHelpers";
+import DTFTransfers from "./products/DTFTransfers";
 
 export default function ProductOptions(props) {
   const {
@@ -226,6 +227,9 @@ export default function ProductOptions(props) {
           <Check label="Custom Cut (No additional cost)" value={foamcoreCustomCut} setValue={setFoamcoreCustomCut} />
         </Box>
       )}
+
+
+      {activeProduct === "dtfTransfers" && <DTFTransfers />}
 
       {activeProduct === "pvc" && (
         <Box title="PVC Options">
