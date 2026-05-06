@@ -37,7 +37,7 @@ export const productCategories = [
   ] },
   { name: "Apparel", items: [
     { id: "apparelItem", label: "Apparel Item" },
-    { id: "dtfTransfers", label: "DTF Transfers" },
+    { id: "dtfTransfers", label: "DTF Transfers", calculator: "dtfTransfers" },
     { id: "embroidery", label: "Embroidery" },
   ] },
   { name: "Paper Printing", items: [
