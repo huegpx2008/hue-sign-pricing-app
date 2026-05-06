@@ -41,7 +41,6 @@ export default function DTFTransfers() {
   const [sanMarSearch, setSanMarSearch] = useState("");
   const [product, setProduct] = useState("Select product");
   const [color, setColor] = useState("Select color");
-  const [size, setSize] = useState("Select size range");
   const [frontPreset, setFrontPreset] = useState("None");
   const [backPreset, setBackPreset] = useState("None");
   const [leftSleeve, setLeftSleeve] = useState(false);
@@ -141,26 +140,23 @@ export default function DTFTransfers() {
     return [...new Set(selectedStyle.rows.map((row) => row.color).filter(Boolean))].sort();
   }, [selectedStyle]);
 
-  const availableSizes = useMemo(() => {
-    if (!selectedStyle || !color || color === "Select color") return [];
-    return [...new Set(selectedStyle.rows.filter((row) => row.color === color).map((row) => row.size).filter(Boolean))];
-  }, [selectedStyle, color]);
-
   useEffect(() => {
-    if (!selectedStyle || color === "Select color" || size === "Select size range") return;
-    const matched = selectedStyle.rows.find((row) => row.color === color && row.size === size) || null;
+    if (!selectedStyle || color === "Select color") return;
+    const matched = selectedStyle.rows.find((row) => row.color === color) || null;
     setSelectedProduct(matched);
     if (matched && !manualApparelCost) {
       setApparelCost(String(matched.casePrice));
     }
-  }, [selectedStyle, color, size, manualApparelCost]);
+    if (matched) {
+      setSanMarSearch("");
+    }
+  }, [selectedStyle, color, manualApparelCost]);
 
   function handleStyleSelect(styleKey) {
     const styleGroup = stylesByKey.get(styleKey);
     setSelectedStyleKey(styleKey);
     setProduct(styleGroup ? `${styleGroup.style} — ${styleGroup.title}` : "Select product");
     setColor("Select color");
-    setSize("Select size range");
     setSelectedProduct(null);
   }
 
@@ -185,8 +181,8 @@ export default function DTFTransfers() {
         )}
         {loadError && <p style={{ margin: "8px 0 0", fontSize: 14, color: "#b91c1c" }}>{loadError}</p>}
 
-        {!loading && filteredStyles.length > 0 && (
-          <div style={{ marginTop: 10, border: "1px solid #ddd", borderRadius: 10, maxHeight: 220, overflowY: "auto" }}>
+        {!loading && sanMarSearch && filteredStyles.length > 0 && (
+          <div style={{ marginTop: 10, border: "1px solid #64748b", borderRadius: 10, maxHeight: 220, overflowY: "auto", background: "rgba(15,23,42,0.92)", color: "#e5e7eb" }}>
             {filteredStyles.map((styleGroup) => (
               <button
                 key={styleGroup.key}
@@ -196,7 +192,8 @@ export default function DTFTransfers() {
                   width: "100%",
                   textAlign: "left",
                   border: "none",
-                  background: selectedStyleKey === styleGroup.key ? "rgba(0,0,0,0.08)" : "transparent",
+                  background: selectedStyleKey === styleGroup.key ? "rgba(59,130,246,0.22)" : "transparent",
+                  color: "inherit",
                   padding: 10,
                   cursor: "pointer",
                 }}
@@ -217,13 +214,6 @@ export default function DTFTransfers() {
             <select style={input} value={color} onChange={(e) => setColor(e.target.value)}>
               <option>Select color</option>
               {availableColors.map((colorName) => <option key={colorName}>{colorName}</option>)}
-            </select>
-          </div>
-          <div>
-            <label>Size</label>
-            <select style={input} value={size} onChange={(e) => setSize(e.target.value)}>
-              <option>Select size range</option>
-              {availableSizes.map((sizeValue) => <option key={sizeValue}>{sizeValue}</option>)}
             </select>
           </div>
         </div>
@@ -250,14 +240,14 @@ export default function DTFTransfers() {
       </Box>
 
       <Box title="Selected SanMar Product">
-        {!selectedProduct && <p style={{ margin: 0, opacity: 0.8 }}>Select style, color, and size to load SanMar product details.</p>}
+        {!selectedProduct && <p style={{ margin: 0, opacity: 0.8 }}>Select style and color to load SanMar product details.</p>}
         {selectedProduct && (
           <div style={{ display: "grid", gap: 6 }}>
             <div><strong>Style #:</strong> {selectedProduct.style}</div>
             <div><strong>Product:</strong> {selectedProduct.title}</div>
             <div><strong>Color:</strong> {selectedProduct.color}</div>
-            <div><strong>Size:</strong> {selectedProduct.size}</div>
-            <div><strong>Case Price:</strong> {selectedProduct.casePriceRaw}</div>
+            <div><strong>Case Price:</strong> {selectedProduct.casePriceRaw || "N/A"}</div>
+            <div><strong>Case Size:</strong> {selectedProduct.caseSize || "N/A"}</div>
           </div>
         )}
       </Box>
