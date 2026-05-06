@@ -17,30 +17,34 @@ export default function PricingSummary({
   multiplier,
   showBreakdown,
   setShowBreakdown,
+  dtfSummary,
 }) {
+  const isDtf = activeProduct === "dtfTransfers" && dtfSummary;
+  const summaryCalc = isDtf ? dtfSummary : calc;
+
   return (
     <>
       <aside className="summary sticky">
         <h2>Suggested Retail</h2>
-        <div style={{ fontSize: 42, fontWeight: "bold" }}>{money(calc.retail)}</div>
-        <p>Each: <strong>{money(calc.each)}</strong></p>
-        <p>Profit: <strong>{money(calc.profit)}</strong></p>
+        <div style={{ fontSize: 42, fontWeight: "bold" }}>{money(summaryCalc.retail)}</div>
+        <p>Each: <strong>{money(summaryCalc.each)}</strong></p>
+        <p>Profit: <strong>{money(summaryCalc.profit)}</strong></p>
         <hr />
-        <p>Product: {calc.label}</p>
-        <p>Total Sq Ft: {calc.totalSqFt?.toFixed(2)}</p>
+        <p>Product: {isDtf ? "DTF Transfers" : calc.label}</p>
+        {!isDtf && <p>Total Sq Ft: {calc.totalSqFt?.toFixed(2)}</p>}
 
         <button className="modeBtn" style={{ marginBottom: 10 }} onClick={() => setShowBreakdown((v) => !v)}>{showBreakdown ? "Hide" : "Show"} Detailed Breakdown</button>
 
-        {showBreakdown && calc.actualTotalSqFt !== undefined && <p>Actual Sq Ft: {calc.actualTotalSqFt.toFixed(2)}</p>}
-        {showBreakdown && calc.effectiveSqFtEach !== undefined && <p>Effective Sq Ft Each: {showBreakdown && calc.effectiveSqFtEach.toFixed(2)}</p>}
-        {showBreakdown && calc.billableSqFtEach !== undefined && <p>Billable Sq Ft Each: {showBreakdown && calc.billableSqFtEach.toFixed(2)}</p>}
-        {showBreakdown && calc.layoutWidth !== undefined && calc.layoutHeight !== undefined && (
+        {!isDtf && showBreakdown && calc.actualTotalSqFt !== undefined && <p>Actual Sq Ft: {calc.actualTotalSqFt.toFixed(2)}</p>}
+        {!isDtf && showBreakdown && calc.effectiveSqFtEach !== undefined && <p>Effective Sq Ft Each: {showBreakdown && calc.effectiveSqFtEach.toFixed(2)}</p>}
+        {!isDtf && showBreakdown && calc.billableSqFtEach !== undefined && <p>Billable Sq Ft Each: {showBreakdown && calc.billableSqFtEach.toFixed(2)}</p>}
+        {!isDtf && showBreakdown && calc.layoutWidth !== undefined && calc.layoutHeight !== undefined && (
           <p>Layout Size: {showBreakdown && calc.layoutWidth}" x {calc.layoutHeight}"</p>
         )}
-        {showBreakdown && calc.rawBillableSqFt !== undefined && <p>Raw Gang Sq Ft: {showBreakdown && calc.rawBillableSqFt.toFixed(2)}</p>}
-        {showBreakdown && calc.billingMode !== undefined && <p>Billing Mode: {showBreakdown && calc.billingMode}</p>}
-        {showBreakdown && calc.normalSqFt !== undefined && <p>Normal Layout Sq Ft: {showBreakdown && calc.normalSqFt.toFixed(2)}</p>}
-        {calc.rotatedSqFt !== undefined && <p>Rotated Layout Sq Ft: {calc.rotatedSqFt.toFixed(2)}</p>}
+        {!isDtf && showBreakdown && calc.rawBillableSqFt !== undefined && <p>Raw Gang Sq Ft: {showBreakdown && calc.rawBillableSqFt.toFixed(2)}</p>}
+        {!isDtf && showBreakdown && calc.billingMode !== undefined && <p>Billing Mode: {showBreakdown && calc.billingMode}</p>}
+        {!isDtf && showBreakdown && calc.normalSqFt !== undefined && <p>Normal Layout Sq Ft: {showBreakdown && calc.normalSqFt.toFixed(2)}</p>}
+        {!isDtf && calc.rotatedSqFt !== undefined && <p>Rotated Layout Sq Ft: {calc.rotatedSqFt.toFixed(2)}</p>}
 
         {showBreakdown && calc.tierPrice !== undefined && <p>Tier Price Total: {money(calc.tierPrice)}</p>}
         {showBreakdown && calc.costMarginPrice !== undefined && <p>Cost + Margin Price: {money(calc.costMarginPrice)}</p>}
@@ -50,7 +54,7 @@ export default function PricingSummary({
         {showBreakdown && calc.piecesPerSheet !== undefined && <p>Pieces Per Sheet: {showBreakdown && calc.piecesPerSheet}</p>}
         {showBreakdown && calc.sheetLayout !== undefined && <p>Sheet Layout: {showBreakdown && calc.sheetLayout}</p>}
         {showBreakdown && calc.costPerPiece !== undefined && <p>Cost Per Piece: {money(calc.costPerPiece)}</p>}
-        <p>Material Cost: {money(calc.materialCost)}</p>
+        <p>Material Cost: {money(summaryCalc.materialCost)}</p>
         {calc.standOffQty !== undefined && calc.standOffQty > 0 && (
           <>
             <p>Stand-Off Qty: {calc.standOffQty} ({calc.standOffColor})</p>
@@ -58,15 +62,40 @@ export default function PricingSummary({
             <p>Stand-Off Retail Charge: {money(calc.standOffRetailCharge)}</p>
           </>
         )}
-        <p>Shipping: {money(calc.shipping)}</p>
-        <p>Direct Cost: {money(calc.cost)}</p>
-        <p>Actual Margin: {calc.margin.toFixed(1)}%</p>
+        <p>Shipping: {money(summaryCalc.shipping)}</p>
+        <p>Direct Cost: {money(summaryCalc.cost)}</p>
+        <p>Actual Margin: {summaryCalc.margin.toFixed(1)}%</p>
         <p>Multiplier: {num(multiplier, 1)}x</p>
+        {isDtf && (
+          <>
+            <hr />
+            <p><strong>Apparel Direct:</strong> {money(dtfSummary.apparelDirectCost)}</p>
+            <p><strong>Apparel Retail Subtotal:</strong> {money(dtfSummary.apparelRetailSubtotal)}</p>
+            <p><strong>DTF Material Cost:</strong> {money(dtfSummary.dtfMaterialCost)}</p>
+            <p><strong>DTF Retail Subtotal:</strong> {money(dtfSummary.dtfRetailSubtotal)}</p>
+            <p><strong>Size Upcharges:</strong> {money(dtfSummary.sizeUpchargeTotal)}</p>
+            <p><strong>Sleeve Retail Add-On:</strong> {money(dtfSummary.sleeveRetailAddOnTotal)}</p>
+            <p><strong>Roll Length Used:</strong> {dtfSummary.rollLengthUsed.toFixed(2)}"</p>
+            <p><strong>Transfer Count:</strong> {dtfSummary.transferCount}</p>
+          </>
+        )}
 
-        <ProductVisual product={activeProduct || product} comingSoon={!activeProduct} />
-        {activeProduct === "vinyl" && <VinylLayoutPreview calc={calc} />}
-        {(activeProduct === "foamcore" || activeProduct === "pvc") && <SheetLayoutPreview calc={calc} />}
-        <SelectedDetails details={selectedDetails} />
+        {!isDtf && <ProductVisual product={activeProduct || product} comingSoon={!activeProduct} />}
+        {!isDtf && activeProduct === "vinyl" && <VinylLayoutPreview calc={calc} />}
+        {!isDtf && (activeProduct === "foamcore" || activeProduct === "pvc") && <SheetLayoutPreview calc={calc} />}
+        {isDtf ? (
+          <div style={{ marginTop: 16, padding: 16, borderRadius: 16, background: "rgba(255,255,255,0.08)", color: "#e5e7eb", fontSize: 14, lineHeight: 1.35 }}>
+            <h3 style={{ marginTop: 0 }}>Selected Details</h3>
+            <p><strong>Product:</strong> DTF Transfers</p>
+            <p><strong>SanMar Item:</strong> {dtfSummary.productDisplay}</p>
+            <p><strong>Apparel Cost Used:</strong> {money(dtfSummary.apparelCostUsed)}</p>
+            <p><strong>Total Garments:</strong> {dtfSummary.totalGarmentQty}</p>
+            <p><strong>Print Locations:</strong> {dtfSummary.selectedPrintLocations.length ? dtfSummary.selectedPrintLocations.join(", ") : "None selected"}</p>
+            <p><strong>Roll Length Used:</strong> {dtfSummary.rollLengthUsed.toFixed(2)}"</p>
+            <p><strong>Transfer Count:</strong> {dtfSummary.transferCount}</p>
+            <p><strong>Size Upcharges:</strong> {money(dtfSummary.sizeUpchargeTotal)}</p>
+          </div>
+        ) : <SelectedDetails details={selectedDetails} />}
       </aside>
 
       <div className="mobilePrice">

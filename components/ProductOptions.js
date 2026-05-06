@@ -97,6 +97,7 @@ export default function ProductOptions(props) {
     setPvcRush,
     pvcCustomCut,
     setPvcCustomCut,
+    onDtfSummaryChange,
   } = props;
 
   return (
@@ -229,7 +230,7 @@ export default function ProductOptions(props) {
       )}
 
 
-      {activeProduct === "dtfTransfers" && <DTFTransfers />}
+      {activeProduct === "dtfTransfers" && <DTFTransfers onSummaryChange={onDtfSummaryChange} />}
 
       {activeProduct === "pvc" && (
         <Box title="PVC Options">
