@@ -108,22 +108,32 @@ export default function PricingSummary({
             <p><strong>Size Upcharges:</strong> {money(dtfSummary.sizeUpchargeTotal)}</p>
           </div>
         ) : isScreenPrint ? (
-          <>
-        {isScreenPrint && (
           <div style={{ marginTop: 16, padding: 16, borderRadius: 16, background: "rgba(255,255,255,0.08)", color: "#e5e7eb", fontSize: 14, lineHeight: 1.35 }}>
-            <h3 style={{ marginTop: 0 }}>Screen Printing Summary</h3>
+            <h3 style={{ marginTop: 0 }}>Screen Printing Details</h3>
+            <p><strong>Product:</strong> Screen Printing</p>
+            {(dtfSummary.lineItems || []).map((li, idx) => (
+              <div key={`${li.id}-${idx}`} style={{ marginBottom: 10, paddingBottom: 8, borderBottom: "1px solid rgba(148,163,184,0.35)" }}>
+                <p><strong>Line {idx + 1}:</strong> {li.style} — {li.title || ""}</p>
+                <p><strong>Color:</strong> {li.color || "Not selected"}</p>
+                <p><strong>Sizes:</strong> {Object.entries(li.sizeQty || {}).filter(([,v]) => Number(v) > 0).map(([k,v]) => `${k}:${v}`).join(", ") || "None"}</p>
+                <p><strong>Total Qty:</strong> {li.totalQty}</p>
+                <p><strong>Garment Direct:</strong> {money(li.garmentCost)}</p>
+                <p><strong>Garment Retail:</strong> {money(li.garmentRetail)}</p>
+              </div>
+            ))}
             <p><strong>Total Garments:</strong> {dtfSummary.totalGarments}</p>
+            {(dtfSummary.printLines || []).map((pl, idx) => (
+              <p key={`${pl.id}-${idx}`}><strong>{pl.name}:</strong> {pl.colors} colors • {pl.pricingType} • {money(pl.pricePerPrint)}/print • {money(pl.subtotal)}</p>
+            ))}
+            <p><strong>Artwork/Setup Fee:</strong> {money(dtfSummary.setupFee)}</p>
             <p><strong>Apparel Direct Cost:</strong> {money(dtfSummary.apparelDirectCost)}</p>
             <p><strong>Apparel Retail Subtotal:</strong> {money(dtfSummary.apparelRetailSubtotal)}</p>
             <p><strong>Print Charge Subtotal:</strong> {money(dtfSummary.printChargeSubtotal)}</p>
-            <p><strong>Setup/Artwork Fee:</strong> {money(dtfSummary.setupFee)}</p>
+            <p><strong>Direct Cost:</strong> {money(dtfSummary.cost)}</p>
             <p><strong>Final Retail:</strong> {money(dtfSummary.retail)}</p>
             <p><strong>Price Per Shirt:</strong> {money(dtfSummary.each)}</p>
             <p><strong>Profit:</strong> {money(dtfSummary.profit)}</p>
           </div>
-        )}
-
-          </>
         ) : <SelectedDetails details={selectedDetails} />}
       </aside>
 
