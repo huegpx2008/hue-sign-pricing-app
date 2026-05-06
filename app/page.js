@@ -78,6 +78,7 @@ export default function Page() {
   const [theme, setTheme] = useState("light");
   const [showBreakdown, setShowBreakdown] = useState(false);
   const [presetProduct, setPresetProduct] = useState("coro");
+  const [dtfSummary, setDtfSummary] = useState(null);
 
   const activeProduct = productMap[product]?.calculator || null;
 
@@ -479,6 +480,7 @@ export default function Page() {
 
                     <ProductOptions
             activeProduct={activeProduct}
+            onDtfSummaryChange={setDtfSummary}
             grid={grid}
             vinylType={vinylType}
             setVinylType={setVinylType}
@@ -573,14 +575,16 @@ export default function Page() {
           />
 
 
-          <div className="formGrid" style={grid}>
-            <Field label="Quantity" value={qty} setValue={setQty} />
-            <Field label="Width Inches" value={width} setValue={setWidth} />
-            <Field label="Height Inches" value={height} setValue={setHeight} />
-            <Field label="Margin %" value={margin} setValue={setMargin} />
-            <Field label="Delivery / Install" value={delivery} setValue={setDelivery} />
-            <Field label="Price Multiplier" value={multiplier} setValue={setMultiplier} />
-          </div>
+          {activeProduct !== "dtfTransfers" && (
+            <div className="formGrid" style={grid}>
+              <Field label="Quantity" value={qty} setValue={setQty} />
+              <Field label="Width Inches" value={width} setValue={setWidth} />
+              <Field label="Height Inches" value={height} setValue={setHeight} />
+              <Field label="Margin %" value={margin} setValue={setMargin} />
+              <Field label="Delivery / Install" value={delivery} setValue={setDelivery} />
+              <Field label="Price Multiplier" value={multiplier} setValue={setMultiplier} />
+            </div>
+          )}
 
           <button className="resetBtn" onClick={resetAll}>Reset to Defaults</button>
 
@@ -605,6 +609,7 @@ export default function Page() {
           multiplier={multiplier}
           showBreakdown={showBreakdown}
           setShowBreakdown={setShowBreakdown}
+          dtfSummary={dtfSummary}
         />
       </div>
     </main>

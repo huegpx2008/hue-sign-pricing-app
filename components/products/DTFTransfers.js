@@ -171,7 +171,7 @@ function DtfRollPreview({ layout, padding }) {
   );
 }
 
-export default function DTFTransfers() {
+export default function DTFTransfers({ onSummaryChange }) {
   const DEFAULT_MARGIN_PERCENT = 60;
   const DTF_MATERIAL_COST_PER_LINEAR_INCH = 0.5;
   const DTF_MINIMUM_MATERIAL_CHARGE = 10;
@@ -326,6 +326,39 @@ export default function DTFTransfers() {
   ), [apparelRetailSubtotal, dtfRetailSubtotal, sizeUpchargeTotal]);
 
   const pricePerGarment = useMemo(() => (totalGarmentQty > 0 ? finalRetail / totalGarmentQty : 0), [finalRetail, totalGarmentQty]);
+
+  useEffect(() => {
+    if (!onSummaryChange) return;
+    onSummaryChange({
+      label: "DTF Transfers",
+      retail: finalRetail,
+      each: pricePerGarment,
+      cost: directCost,
+      profit: finalRetail - directCost,
+      margin: finalRetail ? ((finalRetail - directCost) / finalRetail) * 100 : 0,
+      materialCost: apparelDirectCost + dtfMaterialCost,
+      shipping: DTF_SHIPPING_FLAT,
+      apparelDirectCost,
+      apparelRetailSubtotal,
+      dtfMaterialCost,
+      dtfRetailSubtotal,
+      sizeUpchargeTotal,
+      directCost,
+      finalRetail,
+      pricePerGarment,
+      productDisplay: selectedProduct ? `${selectedProduct.style} — ${selectedProduct.title} (${selectedProduct.color})` : "No SanMar item selected",
+      apparelCostUsed: baseApparelCostUsed,
+      totalGarmentQty,
+      selectedPrintLocations: [
+        frontSelected ? `Front ${resolvedFrontSize ? `(${resolvedFrontSize.width}" x ${resolvedFrontSize.height}")` : ""}` : null,
+        backSelected ? `Back ${resolvedBackSize ? `(${resolvedBackSize.width}" x ${resolvedBackSize.height}")` : ""}` : null,
+        leftSleeve ? `Left Sleeve (${resolvedLeftSleeveSize.width}" x ${resolvedLeftSleeveSize.height}")` : null,
+        rightSleeve ? `Right Sleeve (${resolvedRightSleeveSize.width}" x ${resolvedRightSleeveSize.height}")` : null,
+      ].filter(Boolean),
+      rollLengthUsed: dtfLayout.rollLengthUsed,
+      transferCount: totalTransferCount,
+    });
+  }, [onSummaryChange, finalRetail, pricePerGarment, directCost, apparelDirectCost, dtfMaterialCost, DTF_SHIPPING_FLAT, apparelRetailSubtotal, dtfRetailSubtotal, sizeUpchargeTotal, selectedProduct, baseApparelCostUsed, totalGarmentQty, frontSelected, resolvedFrontSize, backSelected, resolvedBackSize, leftSleeve, resolvedLeftSleeveSize, rightSleeve, resolvedRightSleeveSize, dtfLayout.rollLengthUsed, totalTransferCount]);
 
   const loadedRef = useRef(false);
 
