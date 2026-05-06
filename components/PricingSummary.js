@@ -146,9 +146,18 @@ export default function PricingSummary({
       </aside>
 
       <div className="mobilePrice">
-        <div className="mobilePriceTop"><strong>Suggested Retail {money(calc.retail).replace("$", "$ ")}</strong></div>
-        <div className="mobileMeta">{productMap[product]?.label || products[activeProduct]} • {num(width)}&quot; x {num(height)}&quot; • Qty {num(qty, 1)}</div>
-        <div className="mobileOptions">{selectedDetails.options.length ? `Options: ${selectedDetails.options.join(", ")}` : "Options: None"}</div>
+        <div className="mobilePriceTop"><strong>Suggested Retail {money(summaryCalc.retail).replace("$", "$ ")}</strong></div>
+        {isScreenPrint ? (
+          <>
+            <div className="mobileMeta">Screen Printing • {dtfSummary.totalGarments || 0} garments • {(dtfSummary.lineItems || []).filter((li) => li.totalQty > 0).length} style(s)</div>
+            <div className="mobileOptions">{(dtfSummary.printLines || []).length ? (dtfSummary.printLines || []).map((pl) => `${pl.name} ${pl.colors}-color`).join(" • ") : "No print locations selected"} • Total: {money(dtfSummary.retail)}</div>
+          </>
+        ) : (
+          <>
+            <div className="mobileMeta">{productMap[product]?.label || products[activeProduct]} • {num(width)}&quot; x {num(height)}&quot; • Qty {num(qty, 1)}</div>
+            <div className="mobileOptions">{selectedDetails.options.length ? `Options: ${selectedDetails.options.join(", ")}` : "Options: None"}</div>
+          </>
+        )}
       </div>
     </>
   );
