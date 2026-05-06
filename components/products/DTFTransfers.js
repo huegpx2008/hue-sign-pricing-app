@@ -38,6 +38,14 @@ function toNumber(value) {
 }
 
 export default function DTFTransfers() {
+  const DEFAULT_MARGIN_PERCENT = 60;
+  const SIZE_UPCHARGES = {
+    qty2xl: 2.5,
+    qty3xl: 3.5,
+    qty4xl: 4.5,
+    qty5xl: 5,
+  };
+
   const [sanMarSearch, setSanMarSearch] = useState("");
   const [product, setProduct] = useState("Select product");
   const [color, setColor] = useState("Select color");
@@ -58,6 +66,29 @@ export default function DTFTransfers() {
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [apparelCost, setApparelCost] = useState("");
   const [manualApparelCost, setManualApparelCost] = useState(false);
+
+  const totalGarmentQty = useMemo(() => (
+    toNumber(qtySxl) + toNumber(qty2xl) + toNumber(qty3xl) + toNumber(qty4xl) + toNumber(qty5xl)
+  ), [qtySxl, qty2xl, qty3xl, qty4xl, qty5xl]);
+
+  const baseApparelCostUsed = useMemo(() => toNumber(apparelCost), [apparelCost]);
+
+  const sizeUpchargeTotal = useMemo(() => (
+    toNumber(qty2xl) * SIZE_UPCHARGES.qty2xl
+    + toNumber(qty3xl) * SIZE_UPCHARGES.qty3xl
+    + toNumber(qty4xl) * SIZE_UPCHARGES.qty4xl
+    + toNumber(qty5xl) * SIZE_UPCHARGES.qty5xl
+  ), [qty2xl, qty3xl, qty4xl, qty5xl]);
+
+  const apparelDirectCost = useMemo(() => totalGarmentQty * baseApparelCostUsed, [totalGarmentQty, baseApparelCostUsed]);
+
+  const apparelCostWithMargin = useMemo(() => {
+    const marginDecimal = DEFAULT_MARGIN_PERCENT / 100;
+    if (marginDecimal >= 1) return 0;
+    return apparelDirectCost / (1 - marginDecimal);
+  }, [apparelDirectCost]);
+
+  const apparelRetailSubtotal = useMemo(() => apparelCostWithMargin + sizeUpchargeTotal, [apparelCostWithMargin, sizeUpchargeTotal]);
 
   const loadedRef = useRef(false);
 
@@ -263,7 +294,16 @@ export default function DTFTransfers() {
       </Box>
 
       <Box title="DTF Roll Layout Preview"><p style={{ margin: 0, opacity: 0.8 }}>Placeholder: DTF roll nesting/layout preview will appear here.</p></Box>
-      <Box title="DTF Pricing Summary"><p style={{ margin: 0, opacity: 0.8 }}>Placeholder: DTF-specific pricing summary will appear here.</p></Box>
+      <Box title="DTF Pricing Summary">
+        <div style={{ display: "grid", gap: 6 }}>
+          <div><strong>Base apparel cost used:</strong> ${baseApparelCostUsed.toFixed(2)} {manualApparelCost ? "(manual override)" : "(SanMar CASE_PRICE)"}</div>
+          <div><strong>Total garment quantity:</strong> {totalGarmentQty}</div>
+          <div><strong>Size upcharge total:</strong> ${sizeUpchargeTotal.toFixed(2)}</div>
+          <div><strong>Apparel direct cost:</strong> ${apparelDirectCost.toFixed(2)}</div>
+          <div><strong>Apparel cost with margin ({DEFAULT_MARGIN_PERCENT}%):</strong> ${apparelCostWithMargin.toFixed(2)}</div>
+          <div><strong>Apparel retail subtotal:</strong> ${apparelRetailSubtotal.toFixed(2)}</div>
+        </div>
+      </Box>
     </>
   );
 }
