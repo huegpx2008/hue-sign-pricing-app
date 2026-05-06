@@ -212,6 +212,7 @@ export default function DTFTransfers({ onSummaryChange }) {
   const [rightSleeveWidth, setRightSleeveWidth] = useState(DEFAULT_SLEEVE_SIZE.width);
   const [rightSleeveHeight, setRightSleeveHeight] = useState(DEFAULT_SLEEVE_SIZE.height);
   const [padding, setPadding] = useState(0.25);
+  const [optimizeLayout, setOptimizeLayout] = useState(true);
   const [qtySxl, setQtySxl] = useState(0);
   const [qty2xl, setQty2xl] = useState(0);
   const [qty3xl, setQty3xl] = useState(0);
@@ -224,6 +225,7 @@ export default function DTFTransfers({ onSummaryChange }) {
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [apparelCost, setApparelCost] = useState("");
   const [manualApparelCost, setManualApparelCost] = useState(false);
+  const [copyStatus, setCopyStatus] = useState("");
 
   const totalGarmentQty = useMemo(() => (
     toNumber(qtySxl) + toNumber(qty2xl) + toNumber(qty3xl) + toNumber(qty4xl) + toNumber(qty5xl)
@@ -311,8 +313,17 @@ export default function DTFTransfers({ onSummaryChange }) {
     const safePadding = Math.max(0, toNumber(padding));
     const noRotation = layoutTransfers(dtfTransferItems, rollWidth, safePadding, false);
     const withRotation = layoutTransfers(dtfTransferItems, rollWidth, safePadding, true);
+    if (!optimizeLayout) return noRotation;
     return withRotation.rollLengthUsed < noRotation.rollLengthUsed ? withRotation : noRotation;
-  }, [dtfTransferItems, padding]);
+  }, [dtfTransferItems, padding, optimizeLayout]);
+
+  const dtfWasteSummary = useMemo(() => {
+    const runArea = dtfLayout.rollWidth * dtfLayout.rollLengthUsed;
+    const usedTransferArea = dtfLayout.placements.reduce((sum, item) => sum + (item.width * item.height), 0);
+    const unusedArea = Math.max(0, runArea - usedTransferArea);
+    const unusedPercent = runArea > 0 ? (unusedArea / runArea) * 100 : 0;
+    return { runArea, usedTransferArea, unusedArea, unusedPercent };
+  }, [dtfLayout]);
 
   const dtfMaterialCost = useMemo(() => (
     Math.max(dtfLayout.linearInches * DTF_MATERIAL_COST_PER_LINEAR_INCH, DTF_MINIMUM_MATERIAL_CHARGE)
@@ -511,6 +522,33 @@ export default function DTFTransfers({ onSummaryChange }) {
     setApparelCost(value);
   }
 
+  async function handleCopyQuote() {
+    const selectedLocations = [
+      frontSelected ? `Front${resolvedFrontSize ? ` (${resolvedFrontSize.width}" x ${resolvedFrontSize.height}")` : ""}` : null,
+      backSelected ? `Back${resolvedBackSize ? ` (${resolvedBackSize.width}" x ${resolvedBackSize.height}")` : ""}` : null,
+      leftSleeve ? `Left Sleeve (${resolvedLeftSleeveSize.width}" x ${resolvedLeftSleeveSize.height}")` : null,
+      rightSleeve ? `Right Sleeve (${resolvedRightSleeveSize.width}" x ${resolvedRightSleeveSize.height}")` : null,
+    ].filter(Boolean);
+
+    const quoteLines = [
+      "DTF Transfers Quote",
+      `SanMar Product: ${selectedProduct ? `${selectedProduct.style} — ${selectedProduct.title}` : "Not selected"}`,
+      `Color: ${selectedProduct?.color || color || "Not selected"}`,
+      `Garment Quantity: ${totalGarmentQty}`,
+      `Print Locations: ${selectedLocations.length ? selectedLocations.join(", ") : "None selected"}`,
+      `Total Price: $${finalRetail.toFixed(2)}`,
+      `Price Per Garment: $${pricePerGarment.toFixed(2)}`,
+    ].join("\n");
+
+    try {
+      await navigator.clipboard.writeText(quoteLines);
+      setCopyStatus("Quote copied");
+    } catch (error) {
+      setCopyStatus("Unable to copy quote");
+    }
+    setTimeout(() => setCopyStatus(""), 2500);
+  }
+
   return (
     <>
       <Box title="DTF Transfers Product Setup">
@@ -643,6 +681,7 @@ export default function DTFTransfers({ onSummaryChange }) {
           </>
         )}
         <Field label="Padding (inches)" value={padding} setValue={setPadding} />
+        <Check label="Optimize Layout" value={optimizeLayout} setValue={setOptimizeLayout} />
       </Box>
 
       <Box title="Selected SanMar Product">
@@ -691,9 +730,19 @@ export default function DTFTransfers({ onSummaryChange }) {
           <div><strong>Total transfer count:</strong> {totalTransferCount}</div>
           <div><strong>Roll width:</strong> {dtfLayout.rollWidth}"</div>
           <div><strong>Roll length used:</strong> {dtfLayout.rollLengthUsed.toFixed(2)}"</div>
+          <div><strong>Estimated unused area:</strong> {dtfWasteSummary.unusedArea.toFixed(2)} sq in</div>
+          <div><strong>Unused roll space:</strong> {dtfWasteSummary.unusedPercent.toFixed(1)}%</div>
+          {dtfLayout.totalTransfers > 0 && dtfWasteSummary.unusedPercent >= 10 && (
+            <div style={{ color: "#bfdbfe" }}>You may be able to fit more transfers in this run.</div>
+          )}
           <div><strong>Rotation used:</strong> {dtfLayout.rotationUsed ? "Yes" : "No"}</div>
+          <div><strong>Layout optimization:</strong> {optimizeLayout ? "Enabled (auto-rotation allowed)" : "Disabled (no rotation)"}</div>
           <div><strong>Estimated linear inches:</strong> {dtfLayout.linearInches.toFixed(2)}"</div>
           <div><strong>Material formula:</strong> {dtfLayout.linearInches.toFixed(2)} × ${DTF_MATERIAL_COST_PER_LINEAR_INCH.toFixed(2)} (min ${DTF_MINIMUM_MATERIAL_CHARGE.toFixed(2)})</div>
+        </div>
+        <div style={{ marginTop: 12 }}>
+          <button type="button" className="modeBtn" onClick={handleCopyQuote}>Copy Quote</button>
+          {copyStatus && <span style={{ marginLeft: 10, fontSize: 13, color: "#bfdbfe" }}>{copyStatus}</span>}
         </div>
       </Box>
     </>

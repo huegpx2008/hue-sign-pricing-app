@@ -68,6 +68,17 @@ export default function PricingSummary({
         <p>Multiplier: {num(multiplier, 1)}x</p>
         {isDtf && (
           <>
+            {showBreakdown && (
+              <>
+                <hr />
+                <p><strong>DTF Profit Breakdown</strong></p>
+                <p><strong>Apparel Profit:</strong> {money(dtfSummary.apparelRetailSubtotal - dtfSummary.apparelDirectCost)}</p>
+                <p><strong>DTF Material Profit:</strong> {money(dtfSummary.dtfRetailSubtotal - dtfSummary.dtfMaterialCost)}</p>
+                <p><strong>Sleeve Add-On Retail:</strong> {money(dtfSummary.sleeveRetailAddOnTotal)}</p>
+                <p><strong>Sleeve Add-On Profit:</strong> {money(dtfSummary.sleeveRetailAddOnTotal)}</p>
+                <p><strong>Total Profit:</strong> {money(summaryCalc.profit)}</p>
+              </>
+            )}
             <hr />
             <p><strong>Apparel Direct:</strong> {money(dtfSummary.apparelDirectCost)}</p>
             <p><strong>Apparel Retail Subtotal:</strong> {money(dtfSummary.apparelRetailSubtotal)}</p>
