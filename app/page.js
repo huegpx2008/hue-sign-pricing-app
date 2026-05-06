@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import ProductVisual from "../components/ProductVisual";
 import VinylLayoutPreview from "../components/VinylLayoutPreview";
 import SheetLayoutPreview from "../components/SheetLayoutPreview";
+import { Box, Check, Field, SelectedDetails, input } from "../components/FormControls";
 import { money, num, getFoamcoreSheetPrice, getPvcSheetPrice, getTierPrice, getCoroSheetCost, shippingBySize, sheetLayoutCount, getVinylBillableSqFt } from "../utils/pricingHelpers";
 import { products, acrylicOption, acrylicStandOffOptions, productCategories, bannerOptions, acmOptions, vinylOptions, coroPricing, coroSheetCost, foamcoreSheetPricing, pvcSheetPricing, pvcOptions } from "../data/productConfig";
 
@@ -1154,57 +1155,6 @@ export default function Page() {
 }
 
 const grid = { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 15, marginTop: 15 };
-const input = { width: "100%", padding: 12, borderRadius: 10, border: "1px solid #ccc", fontSize: 16 };
-
-function Field({ label, value, setValue }) {
-  return (
-    <div>
-      <label>{label}</label>
-      <input type="number" value={value} onChange={(e) => setValue(e.target.value)} placeholder="0" style={input} />
-    </div>
-  );
-}
-
-function Check({ label, value, setValue }) {
-  return (
-    <label style={{ display: "block", marginTop: 12 }}>
-      <input type="checkbox" checked={value} onChange={(e) => setValue(e.target.checked)} /> {label}
-    </label>
-  );
-}
-
-function Box({ title, children }) {
-  return (
-    <div className="optionBox" style={{ marginTop: 20, padding: 15, borderRadius: 12 }}>
-      <h3>{title}</h3>
-      {children}
-    </div>
-  );
-}
-
-function SelectedDetails({ details }) {
-  return (
-    <div style={detailsBox}>
-      <h3 style={{ marginTop: 0 }}>Selected Details</h3>
-      <p><strong>Product:</strong> {details.productName}</p>
-      <p><strong>Size:</strong> {details.size}</p>
-      <p><strong>Quantity:</strong> {details.qty}</p>
-      <p><strong>Material:</strong> {details.material}</p>
-      <p><strong>Options:</strong> {details.options.length ? details.options.join(", ") : "None"}</p>
-    </div>
-  );
-}
-
-const detailsBox = {
-  marginTop: 16,
-  padding: 16,
-  borderRadius: 16,
-  background: "rgba(255,255,255,0.08)",
-  color: "#e5e7eb",
-  fontSize: 14,
-  lineHeight: 1.35,
-};
-
 const visualLabel = { marginTop: 12, fontSize: 14, color: "#cbd5e1" };
 const coroSign = { display: "inline-block", position: "relative", height: 120, width: 180 };
 
