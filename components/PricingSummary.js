@@ -28,7 +28,7 @@ export default function PricingSummary({
       <aside className="summary sticky">
         <h2>Suggested Retail</h2>
         <div style={{ fontSize: 42, fontWeight: "bold" }}>{money(summaryCalc.retail)}</div>
-        <p>Each: <strong>{money(summaryCalc.each)}</strong></p>
+        {!(isScreenPrint && (dtfSummary.lineItems || []).length > 1) && <p>Each: <strong>{money(summaryCalc.each)}</strong></p>}
         <p>Profit: <strong>{money(summaryCalc.profit)}</strong></p>
         <hr />
         <p>Product: {isDtf ? "DTF Transfers" : isScreenPrint ? "Screen Printing" : calc.label}</p>
@@ -119,6 +119,10 @@ export default function PricingSummary({
                 <p><strong>Total Qty:</strong> {li.totalQty}</p>
                 <p><strong>Garment Direct:</strong> {money(li.garmentCost)}</p>
                 <p><strong>Garment Retail:</strong> {money(li.garmentRetail)}</p>
+                <p><strong>Print Charge Allocation:</strong> {money(li.printChargeAllocated || 0)}</p>
+                <p><strong>Setup Fee Allocation:</strong> {money(li.setupFeeAllocated || 0)}</p>
+                <p><strong>Final Retail Subtotal:</strong> {money(li.finalRetailSubtotal || 0)}</p>
+                <p><strong>Retail Per Shirt:</strong> {money(li.retailPerShirt || 0)}</p>
               </div>
             ))}
             <p><strong>Total Garments:</strong> {dtfSummary.totalGarments}</p>
@@ -131,7 +135,7 @@ export default function PricingSummary({
             <p><strong>Print Charge Subtotal:</strong> {money(dtfSummary.printChargeSubtotal)}</p>
             <p><strong>Direct Cost:</strong> {money(dtfSummary.cost)}</p>
             <p><strong>Final Retail:</strong> {money(dtfSummary.retail)}</p>
-            <p><strong>Price Per Shirt:</strong> {money(dtfSummary.each)}</p>
+            <p><strong>Average price per shirt:</strong> {money(dtfSummary.averagePricePerShirt || dtfSummary.each)}</p>
             <p><strong>Profit:</strong> {money(dtfSummary.profit)}</p>
           </div>
         ) : <SelectedDetails details={selectedDetails} />}
