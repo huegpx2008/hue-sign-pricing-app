@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import ProductVisual from "../components/ProductVisual";
 
 const money = (n) =>
   Number(n || 0).toLocaleString("en-US", {
@@ -1502,96 +1503,6 @@ function Box({ title, children }) {
   );
 }
 
-function ProductVisual({ product, comingSoon }) {
-  if (comingSoon) {
-    return <div style={visualBox}><p style={visualLabel}>Pricing coming soon for this product.</p></div>;
-  }
-  if (product === "coro") {
-    return (
-      <div style={visualBox}>
-        <div style={coroSign}>
-          <div style={signPanel}>CORO</div>
-          <div style={stakeLeft}></div>
-          <div style={stakeRight}></div>
-        </div>
-        <p style={visualLabel}>Coroplast Yard Sign Selected</p>
-      </div>
-    );
-  }
-
-  if (product === "banner") {
-    return (
-      <div style={visualBox}>
-        <div style={bannerVisual}>BANNER</div>
-        <p style={visualLabel}>Vinyl Banner Selected</p>
-      </div>
-    );
-  }
-
-  if (product === "vinyl") {
-    return (
-      <div style={visualBox}>
-        <div style={vinylVisual}>VINYL</div>
-        <p style={visualLabel}>Printed Vinyl Selected</p>
-      </div>
-    );
-  }
-
-  if (product === "poster") {
-    return (
-      <div style={visualBox}>
-        <div style={posterVisual}>POSTER</div>
-        <p style={visualLabel}>Poster Paper Selected</p>
-      </div>
-    );
-  }
-
-  if (product === "meshBanner") {
-    return (
-      <div style={visualBox}>
-        <div style={meshBannerVisual}>MESH</div>
-        <p style={visualLabel}>Mesh Banner Selected</p>
-      </div>
-    );
-  }
-
-  if (product === "acm") {
-    return (
-      <div style={visualBox}>
-        <div style={acmVisual}>ACM</div>
-        <p style={visualLabel}>ACM / Maxmetal Selected</p>
-      </div>
-    );
-  }
-  if (product === "foamcore") {
-    return (
-      <div style={visualBox}>
-        <div style={foamcoreVisual}>FOAMCORE</div>
-        <p style={visualLabel}>Foamcore Selected</p>
-      </div>
-    );
-  }
-  if (product === "pvc") {
-    return (
-      <div style={visualBox}>
-        <div style={pvcVisual}>PVC</div>
-        <p style={visualLabel}>PVC Selected</p>
-      </div>
-    );
-  }
-
-  if (product === "acrylic") {
-    return (
-      <div style={visualBox}>
-        <div style={acrylicVisual}>ACRYLIC</div>
-        <p style={visualLabel}>Acrylic Selected</p>
-      </div>
-    );
-  }
-
-  return null;
-}
-
 function VinylLayoutPreview({ calc }) {
   if (!calc.piecesAcross || !calc.rows || !calc.pieceW || !calc.pieceH) return null;
 
@@ -1757,14 +1668,6 @@ function SelectedDetails({ details }) {
     </div>
   );
 }
-
-const visualBox = {
-  marginTop: 25,
-  padding: 18,
-  borderRadius: 16,
-  background: "rgba(255,255,255,0.08)",
-  textAlign: "center",
-};
 
 const previewBox = {
   marginTop: 20,
