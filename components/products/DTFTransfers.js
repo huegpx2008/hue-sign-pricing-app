@@ -173,6 +173,9 @@ function DtfRollPreview({ layout, padding }) {
 
 export default function DTFTransfers() {
   const DEFAULT_MARGIN_PERCENT = 60;
+  const DTF_MATERIAL_COST_PER_LINEAR_INCH = 0.5;
+  const DTF_MINIMUM_MATERIAL_CHARGE = 10;
+  const DTF_SHIPPING_FLAT = 10;
   const FRONT_PRESETS = {
     "Left Chest": { width: 4, height: 4 },
     "Full Front": { width: 11, height: 10 },
@@ -240,7 +243,7 @@ export default function DTFTransfers() {
     return apparelDirectCost / (1 - marginDecimal);
   }, [apparelDirectCost]);
 
-  const apparelRetailSubtotal = useMemo(() => apparelCostWithMargin + sizeUpchargeTotal, [apparelCostWithMargin, sizeUpchargeTotal]);
+  const apparelRetailSubtotal = useMemo(() => apparelCostWithMargin, [apparelCostWithMargin]);
 
   const frontSelected = frontPreset !== "None";
   const backSelected = backPreset !== "None";
@@ -305,6 +308,24 @@ export default function DTFTransfers() {
     const withRotation = layoutTransfers(dtfTransferItems, rollWidth, safePadding, true);
     return withRotation.rollLengthUsed < noRotation.rollLengthUsed ? withRotation : noRotation;
   }, [dtfTransferItems, padding]);
+
+  const dtfMaterialCost = useMemo(() => (
+    Math.max(dtfLayout.linearInches * DTF_MATERIAL_COST_PER_LINEAR_INCH, DTF_MINIMUM_MATERIAL_CHARGE)
+  ), [dtfLayout.linearInches]);
+
+  const dtfRetailSubtotal = useMemo(() => {
+    const marginDecimal = DEFAULT_MARGIN_PERCENT / 100;
+    if (marginDecimal >= 1) return 0;
+    return dtfMaterialCost / (1 - marginDecimal);
+  }, [dtfMaterialCost]);
+
+  const directCost = useMemo(() => apparelDirectCost + dtfMaterialCost + DTF_SHIPPING_FLAT, [apparelDirectCost, dtfMaterialCost]);
+
+  const finalRetail = useMemo(() => (
+    apparelRetailSubtotal + dtfRetailSubtotal + sizeUpchargeTotal + DTF_SHIPPING_FLAT
+  ), [apparelRetailSubtotal, dtfRetailSubtotal, sizeUpchargeTotal]);
+
+  const pricePerGarment = useMemo(() => (totalGarmentQty > 0 ? finalRetail / totalGarmentQty : 0), [finalRetail, totalGarmentQty]);
 
   const loadedRef = useRef(false);
 
@@ -557,10 +578,15 @@ export default function DTFTransfers() {
         <div style={{ display: "grid", gap: 6 }}>
           <div><strong>Base apparel cost used:</strong> ${baseApparelCostUsed.toFixed(2)} {manualApparelCost ? "(manual override)" : "(SanMar CASE_PRICE)"}</div>
           <div><strong>Total garment quantity:</strong> {totalGarmentQty}</div>
-          <div><strong>Size upcharge total:</strong> ${sizeUpchargeTotal.toFixed(2)}</div>
           <div><strong>Apparel direct cost:</strong> ${apparelDirectCost.toFixed(2)}</div>
-          <div><strong>Apparel cost with margin ({DEFAULT_MARGIN_PERCENT}%):</strong> ${apparelCostWithMargin.toFixed(2)}</div>
           <div><strong>Apparel retail subtotal:</strong> ${apparelRetailSubtotal.toFixed(2)}</div>
+          <div><strong>DTF material cost:</strong> ${dtfMaterialCost.toFixed(2)}</div>
+          <div><strong>DTF retail subtotal:</strong> ${dtfRetailSubtotal.toFixed(2)}</div>
+          <div><strong>Size upcharge total:</strong> ${sizeUpchargeTotal.toFixed(2)}</div>
+          <div><strong>Shipping (pass-through):</strong> ${DTF_SHIPPING_FLAT.toFixed(2)}</div>
+          <div><strong>Direct cost:</strong> ${directCost.toFixed(2)}</div>
+          <div><strong>Final retail:</strong> ${finalRetail.toFixed(2)}</div>
+          <div><strong>Price per garment:</strong> ${pricePerGarment.toFixed(2)}</div>
           <div><strong>Front print:</strong> {frontPreset}{resolvedFrontSize ? ` (${resolvedFrontSize.width}\" x ${resolvedFrontSize.height}\")` : ""}</div>
           <div><strong>Back print:</strong> {backPreset}{resolvedBackSize ? ` (${resolvedBackSize.width}\" x ${resolvedBackSize.height}\")` : ""}</div>
           <div><strong>Left sleeve:</strong> {leftSleeve ? `Selected (${resolvedLeftSleeveSize.width}\" x ${resolvedLeftSleeveSize.height}\")` : "None"}</div>
@@ -571,6 +597,7 @@ export default function DTFTransfers() {
           <div><strong>Roll length used:</strong> {dtfLayout.rollLengthUsed.toFixed(2)}"</div>
           <div><strong>Rotation used:</strong> {dtfLayout.rotationUsed ? "Yes" : "No"}</div>
           <div><strong>Estimated linear inches:</strong> {dtfLayout.linearInches.toFixed(2)}"</div>
+          <div><strong>Material formula:</strong> {dtfLayout.linearInches.toFixed(2)} × ${DTF_MATERIAL_COST_PER_LINEAR_INCH.toFixed(2)} (min ${DTF_MINIMUM_MATERIAL_CHARGE.toFixed(2)})</div>
         </div>
       </Box>
     </>
