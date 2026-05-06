@@ -39,6 +39,14 @@ function toNumber(value) {
 
 export default function DTFTransfers() {
   const DEFAULT_MARGIN_PERCENT = 60;
+  const FRONT_PRESETS = {
+    "Left Chest": { width: 4, height: 4 },
+    "Full Front": { width: 11, height: 10 },
+  };
+  const BACK_PRESETS = {
+    "Full Back": { width: 12.5, height: 13 },
+  };
+  const DEFAULT_SLEEVE_SIZE = { width: 3.5, height: 3.5 };
   const SIZE_UPCHARGES = {
     qty2xl: 2.5,
     qty3xl: 3.5,
@@ -51,8 +59,18 @@ export default function DTFTransfers() {
   const [color, setColor] = useState("Select color");
   const [frontPreset, setFrontPreset] = useState("None");
   const [backPreset, setBackPreset] = useState("None");
+  const [frontWidth, setFrontWidth] = useState(11);
+  const [frontHeight, setFrontHeight] = useState(10);
+  const [backWidth, setBackWidth] = useState(12.5);
+  const [backHeight, setBackHeight] = useState(13);
   const [leftSleeve, setLeftSleeve] = useState(false);
   const [rightSleeve, setRightSleeve] = useState(false);
+  const [leftSleeveCustomSize, setLeftSleeveCustomSize] = useState(false);
+  const [rightSleeveCustomSize, setRightSleeveCustomSize] = useState(false);
+  const [leftSleeveWidth, setLeftSleeveWidth] = useState(DEFAULT_SLEEVE_SIZE.width);
+  const [leftSleeveHeight, setLeftSleeveHeight] = useState(DEFAULT_SLEEVE_SIZE.height);
+  const [rightSleeveWidth, setRightSleeveWidth] = useState(DEFAULT_SLEEVE_SIZE.width);
+  const [rightSleeveHeight, setRightSleeveHeight] = useState(DEFAULT_SLEEVE_SIZE.height);
   const [padding, setPadding] = useState(0.25);
   const [qtySxl, setQtySxl] = useState(0);
   const [qty2xl, setQty2xl] = useState(0);
@@ -89,6 +107,39 @@ export default function DTFTransfers() {
   }, [apparelDirectCost]);
 
   const apparelRetailSubtotal = useMemo(() => apparelCostWithMargin + sizeUpchargeTotal, [apparelCostWithMargin, sizeUpchargeTotal]);
+
+  const frontSelected = frontPreset !== "None";
+  const backSelected = backPreset !== "None";
+
+  const resolvedFrontSize = useMemo(() => {
+    if (frontPreset === "Custom Size") {
+      return { width: toNumber(frontWidth), height: toNumber(frontHeight) };
+    }
+    return FRONT_PRESETS[frontPreset] || null;
+  }, [frontPreset, frontWidth, frontHeight]);
+
+  const resolvedBackSize = useMemo(() => {
+    if (backPreset === "Custom Size") {
+      return { width: toNumber(backWidth), height: toNumber(backHeight) };
+    }
+    return BACK_PRESETS[backPreset] || null;
+  }, [backPreset, backWidth, backHeight]);
+
+  const resolvedLeftSleeveSize = leftSleeveCustomSize
+    ? { width: toNumber(leftSleeveWidth), height: toNumber(leftSleeveHeight) }
+    : DEFAULT_SLEEVE_SIZE;
+
+  const resolvedRightSleeveSize = rightSleeveCustomSize
+    ? { width: toNumber(rightSleeveWidth), height: toNumber(rightSleeveHeight) }
+    : DEFAULT_SLEEVE_SIZE;
+
+  const transferCountPerGarment =
+    (frontSelected ? 1 : 0)
+    + (backSelected ? 1 : 0)
+    + (leftSleeve ? 1 : 0)
+    + (rightSleeve ? 1 : 0);
+
+  const totalTransferCount = transferCountPerGarment * totalGarmentQty;
 
   const loadedRef = useRef(false);
 
@@ -257,16 +308,59 @@ export default function DTFTransfers() {
         <div className="formGrid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 15, marginTop: 15 }}>
           <div>
             <label>Front Print Preset</label>
-            <select style={input} value={frontPreset} onChange={(e) => setFrontPreset(e.target.value)}><option>None</option></select>
+            <select style={input} value={frontPreset} onChange={(e) => setFrontPreset(e.target.value)}>
+              <option>None</option>
+              <option>Left Chest</option>
+              <option>Full Front</option>
+              <option>Custom Size</option>
+            </select>
           </div>
+          {frontPreset === "Custom Size" && (
+            <>
+              <Field label="Front Width (in)" value={frontWidth} setValue={setFrontWidth} />
+              <Field label="Front Height (in)" value={frontHeight} setValue={setFrontHeight} />
+            </>
+          )}
           <div>
             <label>Back Print Preset</label>
-            <select style={input} value={backPreset} onChange={(e) => setBackPreset(e.target.value)}><option>None</option></select>
+            <select style={input} value={backPreset} onChange={(e) => setBackPreset(e.target.value)}>
+              <option>None</option>
+              <option>Full Back</option>
+              <option>Custom Size</option>
+            </select>
           </div>
+          {backPreset === "Custom Size" && (
+            <>
+              <Field label="Back Width (in)" value={backWidth} setValue={setBackWidth} />
+              <Field label="Back Height (in)" value={backHeight} setValue={setBackHeight} />
+            </>
+          )}
         </div>
 
         <Check label="Left Sleeve Print" value={leftSleeve} setValue={setLeftSleeve} />
+        {leftSleeve && (
+          <>
+            <Check label="Custom Left Sleeve Size" value={leftSleeveCustomSize} setValue={setLeftSleeveCustomSize} />
+            {leftSleeveCustomSize && (
+              <div className="formGrid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 15 }}>
+                <Field label="Left Sleeve Width (in)" value={leftSleeveWidth} setValue={setLeftSleeveWidth} />
+                <Field label="Left Sleeve Height (in)" value={leftSleeveHeight} setValue={setLeftSleeveHeight} />
+              </div>
+            )}
+          </>
+        )}
         <Check label="Right Sleeve Print" value={rightSleeve} setValue={setRightSleeve} />
+        {rightSleeve && (
+          <>
+            <Check label="Custom Right Sleeve Size" value={rightSleeveCustomSize} setValue={setRightSleeveCustomSize} />
+            {rightSleeveCustomSize && (
+              <div className="formGrid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 15 }}>
+                <Field label="Right Sleeve Width (in)" value={rightSleeveWidth} setValue={setRightSleeveWidth} />
+                <Field label="Right Sleeve Height (in)" value={rightSleeveHeight} setValue={setRightSleeveHeight} />
+              </div>
+            )}
+          </>
+        )}
         <Field label="Padding (inches)" value={padding} setValue={setPadding} />
       </Box>
 
@@ -302,6 +396,12 @@ export default function DTFTransfers() {
           <div><strong>Apparel direct cost:</strong> ${apparelDirectCost.toFixed(2)}</div>
           <div><strong>Apparel cost with margin ({DEFAULT_MARGIN_PERCENT}%):</strong> ${apparelCostWithMargin.toFixed(2)}</div>
           <div><strong>Apparel retail subtotal:</strong> ${apparelRetailSubtotal.toFixed(2)}</div>
+          <div><strong>Front print:</strong> {frontPreset}{resolvedFrontSize ? ` (${resolvedFrontSize.width}\" x ${resolvedFrontSize.height}\")` : ""}</div>
+          <div><strong>Back print:</strong> {backPreset}{resolvedBackSize ? ` (${resolvedBackSize.width}\" x ${resolvedBackSize.height}\")` : ""}</div>
+          <div><strong>Left sleeve:</strong> {leftSleeve ? `Selected (${resolvedLeftSleeveSize.width}\" x ${resolvedLeftSleeveSize.height}\")` : "None"}</div>
+          <div><strong>Right sleeve:</strong> {rightSleeve ? `Selected (${resolvedRightSleeveSize.width}\" x ${resolvedRightSleeveSize.height}\")` : "None"}</div>
+          <div><strong>Transfer padding:</strong> {toNumber(padding)}"</div>
+          <div><strong>Total transfer count:</strong> {totalTransferCount}</div>
         </div>
       </Box>
     </>
