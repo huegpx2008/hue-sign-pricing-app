@@ -5,6 +5,7 @@ import ProductVisual from "../components/ProductVisual";
 import VinylLayoutPreview from "../components/VinylLayoutPreview";
 import SheetLayoutPreview from "../components/SheetLayoutPreview";
 import ProductOptions from "../components/ProductOptions";
+import ProductNavigation from "../components/ProductNavigation";
 import { Box, Check, Field, SelectedDetails, input } from "../components/FormControls";
 import { money, num, getFoamcoreSheetPrice, getPvcSheetPrice, getTierPrice, getCoroSheetCost, shippingBySize, sheetLayoutCount, getVinylBillableSqFt } from "../utils/pricingHelpers";
 import { products, acrylicOption, acrylicStandOffOptions, productCategories, bannerOptions, acmOptions, vinylOptions, coroPricing, coroSheetCost, foamcoreSheetPricing, pvcSheetPricing, pvcOptions } from "../data/productConfig";
@@ -880,65 +881,17 @@ export default function Page() {
 
       <div className="layout">
         <section className="card">
-          <h2>Product Categories</h2>
-          {productCategories.map((category) => (
-            <Box key={category.name} title={category.name}>
-              <div className="buttonGrid">
-                {category.items.map((item) => (
-                  <button
-                    key={item.id}
-                    className={`presetBtn ${product === item.id ? "activePreset" : ""} ${item.calculator ? "" : "comingSoonBtn"}`}
-                    onClick={() => setProduct(item.id)}
-                  >
-                    {item.label} {!item.calculator ? "• Coming Soon" : ""}
-                  </button>
-                ))}
-              </div>
-            </Box>
-          ))}
-
-          <h2>Custom Presets</h2>
-          <label>Preset Product</label>
-          <select
-            style={input}
-            value={presetProduct}
-            onChange={(e) => {
-              const nextProduct = e.target.value;
-              setPresetProduct(nextProduct);
-              setProduct(nextProduct);
-            }}
-          >
-            {Object.entries(products).map(([key, name]) => (
-              <option key={key} value={key}>{name}</option>
-            ))}
-          </select>
-
-          <div className="buttonGrid" style={{ marginTop: 12 }}>
-            {(presetGroups[presetProduct] || []).map((p) => (
-              <button
-                key={`${presetProduct}-${p.label}`}
-                className={presetClass(presetProduct, p.w, p.h, p.double || false)}
-                onClick={() => preset(presetProduct, p.w, p.h, p.double || false)}
-              >
-                {p.label}
-              </button>
-            ))}
-          </div>
-
-          <h2>Quote Details</h2>
-
-          <label>Product</label>
-          <select style={input} value={product} onChange={(e) => setProduct(e.target.value)}>
-            {productCategories.map((category) => (
-              <optgroup key={category.name} label={category.name}>
-                {category.items.map((item) => (
-                  <option key={item.id} value={item.id}>
-                    {item.label}{item.calculator ? "" : " (Coming Soon)"}
-                  </option>
-                ))}
-              </optgroup>
-            ))}
-          </select>
+          <ProductNavigation
+            product={product}
+            setProduct={setProduct}
+            presetProduct={presetProduct}
+            setPresetProduct={setPresetProduct}
+            productCategories={productCategories}
+            products={products}
+            presetGroups={presetGroups}
+            presetClass={presetClass}
+            preset={preset}
+          />
 
                     <ProductOptions
             activeProduct={activeProduct}
