@@ -176,6 +176,7 @@ export default function DTFTransfers({ onSummaryChange }) {
   const DTF_MATERIAL_COST_PER_LINEAR_INCH = 0.5;
   const DTF_MINIMUM_MATERIAL_CHARGE = 10;
   const DTF_SHIPPING_FLAT = 10;
+  const DTF_SLEEVE_RETAIL_ADDON_EACH = 1;
   const FRONT_PRESETS = {
     "Left Chest": { width: 4, height: 4 },
     "Full Front": { width: 11, height: 10 },
@@ -277,6 +278,8 @@ export default function DTFTransfers({ onSummaryChange }) {
     + (rightSleeve ? 1 : 0);
 
   const totalTransferCount = transferCountPerGarment * totalGarmentQty;
+  const sleevePrintsPerGarment = (leftSleeve ? 1 : 0) + (rightSleeve ? 1 : 0);
+  const sleeveRetailAddOnTotal = sleevePrintsPerGarment * totalGarmentQty * DTF_SLEEVE_RETAIL_ADDON_EACH;
 
   const dtfTransferItems = useMemo(() => {
     if (!totalGarmentQty) return [];
@@ -322,8 +325,8 @@ export default function DTFTransfers({ onSummaryChange }) {
   const directCost = useMemo(() => apparelDirectCost + dtfMaterialCost + DTF_SHIPPING_FLAT, [apparelDirectCost, dtfMaterialCost]);
 
   const finalRetail = useMemo(() => (
-    apparelRetailSubtotal + dtfRetailSubtotal + sizeUpchargeTotal + DTF_SHIPPING_FLAT
-  ), [apparelRetailSubtotal, dtfRetailSubtotal, sizeUpchargeTotal]);
+    apparelRetailSubtotal + dtfRetailSubtotal + sizeUpchargeTotal + sleeveRetailAddOnTotal + DTF_SHIPPING_FLAT
+  ), [apparelRetailSubtotal, dtfRetailSubtotal, sizeUpchargeTotal, sleeveRetailAddOnTotal]);
 
   const pricePerGarment = useMemo(() => (totalGarmentQty > 0 ? finalRetail / totalGarmentQty : 0), [finalRetail, totalGarmentQty]);
 
@@ -343,6 +346,7 @@ export default function DTFTransfers({ onSummaryChange }) {
       dtfMaterialCost,
       dtfRetailSubtotal,
       sizeUpchargeTotal,
+      sleeveRetailAddOnTotal,
       directCost,
       finalRetail,
       pricePerGarment,
@@ -358,7 +362,7 @@ export default function DTFTransfers({ onSummaryChange }) {
       rollLengthUsed: dtfLayout.rollLengthUsed,
       transferCount: totalTransferCount,
     });
-  }, [onSummaryChange, finalRetail, pricePerGarment, directCost, apparelDirectCost, dtfMaterialCost, DTF_SHIPPING_FLAT, apparelRetailSubtotal, dtfRetailSubtotal, sizeUpchargeTotal, selectedProduct, baseApparelCostUsed, totalGarmentQty, frontSelected, resolvedFrontSize, backSelected, resolvedBackSize, leftSleeve, resolvedLeftSleeveSize, rightSleeve, resolvedRightSleeveSize, dtfLayout.rollLengthUsed, totalTransferCount]);
+  }, [onSummaryChange, finalRetail, pricePerGarment, directCost, apparelDirectCost, dtfMaterialCost, DTF_SHIPPING_FLAT, apparelRetailSubtotal, dtfRetailSubtotal, sizeUpchargeTotal, sleeveRetailAddOnTotal, selectedProduct, baseApparelCostUsed, totalGarmentQty, frontSelected, resolvedFrontSize, backSelected, resolvedBackSize, leftSleeve, resolvedLeftSleeveSize, rightSleeve, resolvedRightSleeveSize, dtfLayout.rollLengthUsed, totalTransferCount]);
 
   const loadedRef = useRef(false);
 
@@ -616,6 +620,7 @@ export default function DTFTransfers({ onSummaryChange }) {
           <div><strong>DTF material cost:</strong> ${dtfMaterialCost.toFixed(2)}</div>
           <div><strong>DTF retail subtotal:</strong> ${dtfRetailSubtotal.toFixed(2)}</div>
           <div><strong>Size upcharge total:</strong> ${sizeUpchargeTotal.toFixed(2)}</div>
+          <div><strong>Sleeve retail add-on total:</strong> ${sleeveRetailAddOnTotal.toFixed(2)}</div>
           <div><strong>Shipping (pass-through):</strong> ${DTF_SHIPPING_FLAT.toFixed(2)}</div>
           <div><strong>Direct cost:</strong> ${directCost.toFixed(2)}</div>
           <div><strong>Final retail:</strong> ${finalRetail.toFixed(2)}</div>

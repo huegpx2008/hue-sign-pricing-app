@@ -74,6 +74,7 @@ export default function PricingSummary({
             <p><strong>DTF Material Cost:</strong> {money(dtfSummary.dtfMaterialCost)}</p>
             <p><strong>DTF Retail Subtotal:</strong> {money(dtfSummary.dtfRetailSubtotal)}</p>
             <p><strong>Size Upcharges:</strong> {money(dtfSummary.sizeUpchargeTotal)}</p>
+            <p><strong>Sleeve Retail Add-On:</strong> {money(dtfSummary.sleeveRetailAddOnTotal)}</p>
             <p><strong>Roll Length Used:</strong> {dtfSummary.rollLengthUsed.toFixed(2)}"</p>
             <p><strong>Transfer Count:</strong> {dtfSummary.transferCount}</p>
           </>
