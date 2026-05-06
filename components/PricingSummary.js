@@ -117,12 +117,16 @@ export default function PricingSummary({
                 <p><strong>Color:</strong> {li.color || "Not selected"}</p>
                 <p><strong>Sizes:</strong> {Object.entries(li.sizeQty || {}).filter(([,v]) => Number(v) > 0).map(([k,v]) => `${k}:${v}`).join(", ") || "None"}</p>
                 <p><strong>Total Qty:</strong> {li.totalQty}</p>
+                <p><strong>CASE_PRICE (avg):</strong> {money(li.casePrice || 0)}</p>
+                <p><strong>Product Markup %:</strong> {li.productMarkupPercent || dtfSummary.productMarkupPercent}%</p>
+                <p><strong>Marked-up Garment Price:</strong> {money(li.markedUpGarmentPrice || 0)} /shirt</p>
                 <p><strong>Garment Direct:</strong> {money(li.garmentCost)}</p>
                 <p><strong>Garment Retail:</strong> {money(li.garmentRetail)}</p>
                 <p><strong>Print Charge Allocation:</strong> {money(li.printChargeAllocated || 0)}</p>
-                <p><strong>Setup Fee Allocation:</strong> {money(li.setupFeeAllocated || 0)}</p>
+                <p><strong>Setup Fee Allocation:</strong> Separate fee</p>
                 <p><strong>Final Retail Subtotal:</strong> {money(li.finalRetailSubtotal || 0)}</p>
-                <p><strong>Retail Per Shirt:</strong> {money(li.retailPerShirt || 0)}</p>
+                <p><strong>Print Charge Per Shirt:</strong> {money(li.printChargePerShirt || 0)}</p>
+                <p><strong>Final Retail Per Shirt:</strong> {money(li.retailPerShirt || 0)}</p>
               </div>
             ))}
             <p><strong>Total Garments:</strong> {dtfSummary.totalGarments}</p>
