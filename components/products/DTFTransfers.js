@@ -177,6 +177,8 @@ export default function DTFTransfers({ onSummaryChange }) {
   const DTF_MINIMUM_MATERIAL_CHARGE = 10;
   const DTF_SHIPPING_FLAT = 10;
   const DTF_SLEEVE_RETAIL_ADDON_EACH = 1;
+  const QUICK_STYLES = ["2000", "2400", "BC3001", "996M", "1717", "ST350", "ST350LS"];
+
   const FRONT_PRESETS = {
     "Left Chest": { width: 4, height: 4 },
     "Full Front": { width: 11, height: 10 },
@@ -465,6 +467,45 @@ export default function DTFTransfers({ onSummaryChange }) {
     setSelectedProduct(null);
   }
 
+  function pickDefaultColor(colors) {
+    if (!colors.length) return "Select color";
+
+    const exactBlack = colors.find((colorName) => colorName.trim().toLowerCase() === "black");
+    if (exactBlack) return exactBlack;
+
+    const closeBlack = colors.find((colorName) => colorName.toLowerCase().includes("black"));
+    if (closeBlack) return closeBlack;
+
+    return colors[0];
+  }
+
+  function handleQuickStyleSelect(styleCode) {
+    const normalizedCode = styleCode.trim().toLowerCase();
+    const matchedStyle = [...stylesByKey.values()].find((styleGroup) => styleGroup.style.trim().toLowerCase() === normalizedCode);
+
+    if (!matchedStyle) {
+      setSanMarSearch(styleCode);
+      return;
+    }
+
+    setSanMarSearch(styleCode);
+    setManualApparelCost(false);
+    setSelectedStyleKey(matchedStyle.key);
+    setProduct(`${matchedStyle.style} — ${matchedStyle.title}`);
+
+    const colors = [...new Set(matchedStyle.rows.map((row) => row.color).filter(Boolean))].sort();
+    const preferredColor = pickDefaultColor(colors);
+
+    setColor(preferredColor);
+    setFrontPreset("Left Chest");
+    setBackPreset("Full Back");
+    setQtySxl(1);
+    setQty2xl(0);
+    setQty3xl(0);
+    setQty4xl(0);
+    setQty5xl(0);
+  }
+
   function handleManualApparelCostChange(value) {
     setManualApparelCost(value !== "");
     setApparelCost(value);
@@ -473,6 +514,23 @@ export default function DTFTransfers({ onSummaryChange }) {
   return (
     <>
       <Box title="DTF Transfers Product Setup">
+        <div style={{ marginBottom: 10 }}>
+          <label style={{ display: "block", marginBottom: 8 }}>Quick Styles</label>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+            {QUICK_STYLES.map((styleCode) => (
+              <button
+                key={styleCode}
+                type="button"
+                className={`presetBtn ${selectedProduct?.style === styleCode || (selectedStyle && selectedStyle.style === styleCode) ? "activePreset" : ""}`}
+                onClick={() => handleQuickStyleSelect(styleCode)}
+                style={{ minWidth: 84, padding: "10px 12px" }}
+              >
+                {styleCode}
+              </button>
+            ))}
+          </div>
+        </div>
+
         <label>SanMar Style Search</label>
         <input
           style={input}
