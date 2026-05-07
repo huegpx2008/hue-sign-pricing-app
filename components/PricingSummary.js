@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import ProductVisual from "./ProductVisual";
 import VinylLayoutPreview from "./VinylLayoutPreview";
 import SheetLayoutPreview from "./SheetLayoutPreview";
@@ -24,6 +24,18 @@ export default function PricingSummary({
   const [customerName, setCustomerName] = useState("");
   const [customerEmail, setCustomerEmail] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
+  const [quoteItems, setQuoteItems] = useState([]);
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      const saved = JSON.parse(localStorage.getItem("hue-quote-items") || "[]");
+      if (Array.isArray(saved)) setQuoteItems(saved);
+    } catch {}
+  }, []);
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    localStorage.setItem("hue-quote-items", JSON.stringify(quoteItems));
+  }, [quoteItems]);
   const scrollToQuoteSummary = () => {
     if (typeof window === "undefined" || window.innerWidth > 800) return;
     document.getElementById("quote-summary-anchor")?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -35,6 +47,31 @@ export default function PricingSummary({
   const priceEachText = isScreenPrint
     ? money(dtfSummary?.averagePricePerShirt || dtfSummary?.each || 0)
     : money(summaryCalc.each || 0);
+  const buildCurrentQuoteItem = () => ({
+    id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+    product: isDtf ? "DTF Transfers" : isScreenPrint ? "Screen Printing" : calc.label,
+    quantity: isDtf ? dtfSummary?.totalGarmentQty || 0 : isScreenPrint ? dtfSummary?.totalGarments || 0 : num(qty, 1),
+    each: isScreenPrint ? dtfSummary?.averagePricePerShirt || dtfSummary?.each || 0 : summaryCalc.each || 0,
+    total: summaryCalc.retail || 0,
+    safeDetails: isDtf
+      ? [
+          `Style #: ${dtfSummary?.selectedStyle || "Not selected"}`,
+          `Garment: ${dtfSummary?.selectedTitle || "Not selected"}`,
+          `Color: ${dtfSummary?.selectedColor || "Not selected"}`,
+        ]
+      : isScreenPrint
+      ? (dtfSummary?.lineItems || []).map((li) => `${li.style || "Style"} ${li.color ? `(${li.color})` : ""} Qty ${li.totalQty || 0}`)
+      : [selectedDetails.size, selectedDetails.material, ...(selectedDetails.options || [])],
+    adminDetails: [
+      `Material Cost: ${money(summaryCalc.materialCost || 0)}`,
+      `Direct Cost: ${money(summaryCalc.cost || 0)}`,
+      `Profit: ${money(summaryCalc.profit || 0)}`,
+    ],
+  });
+  const addToQuote = () => setQuoteItems((prev) => [...prev, buildCurrentQuoteItem()]);
+  const removeQuoteItem = (id) => setQuoteItems((prev) => prev.filter((item) => item.id !== id));
+  const clearQuote = () => setQuoteItems([]);
+  const quoteGrandTotal = quoteItems.reduce((sum, item) => sum + Number(item.total || 0), 0);
 
   const quoteLines = [
     "Hue Graphics & Apparel Quote",
@@ -74,7 +111,29 @@ export default function PricingSummary({
     "Please reply to this email if you’d like to move forward or have any questions.",
   ];
 
-  const quoteText = quoteLines.join("\n");
+  const multiItemQuoteLines = quoteItems.length
+    ? [
+        "Hue Graphics & Apparel Quote",
+        "",
+        `Customer Name: ${customerName || "Not provided"}`,
+        `Customer Email: ${customerEmail || "Not provided"}`,
+        `Customer Phone: ${customerPhone || "Not provided"}`,
+        "",
+        "Quote Items:",
+        ...quoteItems.flatMap((item, idx) => [
+          `${idx + 1}. ${item.product}`,
+          `   Qty: ${item.quantity}`,
+          `   Price Each: ${money(item.each || 0)}`,
+          `   Item Total: ${money(item.total || 0)}`,
+          `   Details: ${(item.safeDetails || []).filter(Boolean).join("; ") || "None"}`,
+          "",
+        ]),
+        `Grand Total: ${money(quoteGrandTotal)}`,
+        "",
+        "Please reply to this email if you’d like to move forward or have any questions.",
+      ]
+    : null;
+  const quoteText = (multiItemQuoteLines || quoteLines).join("\n");
   const emailHref = `mailto:${encodeURIComponent(customerEmail)}?cc=${encodeURIComponent("jason@huegraphics.cc")}&subject=${encodeURIComponent("Quote from Hue Graphics & Apparel")}&body=${encodeURIComponent(quoteText)}`;
 
   const handleCopyQuote = async () => {
@@ -97,6 +156,27 @@ export default function PricingSummary({
             <button className="modeBtn" onClick={handleCopyQuote}>Copy Quote</button>
             <a className="modeBtn" href={customerEmail ? emailHref : "#"} onClick={(e) => { if (!customerEmail) e.preventDefault(); }} style={{ textDecoration: "none", textAlign: "center", lineHeight: "36px" }}>Email Quote</a>
           </div>
+        </div>
+        <div style={{ marginBottom: 14, padding: 12, borderRadius: 10, background: "rgba(255,255,255,0.09)" }}>
+          <h3 style={{ marginTop: 0, marginBottom: 8 }}>Quote Items</h3>
+          <button className="modeBtn" onClick={addToQuote} style={{ width: "100%", marginBottom: 8 }}>Add to Quote</button>
+          {quoteItems.length === 0 ? (
+            <p style={{ margin: 0 }}>No quote items added yet.</p>
+          ) : (
+            <>
+              {quoteItems.map((item, idx) => (
+                <div key={item.id} style={{ marginBottom: 8, padding: 8, borderRadius: 8, border: "1px solid rgba(148,163,184,.45)" }}>
+                  <p style={{ margin: "0 0 4px" }}><strong>{idx + 1}. {item.product}</strong></p>
+                  <p style={{ margin: "0 0 4px" }}>Qty {item.quantity} • {money(item.each || 0)} each • {money(item.total || 0)} total</p>
+                  <p style={{ margin: "0 0 4px", fontSize: 13 }}>{(item.safeDetails || []).filter(Boolean).join(" • ")}</p>
+                  {isAdminView && <p style={{ margin: "0 0 6px", fontSize: 12 }}>Admin: {(item.adminDetails || []).filter(Boolean).join(" • ")}</p>}
+                  <button className="modeBtn" onClick={() => removeQuoteItem(item.id)}>Remove</button>
+                </div>
+              ))}
+              <p style={{ margin: "8px 0" }}><strong>Grand Total: {money(quoteGrandTotal)}</strong></p>
+              <button className="modeBtn" onClick={clearQuote}>Clear Quote</button>
+            </>
+          )}
         </div>
         <h2>{isAdminView ? "Suggested Retail" : "Customer Quote"}</h2>
         <div style={{ fontSize: 42, fontWeight: "bold" }}>{money(summaryCalc.retail)}</div>

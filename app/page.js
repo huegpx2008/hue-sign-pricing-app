@@ -86,7 +86,8 @@ export default function Page() {
   const [pvcRush, setPvcRush] = useState(false);
   const [pvcCustomCut, setPvcCustomCut] = useState(false);
   const [theme, setTheme] = useState("light");
-  const [isAdminView, setIsAdminView] = useState(false);
+  const [viewMode, setViewMode] = useState("customer-online");
+  const [staffUnlocked, setStaffUnlocked] = useState(false);
   const [showBreakdown, setShowBreakdown] = useState(false);
   const [presetProduct, setPresetProduct] = useState("coro");
   const [dtfSummary, setDtfSummary] = useState(null);
@@ -105,25 +106,36 @@ export default function Page() {
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    setIsAdminView(localStorage.getItem("hue-admin-view") === "true");
+    const savedMode = localStorage.getItem("hue-staff-mode");
+    if (savedMode === "customer-online" || savedMode === "customer-in-store" || savedMode === "admin") {
+      setStaffUnlocked(true);
+      setViewMode(savedMode);
+    }
   }, []);
 
-  const unlockAdminView = () => {
+  const unlockStaffMode = () => {
     if (typeof window === "undefined") return;
-    const entered = window.prompt("Enter admin password");
+    const entered = window.prompt("Enter staff password");
     if (entered === "HUE2026") {
-      setIsAdminView(true);
-      localStorage.setItem("hue-admin-view", "true");
+      setStaffUnlocked(true);
+      setViewMode("customer-in-store");
+      localStorage.setItem("hue-staff-mode", "customer-in-store");
     } else if (entered !== null) {
       window.alert("Incorrect password.");
     }
   };
 
-  const lockAdminView = () => {
+  const setStaffMode = (nextMode) => {
+    setViewMode(nextMode);
+    if (typeof window !== "undefined") localStorage.setItem("hue-staff-mode", nextMode);
+  };
+
+  const lockStaffMode = () => {
     if (typeof window === "undefined") return;
-    setIsAdminView(false);
+    setStaffUnlocked(false);
+    setViewMode("customer-online");
     setShowBreakdown(false);
-    localStorage.removeItem("hue-admin-view");
+    localStorage.removeItem("hue-staff-mode");
   };
 
   useEffect(() => {
@@ -269,6 +281,9 @@ export default function Page() {
     pvcCustomCut,
   });
 
+  const isAdminView = viewMode === "admin";
+  const isStaffUnlocked = staffUnlocked;
+
   const selectedDetails = {
     product,
     productName: productMap[product]?.label || products[activeProduct] || "Unknown Product",
@@ -362,8 +377,8 @@ export default function Page() {
           gap: 20px;
         }
 
-        .themeToggle{display:flex;gap:10px;align-items:center;margin:8px 0 14px;}
-        .modeBtn{padding:8px 12px;border-radius:999px;border:1px solid #94a3b8;background:linear-gradient(180deg,#fff,#e2e8f0);cursor:pointer;box-shadow:0 3px 8px rgba(15,23,42,.12);}
+        .themeToggle{display:flex;gap:8px;align-items:center;margin:8px 0 14px;flex-wrap:wrap;max-width:100%;}
+        .modeBtn{padding:6px 10px;border-radius:999px;border:1px solid #94a3b8;background:linear-gradient(180deg,#fff,#e2e8f0);cursor:pointer;box-shadow:0 3px 8px rgba(15,23,42,.12);font-size:13px;line-height:1.2;white-space:nowrap;}
         .modeBtn.active{background:linear-gradient(180deg,#1d4ed8,#1e293b);color:#fff;border-color:#60a5fa;box-shadow:inset 0 2px 6px rgba(0,0,0,.35),0 0 0 2px rgba(96,165,250,.3);}
         .appRoot.light{background:linear-gradient(160deg,#eff6ff,#f8fafc 45%,#fff);color:#0f172a;}
         .appRoot.dark{background:linear-gradient(160deg,#0b1220,#111827 52%,#1f2937);color:#e2e8f0;}
@@ -460,8 +475,8 @@ export default function Page() {
             flex-direction: column;
           }
 
-          .themeToggle{display:flex;gap:10px;align-items:center;margin:8px 0 14px;}
-        .modeBtn{padding:8px 12px;border-radius:999px;border:1px solid #94a3b8;background:linear-gradient(180deg,#fff,#e2e8f0);cursor:pointer;box-shadow:0 3px 8px rgba(15,23,42,.12);}
+          .themeToggle{display:flex;gap:6px;align-items:center;margin:8px 0 14px;flex-wrap:wrap;max-width:100%;}
+        .modeBtn{padding:6px 9px;border-radius:999px;border:1px solid #94a3b8;background:linear-gradient(180deg,#fff,#e2e8f0);cursor:pointer;box-shadow:0 3px 8px rgba(15,23,42,.12);font-size:12px;max-width:100%;}
         .modeBtn.active{background:linear-gradient(180deg,#1d4ed8,#1e293b);color:#fff;border-color:#60a5fa;box-shadow:inset 0 2px 6px rgba(0,0,0,.35),0 0 0 2px rgba(96,165,250,.3);}
         .appRoot.light{background:linear-gradient(160deg,#eff6ff,#f8fafc 45%,#fff);color:#0f172a;}
         .appRoot.dark{background:linear-gradient(160deg,#0b1220,#111827 52%,#1f2937);color:#e2e8f0;}
@@ -495,10 +510,15 @@ export default function Page() {
       <div className="themeToggle">
         <button className={`modeBtn ${theme === "light" ? "active" : ""}`} onClick={() => setTheme("light")}>Light Mode</button>
         <button className={`modeBtn ${theme === "dark" ? "active" : ""}`} onClick={() => setTheme("dark")}>Dark Mode</button>
-        {isAdminView ? (
-          <button className="modeBtn" onClick={lockAdminView}>Activate Customer View</button>
+        {isStaffUnlocked ? (
+          <>
+            <button className={`modeBtn ${viewMode === "customer-online" ? "active" : ""}`} onClick={() => setStaffMode("customer-online")}>Customer Online</button>
+            <button className={`modeBtn ${viewMode === "customer-in-store" ? "active" : ""}`} onClick={() => setStaffMode("customer-in-store")}>Customer/In-Store</button>
+            <button className={`modeBtn ${viewMode === "admin" ? "active" : ""}`} onClick={() => setStaffMode("admin")}>Admin</button>
+            <button className="modeBtn" onClick={lockStaffMode}>Lock Staff Mode</button>
+          </>
         ) : (
-          <button className="modeBtn" onClick={unlockAdminView}>Unlock Admin View</button>
+          <button className="modeBtn" onClick={unlockStaffMode}>Unlock Staff Mode</button>
         )}
       </div>
       <p>Live quote calculator for signs, banners, ACM, vinyl, and poster paper.</p>
