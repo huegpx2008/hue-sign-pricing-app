@@ -114,7 +114,7 @@ export function calculateLayout(pieceW, pieceH, qty, rollWidth) {
   };
 }
 
-export function getVinylBillableSqFt(w, h, qty, gangVinyl, vinylContour, contourPadding, gangWastePercent) {
+export function getVinylBillableSqFt(w, h, qty, gangVinyl, vinylContour, contourPadding, gangWastePercent, rollWidth = 52) {
   const actualEach = (w * h) / 144;
   const pad = vinylContour && gangVinyl ? contourPadding * 2 : 0;
 
@@ -136,8 +136,6 @@ export function getVinylBillableSqFt(w, h, qty, gangVinyl, vinylContour, contour
       layoutHeight: roundedHeight,
     };
   }
-
-  const rollWidth = 52;
 
   const normal = calculateLayout(effectiveW, effectiveH, qty, rollWidth);
   const rotated = calculateLayout(effectiveH, effectiveW, qty, rollWidth);

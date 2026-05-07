@@ -5,6 +5,7 @@ export const products = {
   acm: "ACM / Maxmetal",
   acrylic: "Acrylic",
   vinyl: "Printed Vinyl",
+  reflective: "Reflective Vinyl",
   poster: "Poster Paper",
   foamcore: "Foamcore",
 };
@@ -31,7 +32,7 @@ export const productCategories = [
   { name: "Vinyl / Decals", items: [
     { id: "vinyl", label: "Printed Vinyl", calculator: "vinyl" },
     { id: "footprints", label: "FootPrints Vinyl" }, { id: "bootprints", label: "BootPrints Vinyl" },
-    { id: "reflective", label: "Reflective Vinyl" }, { id: "wallVinyl", label: "Wall Vinyl" },
+    { id: "reflective", label: "Reflective Vinyl", calculator: "reflective" }, { id: "wallVinyl", label: "Wall Vinyl" },
     { id: "windowPerf", label: "Window Perforated Vinyl" }, { id: "staticCling", label: "Static Cling" },
     { id: "decals", label: "Decals / Stickers" },
   ] },
