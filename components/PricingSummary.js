@@ -20,13 +20,18 @@ export default function PricingSummary({
   dtfSummary,
   isAdminView,
 }) {
+  const scrollToQuoteSummary = () => {
+    if (typeof window === "undefined" || window.innerWidth > 800) return;
+    document.getElementById("quote-summary-anchor")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
   const isDtf = activeProduct === "dtfTransfers" && dtfSummary;
   const isScreenPrint = activeProduct === "screenPrinting" && dtfSummary;
   const summaryCalc = (isDtf || isScreenPrint) ? dtfSummary : calc;
 
   return (
     <>
-      <aside className="summary sticky">
+      <aside className="summary sticky" id="quote-summary-anchor">
         <h2>{isAdminView ? "Suggested Retail" : "Customer Quote"}</h2>
         <div style={{ fontSize: 42, fontWeight: "bold" }}>{money(summaryCalc.retail)}</div>
         {!(isScreenPrint && (dtfSummary.lineItems || []).length > 1) && <p>Each: <strong>{money(summaryCalc.each)}</strong></p>}
@@ -146,7 +151,7 @@ export default function PricingSummary({
         ) : <SelectedDetails details={selectedDetails} />}
       </aside>
 
-      <div className="mobilePrice">
+      <div className="mobilePrice" role="button" tabIndex={0} onClick={scrollToQuoteSummary} onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && scrollToQuoteSummary()} style={{ cursor: "pointer" }}>
         <div className="mobilePriceTop"><strong>Suggested Retail {money(summaryCalc.retail).replace("$", "$ ")}</strong></div>
         {isDtf ? (
           <>
