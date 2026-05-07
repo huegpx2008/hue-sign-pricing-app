@@ -76,6 +76,7 @@ export default function Page() {
   const [pvcRush, setPvcRush] = useState(false);
   const [pvcCustomCut, setPvcCustomCut] = useState(false);
   const [theme, setTheme] = useState("light");
+  const [isAdminView, setIsAdminView] = useState(false);
   const [showBreakdown, setShowBreakdown] = useState(false);
   const [presetProduct, setPresetProduct] = useState("coro");
   const [dtfSummary, setDtfSummary] = useState(null);
@@ -91,6 +92,29 @@ export default function Page() {
   useEffect(() => {
     if (typeof window !== "undefined") localStorage.setItem("hue-theme", theme);
   }, [theme]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    setIsAdminView(localStorage.getItem("hue-admin-view") === "true");
+  }, []);
+
+  const unlockAdminView = () => {
+    if (typeof window === "undefined") return;
+    const entered = window.prompt("Enter admin password");
+    if (entered === "HUE2026") {
+      setIsAdminView(true);
+      localStorage.setItem("hue-admin-view", "true");
+    } else if (entered !== null) {
+      window.alert("Incorrect password.");
+    }
+  };
+
+  const lockAdminView = () => {
+    if (typeof window === "undefined") return;
+    setIsAdminView(false);
+    setShowBreakdown(false);
+    localStorage.removeItem("hue-admin-view");
+  };
 
   useEffect(() => {
     const linked = activeProduct && presetGroups[activeProduct] ? activeProduct : "coro";
@@ -315,7 +339,7 @@ export default function Page() {
       useDesignFee ? `Design Fee: ${money(num(designFee))}` : null,
       useSetupFee ? `Setup Fee: ${money(num(setupFee))}` : null,
       num(delivery) > 0 ? `Delivery/Install: ${money(num(delivery))}` : null,
-      num(multiplier, 1) !== 1 ? `Multiplier: ${num(multiplier, 1)}x` : null,
+      isAdminView && num(multiplier, 1) !== 1 ? `Multiplier: ${num(multiplier, 1)}x` : null,
     ].filter(Boolean),
   };
 
@@ -461,6 +485,11 @@ export default function Page() {
       <div className="themeToggle">
         <button className={`modeBtn ${theme === "light" ? "active" : ""}`} onClick={() => setTheme("light")}>Light Mode</button>
         <button className={`modeBtn ${theme === "dark" ? "active" : ""}`} onClick={() => setTheme("dark")}>Dark Mode</button>
+        {isAdminView ? (
+          <button className="modeBtn" onClick={lockAdminView}>Lock Admin View</button>
+        ) : (
+          <button className="modeBtn" onClick={unlockAdminView}>Unlock Admin View</button>
+        )}
       </div>
       <p>Live quote calculator for signs, banners, ACM, vinyl, and poster paper.</p>
 
@@ -582,9 +611,9 @@ export default function Page() {
               <Field label="Quantity" value={qty} setValue={setQty} />
               <Field label="Width Inches" value={width} setValue={setWidth} />
               <Field label="Height Inches" value={height} setValue={setHeight} />
-              <Field label="Margin %" value={margin} setValue={setMargin} />
+              {isAdminView && <Field label="Margin %" value={margin} setValue={setMargin} />}
               <Field label="Delivery / Install" value={delivery} setValue={setDelivery} />
-              <Field label="Price Multiplier" value={multiplier} setValue={setMultiplier} />
+              {isAdminView && <Field label="Price Multiplier" value={multiplier} setValue={setMultiplier} />}
             </div>
           )}
 
@@ -612,6 +641,7 @@ export default function Page() {
           showBreakdown={showBreakdown}
           setShowBreakdown={setShowBreakdown}
           dtfSummary={dtfSummary}
+          isAdminView={isAdminView}
         />
       </div>
     </main>
