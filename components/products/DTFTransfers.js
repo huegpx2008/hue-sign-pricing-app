@@ -177,7 +177,15 @@ export default function DTFTransfers({ onSummaryChange, isAdminView = false }) {
   const DTF_MINIMUM_MATERIAL_CHARGE = 10;
   const DTF_SHIPPING_FLAT = 10;
   const DTF_SLEEVE_RETAIL_ADDON_EACH = 1;
-  const QUICK_STYLES = ["2000", "2400", "BC3001", "996M", "1717", "ST350", "ST350LS"];
+  const QUICK_STYLES = [
+    { code: "2000", label: "Gildan Tee 2000" },
+    { code: "G2400", label: "Gildan Long Sleeve G2400" },
+    { code: "BC3001", label: "Bella Tee BC3001" },
+    { code: "996M", label: "Jerzees Tee 996M" },
+    { code: "1717", label: "Comfort Colors 1717" },
+    { code: "ST350", label: "Sport-Tek ST350" },
+    { code: "ST350LS", label: "Sport-Tek LS ST350LS" },
+  ];
 
   const FRONT_PRESETS = {
     "Left Chest": { width: 4, height: 4 },
@@ -609,15 +617,15 @@ export default function DTFTransfers({ onSummaryChange, isAdminView = false }) {
         <div style={{ marginBottom: 10 }}>
           <label style={{ display: "block", marginBottom: 8 }}>Quick Styles</label>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-            {QUICK_STYLES.map((styleCode) => (
+            {QUICK_STYLES.map((styleOption) => (
               <button
-                key={styleCode}
+                key={styleOption.code}
                 type="button"
-                className={`presetBtn ${selectedProduct?.style === styleCode || (selectedStyle && selectedStyle.style === styleCode) ? "activePreset" : ""}`}
-                onClick={() => handleQuickStyleSelect(styleCode)}
+                className={`presetBtn ${selectedProduct?.style === styleOption.code || (selectedStyle && selectedStyle.style === styleOption.code) ? "activePreset" : ""}`}
+                onClick={() => handleQuickStyleSelect(styleOption.code)}
                 style={{ minWidth: 84, padding: "10px 12px" }}
               >
-                {styleCode}
+                {styleOption.label}
               </button>
             ))}
           </div>
@@ -745,7 +753,11 @@ export default function DTFTransfers({ onSummaryChange, isAdminView = false }) {
           </>
         )}
         </>)}
-        <Field label="Padding (inches)" value={padding} setValue={isAdminView ? setPadding : undefined} readOnly={!isAdminView} />
+        {isAdminView ? (
+          <Field label="Padding (inches)" value={padding} setValue={setPadding} />
+        ) : (
+          <p style={{ margin: "8px 0 12px", opacity: 0.9 }}><strong>Production spacing/padding:</strong> {Math.max(0, toNumber(padding)).toFixed(2)} inch</p>
+        )}
         <Check label="Optimize Layout" value={optimizeLayout} setValue={setOptimizeLayout} />
       </Box>
 

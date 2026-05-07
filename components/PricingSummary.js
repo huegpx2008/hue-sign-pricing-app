@@ -25,7 +25,7 @@ export default function PricingSummary({
   const [customerEmail, setCustomerEmail] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
   const [quoteItems, setQuoteItems] = useState([]);
-  const [emailQuoteToHue, setEmailQuoteToHue] = useState("jason@huegraphics.cc");
+  const emailQuoteToHue = "jason@huegraphics.cc";
   useEffect(() => {
     if (typeof window === "undefined") return;
     try {
@@ -154,10 +154,11 @@ export default function PricingSummary({
           <input style={{ width: "100%", marginBottom: 8, padding: 8, borderRadius: 8, border: "1px solid rgba(148,163,184,.5)" }} placeholder="Customer Name" value={customerName} onChange={(e) => setCustomerName(e.target.value)} />
           <input style={{ width: "100%", marginBottom: 8, padding: 8, borderRadius: 8, border: "1px solid rgba(148,163,184,.5)" }} placeholder="Customer Email" value={customerEmail} onChange={(e) => setCustomerEmail(e.target.value)} />
           <input style={{ width: "100%", marginBottom: 8, padding: 8, borderRadius: 8, border: "1px solid rgba(148,163,184,.5)" }} placeholder="Customer Phone" value={customerPhone} onChange={(e) => setCustomerPhone(e.target.value)} />
-          <input style={{ width: "100%", marginBottom: 8, padding: 8, borderRadius: 8, border: "1px solid rgba(148,163,184,.5)" }} placeholder="Email Quote To Hue" value={emailQuoteToHue} onChange={(e) => setEmailQuoteToHue(e.target.value)} />
+          <label style={{ display: "block", fontSize: 12, fontWeight: 700, letterSpacing: ".04em", marginBottom: 6 }}>SENDING QUOTE TO HUE</label>
+          <input style={{ width: "100%", marginBottom: 8, padding: 8, borderRadius: 8, border: "1px solid rgba(148,163,184,.5)", opacity: 0.9 }} value={emailQuoteToHue} readOnly />
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
             <button className="modeBtn" onClick={handleCopyQuote}>Copy Quote</button>
-            <a className="modeBtn" href={emailQuoteToHue ? emailHref : "#"} onClick={(e) => { if (!emailQuoteToHue) e.preventDefault(); }} style={{ textDecoration: "none", textAlign: "center", lineHeight: "36px" }}>Email Quote</a>
+            <a className="modeBtn" href={emailQuoteToHue ? emailHref : "#"} onClick={(e) => { if (!emailQuoteToHue) e.preventDefault(); }} style={{ textDecoration: "none", textAlign: "center", lineHeight: "36px" }}>SUBMIT / EMAIL QUOTE</a>
           </div>
         </div>
         <div style={{ marginBottom: 14, padding: 12, borderRadius: 10, background: "rgba(255,255,255,0.09)" }}>
