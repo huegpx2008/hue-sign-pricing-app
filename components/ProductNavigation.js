@@ -35,7 +35,7 @@ export default function ProductNavigation({
       <label>Preset Product</label>
       <select
         style={input}
-        value={presetProduct}
+        value={presetProduct || ""}
         onChange={(e) => {
           const nextProduct = e.target.value;
           setPresetProduct(nextProduct);
@@ -43,6 +43,7 @@ export default function ProductNavigation({
           else setProduct(nextProduct);
         }}
       >
+        <option value="">Select a product for presets</option>
         {Object.entries(products).map(([key, name]) => (
           <option key={key} value={key}>{name}</option>
         ))}
@@ -63,7 +64,8 @@ export default function ProductNavigation({
       <h2 id="quote-details-anchor">Quote Details</h2>
 
       <label>Product</label>
-      <select style={input} value={product} onChange={(e) => (onProductSelect ? onProductSelect(e.target.value) : setProduct(e.target.value))}>
+      <select style={input} value={product || ""} onChange={(e) => (onProductSelect ? onProductSelect(e.target.value) : setProduct(e.target.value))}>
+        <option value="">Select a product</option>
         {productCategories.map((category) => (
           <optgroup key={category.name} label={category.name}>
             {category.items.map((item) => (

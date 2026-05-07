@@ -23,7 +23,7 @@ export default function Page() {
     });
   };
 
-  const [product, setProduct] = useState("coro");
+  const [product, setProduct] = useState("");
   const [width, setWidth] = useState(24);
   const [height, setHeight] = useState(18);
   const [qty, setQty] = useState(1);
@@ -89,7 +89,7 @@ export default function Page() {
   const [viewMode, setViewMode] = useState("customer-online");
   const [staffUnlocked, setStaffUnlocked] = useState(false);
   const [showBreakdown, setShowBreakdown] = useState(false);
-  const [presetProduct, setPresetProduct] = useState("coro");
+  const [presetProduct, setPresetProduct] = useState("");
   const [dtfSummary, setDtfSummary] = useState(null);
 
   const activeProduct = productMap[product]?.calculator || null;
@@ -139,12 +139,12 @@ export default function Page() {
   };
 
   useEffect(() => {
-    const linked = activeProduct && presetGroups[activeProduct] ? activeProduct : "coro";
+    const linked = activeProduct && presetGroups[activeProduct] ? activeProduct : "";
     setPresetProduct(linked);
   }, [activeProduct]);
 
   function resetAll() {
-    setProduct("coro"); setWidth(24); setHeight(18); setQty(1); setMargin(60); setMultiplier(1);
+    setProduct(""); setWidth(24); setHeight(18); setQty(1); setMargin(60); setMultiplier(1);
     setUseDesignFee(false); setUseSetupFee(false); setDesignFee(""); setSetupFee(""); setDelivery("");
     setCoroDouble(false); setCoroFlute("vertical"); setStakes(false); setHeavyStakes(false); setGrommets(false); setGloss(false); setCoroContour(false); setCoroRush(false);
     setBannerType("13-single"); setPolePocket(false); setRope(false); setWindSlits(false); setBannerRush(false);
