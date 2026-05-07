@@ -659,7 +659,7 @@ export default function Page() {
 
           <button className="resetBtn" onClick={resetAll}>Reset to Defaults</button>
 
-          {activeProduct !== "screenPrinting" && <Box title="Optional Fees">
+          {isAdminView && activeProduct !== "screenPrinting" && <Box title="Optional Fees">
             <Check label="Add Design Fee" value={useDesignFee} setValue={setUseDesignFee} />
             {useDesignFee && <Field label="Design Fee" value={designFee} setValue={setDesignFee} />}
             <Check label="Add Setup Fee" value={useSetupFee} setValue={setUseSetupFee} />
