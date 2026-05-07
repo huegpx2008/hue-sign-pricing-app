@@ -86,7 +86,8 @@ export default function Page() {
   const [pvcRush, setPvcRush] = useState(false);
   const [pvcCustomCut, setPvcCustomCut] = useState(false);
   const [theme, setTheme] = useState("light");
-  const [isAdminView, setIsAdminView] = useState(false);
+  const [viewMode, setViewMode] = useState("customer-online");
+  const [staffUnlocked, setStaffUnlocked] = useState(false);
   const [showBreakdown, setShowBreakdown] = useState(false);
   const [presetProduct, setPresetProduct] = useState("coro");
   const [dtfSummary, setDtfSummary] = useState(null);
@@ -105,25 +106,36 @@ export default function Page() {
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    setIsAdminView(localStorage.getItem("hue-admin-view") === "true");
+    const savedMode = localStorage.getItem("hue-staff-mode");
+    if (savedMode === "customer-online" || savedMode === "customer-in-store" || savedMode === "admin") {
+      setStaffUnlocked(true);
+      setViewMode(savedMode);
+    }
   }, []);
 
-  const unlockAdminView = () => {
+  const unlockStaffMode = () => {
     if (typeof window === "undefined") return;
-    const entered = window.prompt("Enter admin password");
+    const entered = window.prompt("Enter staff password");
     if (entered === "HUE2026") {
-      setIsAdminView(true);
-      localStorage.setItem("hue-admin-view", "true");
+      setStaffUnlocked(true);
+      setViewMode("customer-in-store");
+      localStorage.setItem("hue-staff-mode", "customer-in-store");
     } else if (entered !== null) {
       window.alert("Incorrect password.");
     }
   };
 
-  const lockAdminView = () => {
+  const setStaffMode = (nextMode) => {
+    setViewMode(nextMode);
+    if (typeof window !== "undefined") localStorage.setItem("hue-staff-mode", nextMode);
+  };
+
+  const lockStaffMode = () => {
     if (typeof window === "undefined") return;
-    setIsAdminView(false);
+    setStaffUnlocked(false);
+    setViewMode("customer-online");
     setShowBreakdown(false);
-    localStorage.removeItem("hue-admin-view");
+    localStorage.removeItem("hue-staff-mode");
   };
 
   useEffect(() => {
@@ -268,6 +280,9 @@ export default function Page() {
     pvcRush,
     pvcCustomCut,
   });
+
+  const isAdminView = viewMode === "admin";
+  const isStaffUnlocked = staffUnlocked;
 
   const selectedDetails = {
     product,
@@ -495,10 +510,15 @@ export default function Page() {
       <div className="themeToggle">
         <button className={`modeBtn ${theme === "light" ? "active" : ""}`} onClick={() => setTheme("light")}>Light Mode</button>
         <button className={`modeBtn ${theme === "dark" ? "active" : ""}`} onClick={() => setTheme("dark")}>Dark Mode</button>
-        {isAdminView ? (
-          <button className="modeBtn" onClick={lockAdminView}>Activate Customer View</button>
+        {isStaffUnlocked ? (
+          <>
+            <button className={`modeBtn ${viewMode === "customer-online" ? "active" : ""}`} onClick={() => setStaffMode("customer-online")}>Customer Online</button>
+            <button className={`modeBtn ${viewMode === "customer-in-store" ? "active" : ""}`} onClick={() => setStaffMode("customer-in-store")}>Customer/In-Store</button>
+            <button className={`modeBtn ${viewMode === "admin" ? "active" : ""}`} onClick={() => setStaffMode("admin")}>Admin</button>
+            <button className="modeBtn" onClick={lockStaffMode}>Lock Staff Mode</button>
+          </>
         ) : (
-          <button className="modeBtn" onClick={unlockAdminView}>Unlock Admin View</button>
+          <button className="modeBtn" onClick={unlockStaffMode}>Unlock Staff Mode</button>
         )}
       </div>
       <p>Live quote calculator for signs, banners, ACM, vinyl, and poster paper.</p>
