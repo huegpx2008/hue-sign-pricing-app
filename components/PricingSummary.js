@@ -142,7 +142,19 @@ export default function PricingSummary({
 
       <div className="mobilePrice">
         <div className="mobilePriceTop"><strong>Suggested Retail {money(summaryCalc.retail).replace("$", "$ ")}</strong></div>
-        {isScreenPrint ? (
+        {isDtf ? (
+          <>
+            <div className="mobileMeta">
+              DTF Transfers • {dtfSummary.totalGarmentQty || 0} garments
+              {dtfSummary.productDisplay ? ` • ${dtfSummary.productDisplay}` : ""}
+            </div>
+            <div className="mobileOptions">
+              {(dtfSummary.selectedPrintLocations || []).length ? dtfSummary.selectedPrintLocations.join(" • ") : "No print locations selected"}
+              {dtfSummary.each ? ` • ${money(dtfSummary.each)}/garment` : ""}
+              {` • Total: ${money(dtfSummary.retail)}`}
+            </div>
+          </>
+        ) : isScreenPrint ? (
           <>
             <div className="mobileMeta">Screen Printing • {dtfSummary.totalGarments || 0} garments • {(dtfSummary.lineItems || []).filter((li) => li.totalQty > 0).length} style(s)</div>
             <div className="mobileOptions">{(dtfSummary.printLines || []).length ? (dtfSummary.printLines || []).map((pl) => `${pl.name} ${pl.colors}-color`).join(" • ") : "No print locations selected"} • Total: {money(dtfSummary.retail)}</div>
