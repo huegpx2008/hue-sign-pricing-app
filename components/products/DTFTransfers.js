@@ -213,7 +213,11 @@ export default function DTFTransfers({ onSummaryChange, isAdminView = false }) {
   const [rightSleeveHeight, setRightSleeveHeight] = useState(DEFAULT_SLEEVE_SIZE.height);
   const [padding, setPadding] = useState(0.25);
   const [optimizeLayout, setOptimizeLayout] = useState(true);
-  const [qtySxl, setQtySxl] = useState(0);
+  const [qtyXs, setQtyXs] = useState(0);
+  const [qtyS, setQtyS] = useState(0);
+  const [qtyM, setQtyM] = useState(0);
+  const [qtyL, setQtyL] = useState(0);
+  const [qtyXl, setQtyXl] = useState(0);
   const [qty2xl, setQty2xl] = useState(0);
   const [qty3xl, setQty3xl] = useState(0);
   const [qty4xl, setQty4xl] = useState(0);
@@ -228,8 +232,9 @@ export default function DTFTransfers({ onSummaryChange, isAdminView = false }) {
   const [copyStatus, setCopyStatus] = useState("");
 
   const totalGarmentQty = useMemo(() => (
-    toNumber(qtySxl) + toNumber(qty2xl) + toNumber(qty3xl) + toNumber(qty4xl) + toNumber(qty5xl)
-  ), [qtySxl, qty2xl, qty3xl, qty4xl, qty5xl]);
+    toNumber(qtyXs) + toNumber(qtyS) + toNumber(qtyM) + toNumber(qtyL) + toNumber(qtyXl)
+    + toNumber(qty2xl) + toNumber(qty3xl) + toNumber(qty4xl) + toNumber(qty5xl)
+  ), [qtyXs, qtyS, qtyM, qtyL, qtyXl, qty2xl, qty3xl, qty4xl, qty5xl]);
 
   const baseApparelCostUsed = useMemo(() => toNumber(apparelCost), [apparelCost]);
 
@@ -368,7 +373,11 @@ export default function DTFTransfers({ onSummaryChange, isAdminView = false }) {
       selectedTitle: selectedProduct?.title || "",
       selectedColor: selectedProduct?.color || "",
       sizeQuantities: {
-        "S-XL": toNumber(qtySxl),
+        XS: toNumber(qtyXs),
+        S: toNumber(qtyS),
+        M: toNumber(qtyM),
+        L: toNumber(qtyL),
+        XL: toNumber(qtyXl),
         "2XL": toNumber(qty2xl),
         "3XL": toNumber(qty3xl),
         "4XL": toNumber(qty4xl),
@@ -385,7 +394,7 @@ export default function DTFTransfers({ onSummaryChange, isAdminView = false }) {
       rollLengthUsed: dtfLayout.rollLengthUsed,
       transferCount: totalTransferCount,
     });
-  }, [onSummaryChange, finalRetail, pricePerGarment, directCost, apparelDirectCost, dtfMaterialCost, DTF_SHIPPING_FLAT, apparelRetailSubtotal, dtfRetailSubtotal, sizeUpchargeTotal, sleeveRetailAddOnTotal, selectedProduct, baseApparelCostUsed, totalGarmentQty, frontSelected, resolvedFrontSize, backSelected, resolvedBackSize, leftSleeve, resolvedLeftSleeveSize, rightSleeve, resolvedRightSleeveSize, dtfLayout.rollLengthUsed, totalTransferCount, qtySxl, qty2xl, qty3xl, qty4xl, qty5xl]);
+  }, [onSummaryChange, finalRetail, pricePerGarment, directCost, apparelDirectCost, dtfMaterialCost, DTF_SHIPPING_FLAT, apparelRetailSubtotal, dtfRetailSubtotal, sizeUpchargeTotal, sleeveRetailAddOnTotal, selectedProduct, baseApparelCostUsed, totalGarmentQty, frontSelected, resolvedFrontSize, backSelected, resolvedBackSize, leftSleeve, resolvedLeftSleeveSize, rightSleeve, resolvedRightSleeveSize, dtfLayout.rollLengthUsed, totalTransferCount, qtyXs, qtyS, qtyM, qtyL, qtyXl, qty2xl, qty3xl, qty4xl, qty5xl]);
 
   const loadedRef = useRef(false);
 
@@ -520,7 +529,11 @@ export default function DTFTransfers({ onSummaryChange, isAdminView = false }) {
     setColor(preferredColor);
     setFrontPreset("Left Chest");
     setBackPreset("Full Back");
-    setQtySxl(1);
+    setQtyXs(0);
+    setQtyS(0);
+    setQtyM(1);
+    setQtyL(0);
+    setQtyXl(0);
     setQty2xl(0);
     setQty3xl(0);
     setQty4xl(0);
@@ -708,8 +721,12 @@ export default function DTFTransfers({ onSummaryChange, isAdminView = false }) {
       </Box>
 
       <Box title="Apparel Quantities">
-        <div className="formGrid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 15 }}>
-          <Field label="S-XL" value={qtySxl} setValue={setQtySxl} />
+        <div className="formGrid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(70px, 1fr))", gap: 10 }}>
+          <Field label="XS" value={qtyXs} setValue={setQtyXs} />
+          <Field label="S" value={qtyS} setValue={setQtyS} />
+          <Field label="M" value={qtyM} setValue={setQtyM} />
+          <Field label="L" value={qtyL} setValue={setQtyL} />
+          <Field label="XL" value={qtyXl} setValue={setQtyXl} />
           <Field label="2XL" value={qty2xl} setValue={setQty2xl} />
           <Field label="3XL" value={qty3xl} setValue={setQty3xl} />
           <Field label="4XL" value={qty4xl} setValue={setQty4xl} />
@@ -726,7 +743,17 @@ export default function DTFTransfers({ onSummaryChange, isAdminView = false }) {
             <div><strong>Garment:</strong> {selectedProduct?.title || "Not selected"}</div>
             <div><strong>Color:</strong> {selectedProduct?.color || "Not selected"}</div>
             <div><strong>Total garment quantity:</strong> {totalGarmentQty}</div>
-            <div><strong>Size quantities:</strong> S-XL {toNumber(qtySxl)}, 2XL {toNumber(qty2xl)}, 3XL {toNumber(qty3xl)}, 4XL {toNumber(qty4xl)}, 5XL {toNumber(qty5xl)}</div>
+            <div><strong>Size quantities:</strong> {Object.entries({
+              XS: toNumber(qtyXs),
+              S: toNumber(qtyS),
+              M: toNumber(qtyM),
+              L: toNumber(qtyL),
+              XL: toNumber(qtyXl),
+              "2XL": toNumber(qty2xl),
+              "3XL": toNumber(qty3xl),
+              "4XL": toNumber(qty4xl),
+              "5XL": toNumber(qty5xl),
+            }).filter(([, value]) => value > 0).map(([size, value]) => `${size}(${value})`).join(", ") || "None"}</div>
             <div><strong>Front print:</strong> {frontSelected ? `${frontPreset}${resolvedFrontSize ? ` (${resolvedFrontSize.width}" x ${resolvedFrontSize.height}")` : ""}` : "None"}</div>
             <div><strong>Back print:</strong> {backSelected ? `${backPreset}${resolvedBackSize ? ` (${resolvedBackSize.width}" x ${resolvedBackSize.height}")` : ""}` : "None"}</div>
             <div><strong>Left sleeve:</strong> {leftSleeve ? `Selected (${resolvedLeftSleeveSize.width}" x ${resolvedLeftSleeveSize.height}")` : "None"}</div>

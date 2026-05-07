@@ -54,7 +54,7 @@ export default function PricingSummary({
           `Style #: ${dtfSummary?.selectedStyle || "Not selected"}`,
           `Garment: ${dtfSummary?.selectedTitle || "Not selected"}`,
           `Color: ${dtfSummary?.selectedColor || "Not selected"}`,
-          `Sizes: ${Object.entries(dtfSummary?.sizeQuantities || {}).filter(([, v]) => Number(v) > 0).map(([k, v]) => `${k}:${v}`).join(", ") || "None"}`,
+          `Sizes: ${Object.entries(dtfSummary?.sizeQuantities || {}).filter(([, v]) => Number(v) > 0).map(([k, v]) => `${k}(${v})`).join(", ") || "None"}`,
           `Print Locations: ${(dtfSummary?.selectedPrintLocations || []).length ? dtfSummary.selectedPrintLocations.join(", ") : "None selected"}`,
         ]
       : isScreenPrint
@@ -175,7 +175,7 @@ export default function PricingSummary({
             <p><strong>Garment:</strong> {dtfSummary.selectedTitle || "Not selected"}</p>
             <p><strong>Color:</strong> {dtfSummary.selectedColor || "Not selected"}</p>
             <p><strong>Total Garments:</strong> {dtfSummary.totalGarmentQty}</p>
-            <p><strong>Sizes:</strong> {Object.entries(dtfSummary.sizeQuantities || {}).filter(([, v]) => Number(v) > 0).map(([k, v]) => `${k}:${v}`).join(", ") || "None"}</p>
+            <p><strong>Sizes:</strong> {Object.entries(dtfSummary.sizeQuantities || {}).filter(([, v]) => Number(v) > 0).map(([k, v]) => `${k}(${v})`).join(", ") || "None"}</p>
             <p><strong>Print Locations:</strong> {dtfSummary.selectedPrintLocations.length ? dtfSummary.selectedPrintLocations.join(", ") : "None selected"}</p>
             <p><strong>Price per garment:</strong> {money(dtfSummary.each)}</p>
             <p><strong>Final total:</strong> {money(dtfSummary.retail)}</p>
