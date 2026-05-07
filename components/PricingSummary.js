@@ -1,3 +1,4 @@
+import { useState } from "react";
 import ProductVisual from "./ProductVisual";
 import VinylLayoutPreview from "./VinylLayoutPreview";
 import SheetLayoutPreview from "./SheetLayoutPreview";
@@ -20,6 +21,9 @@ export default function PricingSummary({
   dtfSummary,
   isAdminView,
 }) {
+  const [customerName, setCustomerName] = useState("");
+  const [customerEmail, setCustomerEmail] = useState("");
+  const [customerPhone, setCustomerPhone] = useState("");
   const scrollToQuoteSummary = () => {
     if (typeof window === "undefined" || window.innerWidth > 800) return;
     document.getElementById("quote-summary-anchor")?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -28,10 +32,72 @@ export default function PricingSummary({
   const isDtf = activeProduct === "dtfTransfers" && dtfSummary;
   const isScreenPrint = activeProduct === "screenPrinting" && dtfSummary;
   const summaryCalc = (isDtf || isScreenPrint) ? dtfSummary : calc;
+  const priceEachText = isScreenPrint
+    ? money(dtfSummary?.averagePricePerShirt || dtfSummary?.each || 0)
+    : money(summaryCalc.each || 0);
+
+  const quoteLines = [
+    "Hue Graphics & Apparel Quote",
+    "",
+    `Customer Name: ${customerName || "Not provided"}`,
+    `Customer Phone: ${customerPhone || "Not provided"}`,
+    "",
+    "Quote Summary:",
+    `Product: ${isDtf ? "DTF Transfers" : isScreenPrint ? "Screen Printing" : calc.label}`,
+    `Quantity: ${isDtf ? dtfSummary?.totalGarmentQty || 0 : isScreenPrint ? dtfSummary?.totalGarments || 0 : num(qty, 1)}`,
+    `Price Each: ${priceEachText}`,
+    `Grand Total: ${money(summaryCalc.retail || 0)}`,
+    "",
+    "Selected Options/Details:",
+    ...(isDtf
+      ? [
+          `Style #: ${dtfSummary?.selectedStyle || "Not selected"}`,
+          `Garment: ${dtfSummary?.selectedTitle || "Not selected"}`,
+          `Color: ${dtfSummary?.selectedColor || "Not selected"}`,
+          `Sizes: ${Object.entries(dtfSummary?.sizeQuantities || {}).filter(([, v]) => Number(v) > 0).map(([k, v]) => `${k}(${v})`).join(", ") || "None"}`,
+          `Print Locations: ${(dtfSummary?.selectedPrintLocations || []).length ? dtfSummary.selectedPrintLocations.join(", ") : "None selected"}`,
+        ]
+      : isScreenPrint
+      ? [
+          ...((dtfSummary?.lineItems || []).map((li, idx) => {
+            const sizes = Object.entries(li.sizeQty || {}).filter(([, v]) => Number(v) > 0).map(([k, v]) => `${k}:${v}`).join(", ") || "None";
+            return `Line ${idx + 1}: ${li.style || "Style not selected"} ${li.color ? `(${li.color})` : ""} • Qty ${li.totalQty || 0} • Sizes ${sizes} • ${money(li.retailPerShirt || 0)}/shirt`;
+          })),
+          ...((dtfSummary?.printLines || []).map((pl) => `${pl.name}: ${pl.colors} colors • ${money(pl.pricePerPrint)}/print`)),
+          `Artwork/Setup Fee: ${money(dtfSummary?.setupFee || 0)}`,
+        ]
+      : selectedDetails.options.length
+      ? selectedDetails.options
+      : ["None"])
+    ,
+    "",
+    "Please reply to this email if you’d like to move forward or have any questions.",
+  ];
+
+  const quoteText = quoteLines.join("\n");
+  const emailHref = `mailto:${encodeURIComponent(customerEmail)}?cc=${encodeURIComponent("jason@huegraphics.cc")}&subject=${encodeURIComponent("Quote from Hue Graphics & Apparel")}&body=${encodeURIComponent(quoteText)}`;
+
+  const handleCopyQuote = async () => {
+    if (typeof navigator !== "undefined" && navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(quoteText);
+      return;
+    }
+    if (typeof window !== "undefined") window.alert("Clipboard not available on this browser.");
+  };
 
   return (
     <>
       <aside className="summary sticky" id="quote-summary-anchor">
+        <div style={{ marginBottom: 14, padding: 12, borderRadius: 10, background: "rgba(255,255,255,0.09)" }}>
+          <h3 style={{ marginTop: 0, marginBottom: 8 }}>Customer Contact</h3>
+          <input style={{ width: "100%", marginBottom: 8, padding: 8, borderRadius: 8, border: "1px solid rgba(148,163,184,.5)" }} placeholder="Customer Name" value={customerName} onChange={(e) => setCustomerName(e.target.value)} />
+          <input style={{ width: "100%", marginBottom: 8, padding: 8, borderRadius: 8, border: "1px solid rgba(148,163,184,.5)" }} placeholder="Customer Email" value={customerEmail} onChange={(e) => setCustomerEmail(e.target.value)} />
+          <input style={{ width: "100%", marginBottom: 8, padding: 8, borderRadius: 8, border: "1px solid rgba(148,163,184,.5)" }} placeholder="Customer Phone" value={customerPhone} onChange={(e) => setCustomerPhone(e.target.value)} />
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+            <button className="modeBtn" onClick={handleCopyQuote}>Copy Quote</button>
+            <a className="modeBtn" href={customerEmail ? emailHref : "#"} onClick={(e) => { if (!customerEmail) e.preventDefault(); }} style={{ textDecoration: "none", textAlign: "center", lineHeight: "36px" }}>Email Quote</a>
+          </div>
+        </div>
         <h2>{isAdminView ? "Suggested Retail" : "Customer Quote"}</h2>
         <div style={{ fontSize: 42, fontWeight: "bold" }}>{money(summaryCalc.retail)}</div>
         {!(isScreenPrint && (dtfSummary.lineItems || []).length > 1) && <p>Each: <strong>{money(summaryCalc.each)}</strong></p>}
@@ -109,7 +175,7 @@ export default function PricingSummary({
             <p><strong>Garment:</strong> {dtfSummary.selectedTitle || "Not selected"}</p>
             <p><strong>Color:</strong> {dtfSummary.selectedColor || "Not selected"}</p>
             <p><strong>Total Garments:</strong> {dtfSummary.totalGarmentQty}</p>
-            <p><strong>Sizes:</strong> {Object.entries(dtfSummary.sizeQuantities || {}).filter(([, v]) => Number(v) > 0).map(([k, v]) => `${k}:${v}`).join(", ") || "None"}</p>
+            <p><strong>Sizes:</strong> {Object.entries(dtfSummary.sizeQuantities || {}).filter(([, v]) => Number(v) > 0).map(([k, v]) => `${k}(${v})`).join(", ") || "None"}</p>
             <p><strong>Print Locations:</strong> {dtfSummary.selectedPrintLocations.length ? dtfSummary.selectedPrintLocations.join(", ") : "None selected"}</p>
             <p><strong>Price per garment:</strong> {money(dtfSummary.each)}</p>
             <p><strong>Final total:</strong> {money(dtfSummary.retail)}</p>
