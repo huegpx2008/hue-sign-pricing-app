@@ -23,7 +23,7 @@ export default function Page() {
     });
   };
 
-  const [product, setProduct] = useState("coro");
+  const [product, setProduct] = useState("");
   const [width, setWidth] = useState(24);
   const [height, setHeight] = useState(18);
   const [qty, setQty] = useState(1);
@@ -89,7 +89,7 @@ export default function Page() {
   const [viewMode, setViewMode] = useState("customer-online");
   const [staffUnlocked, setStaffUnlocked] = useState(false);
   const [showBreakdown, setShowBreakdown] = useState(false);
-  const [presetProduct, setPresetProduct] = useState("coro");
+  const [presetProduct, setPresetProduct] = useState("");
   const [dtfSummary, setDtfSummary] = useState(null);
 
   const activeProduct = productMap[product]?.calculator || null;
@@ -139,12 +139,12 @@ export default function Page() {
   };
 
   useEffect(() => {
-    const linked = activeProduct && presetGroups[activeProduct] ? activeProduct : "coro";
+    const linked = activeProduct && presetGroups[activeProduct] ? activeProduct : "";
     setPresetProduct(linked);
   }, [activeProduct]);
 
   function resetAll() {
-    setProduct("coro"); setWidth(24); setHeight(18); setQty(1); setMargin(60); setMultiplier(1);
+    setProduct(""); setWidth(24); setHeight(18); setQty(1); setMargin(60); setMultiplier(1);
     setUseDesignFee(false); setUseSetupFee(false); setDesignFee(""); setSetupFee(""); setDelivery("");
     setCoroDouble(false); setCoroFlute("vertical"); setStakes(false); setHeavyStakes(false); setGrommets(false); setGloss(false); setCoroContour(false); setCoroRush(false);
     setBannerType("13-single"); setPolePocket(false); setRope(false); setWindSlits(false); setBannerRush(false);
@@ -286,6 +286,8 @@ export default function Page() {
   });
 
   const isAdminView = viewMode === "admin";
+  const isCustomerOnlineView = viewMode === "customer-online";
+  const showInternalFields = !isCustomerOnlineView;
   const isStaffUnlocked = staffUnlocked;
 
   const selectedDetails = {
@@ -368,9 +370,9 @@ export default function Page() {
       activeProduct === "pvc" && pvcContour ? "Contour Cut" : null,
       activeProduct === "pvc" && pvcRush ? "Rush Order" : null,
       activeProduct === "pvc" && pvcCustomCut ? "Custom Cut" : null,
-      useDesignFee ? `Design Fee: ${money(num(designFee))}` : null,
-      useSetupFee ? `Setup Fee: ${money(num(setupFee))}` : null,
-      num(delivery) > 0 ? `Delivery/Install: ${money(num(delivery))}` : null,
+      showInternalFields && useDesignFee ? `Design Fee: ${money(num(designFee))}` : null,
+      showInternalFields && useSetupFee ? `Setup Fee: ${money(num(setupFee))}` : null,
+      showInternalFields && num(delivery) > 0 ? `Delivery/Install: ${money(num(delivery))}` : null,
       isAdminView && num(multiplier, 1) !== 1 ? `Multiplier: ${num(multiplier, 1)}x` : null,
     ].filter(Boolean),
   };
@@ -652,7 +654,7 @@ export default function Page() {
               <Field label="Width Inches" value={width} setValue={setWidth} />
               <Field label="Height Inches" value={height} setValue={setHeight} />
               {isAdminView && <Field label="Margin %" value={margin} setValue={setMargin} />}
-              <Field label="Delivery / Install" value={delivery} setValue={setDelivery} />
+              {showInternalFields && <Field label="Delivery / Install" value={delivery} setValue={setDelivery} />}
               {isAdminView && <Field label="Price Multiplier" value={multiplier} setValue={setMultiplier} />}
             </div>
           )}

@@ -42,6 +42,7 @@ export default function PricingSummary({
     document.getElementById("quote-summary-anchor")?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
+  const hasProductSelected = Boolean(product);
   const isDtf = activeProduct === "dtfTransfers" && dtfSummary;
   const isScreenPrint = activeProduct === "screenPrinting" && dtfSummary;
   const summaryCalc = (isDtf || isScreenPrint) ? dtfSummary : calc;
@@ -69,7 +70,10 @@ export default function PricingSummary({
       `Profit: ${money(summaryCalc.profit || 0)}`,
     ],
   });
-  const addToQuote = () => setQuoteItems((prev) => [...prev, buildCurrentQuoteItem()]);
+  const addToQuote = () => {
+    if (!hasProductSelected) return;
+    setQuoteItems((prev) => [...prev, buildCurrentQuoteItem()]);
+  };
   const removeQuoteItem = (id) => setQuoteItems((prev) => prev.filter((item) => item.id !== id));
   const clearQuote = () => setQuoteItems([]);
   const quoteGrandTotal = quoteItems.reduce((sum, item) => sum + Number(item.total || 0), 0);
@@ -163,7 +167,7 @@ export default function PricingSummary({
         </div>
         <div style={{ marginBottom: 14, padding: 12, borderRadius: 10, background: "rgba(255,255,255,0.09)" }}>
           <h3 style={{ marginTop: 0, marginBottom: 8 }}>Quote Items</h3>
-          <button className="modeBtn" onClick={addToQuote} style={{ width: "100%", marginBottom: 8 }}>Add to Quote</button>
+          <button className="modeBtn" onClick={addToQuote} disabled={!hasProductSelected} style={{ width: "100%", marginBottom: 8, opacity: hasProductSelected ? 1 : 0.6 }}>Add Selected Item to Quote</button>
           {quoteItems.length === 0 ? (
             <p style={{ margin: 0 }}>No quote items added yet.</p>
           ) : (
@@ -182,12 +186,12 @@ export default function PricingSummary({
             </>
           )}
         </div>
-        <h2>{isAdminView ? "Suggested Retail" : "Customer Quote"}</h2>
-        <div style={{ fontSize: 42, fontWeight: "bold" }}>{money(summaryCalc.retail)}</div>
-        {!(isScreenPrint && (dtfSummary.lineItems || []).length > 1) && <p>Each: <strong>{money(summaryCalc.each)}</strong></p>}
+        <h2>{isAdminView ? "Suggested Retail" : "Selected Item Preview"}</h2>
+        <div style={{ fontSize: 42, fontWeight: "bold" }}>{money(hasProductSelected ? summaryCalc.retail : 0)}</div>
+        {hasProductSelected && !(isScreenPrint && (dtfSummary.lineItems || []).length > 1) && <p>Each: <strong>{money(summaryCalc.each)}</strong></p>}
         {isAdminView && <p>Profit: <strong>{money(summaryCalc.profit)}</strong></p>}
         <hr />
-        <p>Product: {isDtf ? "DTF Transfers" : isScreenPrint ? "Screen Printing" : calc.label}</p>
+        <p>Product: {hasProductSelected ? (isDtf ? "DTF Transfers" : isScreenPrint ? "Screen Printing" : calc.label) : "Select a product"}</p>
         {!isDtf && !isScreenPrint && isAdminView && <p>Total Sq Ft: {calc.totalSqFt?.toFixed(2)}</p>}
 
         {isAdminView && <button className="modeBtn" style={{ marginBottom: 10 }} onClick={() => setShowBreakdown((v) => !v)}>{showBreakdown ? "Hide" : "Show"} Detailed Breakdown</button>}
