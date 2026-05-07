@@ -5,6 +5,7 @@ export default function ProductNavigation({
   setProduct,
   presetProduct,
   setPresetProduct,
+  onProductSelect,
   productCategories,
   products,
   presetGroups,
@@ -21,7 +22,7 @@ export default function ProductNavigation({
               <button
                 key={item.id}
                 className={`presetBtn ${product === item.id ? "activePreset" : ""} ${item.calculator ? "" : "comingSoonBtn"}`}
-                onClick={() => setProduct(item.id)}
+                onClick={() => (onProductSelect ? onProductSelect(item.id) : setProduct(item.id))}
               >
                 {item.label} {!item.calculator ? "• Coming Soon" : ""}
               </button>
@@ -30,7 +31,7 @@ export default function ProductNavigation({
         </Box>
       ))}
 
-      <h2>Custom Presets</h2>
+      <h2 id="quick-presets-anchor">Custom Presets</h2>
       <label>Preset Product</label>
       <select
         style={input}
@@ -38,7 +39,8 @@ export default function ProductNavigation({
         onChange={(e) => {
           const nextProduct = e.target.value;
           setPresetProduct(nextProduct);
-          setProduct(nextProduct);
+          if (onProductSelect) onProductSelect(nextProduct);
+          else setProduct(nextProduct);
         }}
       >
         {Object.entries(products).map(([key, name]) => (
@@ -58,10 +60,10 @@ export default function ProductNavigation({
         ))}
       </div>
 
-      <h2>Quote Details</h2>
+      <h2 id="quote-details-anchor">Quote Details</h2>
 
       <label>Product</label>
-      <select style={input} value={product} onChange={(e) => setProduct(e.target.value)}>
+      <select style={input} value={product} onChange={(e) => (onProductSelect ? onProductSelect(e.target.value) : setProduct(e.target.value))}>
         {productCategories.map((category) => (
           <optgroup key={category.name} label={category.name}>
             {category.items.map((item) => (

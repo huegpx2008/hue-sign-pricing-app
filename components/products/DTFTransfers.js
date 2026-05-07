@@ -171,7 +171,7 @@ function DtfRollPreview({ layout, padding }) {
   );
 }
 
-export default function DTFTransfers({ onSummaryChange }) {
+export default function DTFTransfers({ onSummaryChange, isAdminView = false }) {
   const DEFAULT_MARGIN_PERCENT = 60;
   const DTF_MATERIAL_COST_PER_LINEAR_INCH = 0.5;
   const DTF_MINIMUM_MATERIAL_CHARGE = 10;
@@ -364,6 +364,16 @@ export default function DTFTransfers({ onSummaryChange }) {
       finalRetail,
       pricePerGarment,
       productDisplay: selectedProduct ? `${selectedProduct.style} — ${selectedProduct.title} (${selectedProduct.color})` : "No SanMar item selected",
+      selectedStyle: selectedProduct?.style || "",
+      selectedTitle: selectedProduct?.title || "",
+      selectedColor: selectedProduct?.color || "",
+      sizeQuantities: {
+        "S-XL": toNumber(qtySxl),
+        "2XL": toNumber(qty2xl),
+        "3XL": toNumber(qty3xl),
+        "4XL": toNumber(qty4xl),
+        "5XL": toNumber(qty5xl),
+      },
       apparelCostUsed: baseApparelCostUsed,
       totalGarmentQty,
       selectedPrintLocations: [
@@ -375,7 +385,7 @@ export default function DTFTransfers({ onSummaryChange }) {
       rollLengthUsed: dtfLayout.rollLengthUsed,
       transferCount: totalTransferCount,
     });
-  }, [onSummaryChange, finalRetail, pricePerGarment, directCost, apparelDirectCost, dtfMaterialCost, DTF_SHIPPING_FLAT, apparelRetailSubtotal, dtfRetailSubtotal, sizeUpchargeTotal, sleeveRetailAddOnTotal, selectedProduct, baseApparelCostUsed, totalGarmentQty, frontSelected, resolvedFrontSize, backSelected, resolvedBackSize, leftSleeve, resolvedLeftSleeveSize, rightSleeve, resolvedRightSleeveSize, dtfLayout.rollLengthUsed, totalTransferCount]);
+  }, [onSummaryChange, finalRetail, pricePerGarment, directCost, apparelDirectCost, dtfMaterialCost, DTF_SHIPPING_FLAT, apparelRetailSubtotal, dtfRetailSubtotal, sizeUpchargeTotal, sleeveRetailAddOnTotal, selectedProduct, baseApparelCostUsed, totalGarmentQty, frontSelected, resolvedFrontSize, backSelected, resolvedBackSize, leftSleeve, resolvedLeftSleeveSize, rightSleeve, resolvedRightSleeveSize, dtfLayout.rollLengthUsed, totalTransferCount, qtySxl, qty2xl, qty3xl, qty4xl, qty5xl]);
 
   const loadedRef = useRef(false);
 
@@ -691,7 +701,7 @@ export default function DTFTransfers({ onSummaryChange }) {
             <div><strong>Style #:</strong> {selectedProduct.style}</div>
             <div><strong>Product:</strong> {selectedProduct.title}</div>
             <div><strong>Color:</strong> {selectedProduct.color}</div>
-            <div><strong>Case Price:</strong> {selectedProduct.casePriceRaw || "N/A"}</div>
+            {isAdminView && <div><strong>Case Price:</strong> {selectedProduct.casePriceRaw || "N/A"}</div>}
             <div><strong>Case Size:</strong> {selectedProduct.caseSize || "N/A"}</div>
           </div>
         )}
@@ -708,7 +718,24 @@ export default function DTFTransfers({ onSummaryChange }) {
       </Box>
 
       <Box title="DTF Roll Layout Preview"><DtfRollPreview layout={dtfLayout} padding={Math.max(0, toNumber(padding))} /></Box>
-      <Box title="DTF Pricing Summary">
+      <Box title={isAdminView ? "DTF Pricing Summary" : "DTF Customer Quote Summary"}>
+        {!isAdminView ? (
+          <div style={{ display: "grid", gap: 6 }}>
+            <div><strong>Product:</strong> DTF Transfers</div>
+            <div><strong>Style #:</strong> {selectedProduct?.style || "Not selected"}</div>
+            <div><strong>Garment:</strong> {selectedProduct?.title || "Not selected"}</div>
+            <div><strong>Color:</strong> {selectedProduct?.color || "Not selected"}</div>
+            <div><strong>Total garment quantity:</strong> {totalGarmentQty}</div>
+            <div><strong>Size quantities:</strong> S-XL {toNumber(qtySxl)}, 2XL {toNumber(qty2xl)}, 3XL {toNumber(qty3xl)}, 4XL {toNumber(qty4xl)}, 5XL {toNumber(qty5xl)}</div>
+            <div><strong>Front print:</strong> {frontSelected ? `${frontPreset}${resolvedFrontSize ? ` (${resolvedFrontSize.width}" x ${resolvedFrontSize.height}")` : ""}` : "None"}</div>
+            <div><strong>Back print:</strong> {backSelected ? `${backPreset}${resolvedBackSize ? ` (${resolvedBackSize.width}" x ${resolvedBackSize.height}")` : ""}` : "None"}</div>
+            <div><strong>Left sleeve:</strong> {leftSleeve ? `Selected (${resolvedLeftSleeveSize.width}" x ${resolvedLeftSleeveSize.height}")` : "None"}</div>
+            <div><strong>Right sleeve:</strong> {rightSleeve ? `Selected (${resolvedRightSleeveSize.width}" x ${resolvedRightSleeveSize.height}")` : "None"}</div>
+            <div><strong>Price per garment:</strong> ${pricePerGarment.toFixed(2)}</div>
+            <div><strong>Final total:</strong> ${finalRetail.toFixed(2)}</div>
+          </div>
+        ) : (
+        <>
         <div style={{ display: "grid", gap: 6 }}>
           <div><strong>Base apparel cost used:</strong> ${baseApparelCostUsed.toFixed(2)} {manualApparelCost ? "(manual override)" : "(SanMar CASE_PRICE)"}</div>
           <div><strong>Total garment quantity:</strong> {totalGarmentQty}</div>
@@ -744,6 +771,8 @@ export default function DTFTransfers({ onSummaryChange }) {
           <button type="button" className="modeBtn" onClick={handleCopyQuote}>Copy Quote</button>
           {copyStatus && <span style={{ marginLeft: 10, fontSize: 13, color: "#bfdbfe" }}>{copyStatus}</span>}
         </div>
+        </>
+        )}
       </Box>
     </>
   );

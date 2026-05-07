@@ -98,15 +98,21 @@ export default function PricingSummary({
         {!isDtf && (activeProduct === "foamcore" || activeProduct === "pvc") && <SheetLayoutPreview calc={calc} />}
         {isDtf ? (
           <div style={{ marginTop: 16, padding: 16, borderRadius: 16, background: "rgba(255,255,255,0.08)", color: "#e5e7eb", fontSize: 14, lineHeight: 1.35 }}>
-            <h3 style={{ marginTop: 0 }}>Selected Details</h3>
+            <h3 style={{ marginTop: 0 }}>{isAdminView ? "Selected Details" : "DTF Customer Quote"}</h3>
             <p><strong>Product:</strong> DTF Transfers</p>
-            <p><strong>SanMar Item:</strong> {dtfSummary.productDisplay}</p>
-            <p><strong>Apparel Cost Used:</strong> {money(dtfSummary.apparelCostUsed)}</p>
+            <p><strong>Style #:</strong> {dtfSummary.selectedStyle || "Not selected"}</p>
+            <p><strong>Garment:</strong> {dtfSummary.selectedTitle || "Not selected"}</p>
+            <p><strong>Color:</strong> {dtfSummary.selectedColor || "Not selected"}</p>
             <p><strong>Total Garments:</strong> {dtfSummary.totalGarmentQty}</p>
+            <p><strong>Sizes:</strong> {Object.entries(dtfSummary.sizeQuantities || {}).filter(([, v]) => Number(v) > 0).map(([k, v]) => `${k}:${v}`).join(", ") || "None"}</p>
             <p><strong>Print Locations:</strong> {dtfSummary.selectedPrintLocations.length ? dtfSummary.selectedPrintLocations.join(", ") : "None selected"}</p>
-            <p><strong>Roll Length Used:</strong> {dtfSummary.rollLengthUsed.toFixed(2)}"</p>
-            <p><strong>Transfer Count:</strong> {dtfSummary.transferCount}</p>
-            <p><strong>Size Upcharges:</strong> {money(dtfSummary.sizeUpchargeTotal)}</p>
+            <p><strong>Price per garment:</strong> {money(dtfSummary.each)}</p>
+            <p><strong>Final total:</strong> {money(dtfSummary.retail)}</p>
+            {isAdminView && <p><strong>SanMar Item:</strong> {dtfSummary.productDisplay}</p>}
+            {isAdminView && <p><strong>Apparel Cost Used:</strong> {money(dtfSummary.apparelCostUsed)}</p>}
+            {isAdminView && <p><strong>Roll Length Used:</strong> {dtfSummary.rollLengthUsed.toFixed(2)}"</p>}
+            {isAdminView && <p><strong>Transfer Count:</strong> {dtfSummary.transferCount}</p>}
+            {isAdminView && <p><strong>Size Upcharges:</strong> {money(dtfSummary.sizeUpchargeTotal)}</p>}
           </div>
         ) : isScreenPrint ? (
           <div style={{ marginTop: 16, padding: 16, borderRadius: 16, background: "rgba(255,255,255,0.08)", color: "#e5e7eb", fontSize: 14, lineHeight: 1.35 }}>

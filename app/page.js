@@ -13,6 +13,16 @@ const productMap = Object.fromEntries(productCategories.flatMap((c) => c.items.m
 const allProducts = productCategories.flatMap((c) => c.items.map((i) => ({ ...i, category: c.name })));
 
 export default function Page() {
+  const handleProductSelect = (nextProduct) => {
+    setProduct(nextProduct);
+    if (typeof window === "undefined" || window.innerWidth > 800) return;
+    window.requestAnimationFrame(() => {
+      const toQuoteDetails = ["dtfTransfers", "screenPrinting"].includes(nextProduct);
+      const anchorId = toQuoteDetails ? "quote-details-anchor" : "quick-presets-anchor";
+      document.getElementById(anchorId)?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  };
+
   const [product, setProduct] = useState("coro");
   const [width, setWidth] = useState(24);
   const [height, setHeight] = useState(18);
@@ -486,7 +496,7 @@ export default function Page() {
         <button className={`modeBtn ${theme === "light" ? "active" : ""}`} onClick={() => setTheme("light")}>Light Mode</button>
         <button className={`modeBtn ${theme === "dark" ? "active" : ""}`} onClick={() => setTheme("dark")}>Dark Mode</button>
         {isAdminView ? (
-          <button className="modeBtn" onClick={lockAdminView}>Lock Admin View</button>
+          <button className="modeBtn" onClick={lockAdminView}>Activate Customer View</button>
         ) : (
           <button className="modeBtn" onClick={unlockAdminView}>Unlock Admin View</button>
         )}
@@ -498,6 +508,7 @@ export default function Page() {
           <ProductNavigation
             product={product}
             setProduct={setProduct}
+            onProductSelect={handleProductSelect}
             presetProduct={presetProduct}
             setPresetProduct={setPresetProduct}
             productCategories={productCategories}
@@ -603,6 +614,7 @@ export default function Page() {
             setPvcRush={setPvcRush}
             pvcCustomCut={pvcCustomCut}
             setPvcCustomCut={setPvcCustomCut}
+            isAdminView={isAdminView}
           />
 
 

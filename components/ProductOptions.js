@@ -101,6 +101,7 @@ export default function ProductOptions(props) {
     onDtfSummaryChange,
     margin,
     multiplier,
+    isAdminView,
   } = props;
 
   return (
@@ -235,7 +236,7 @@ export default function ProductOptions(props) {
 
       {activeProduct === "screenPrinting" && <ScreenPrinting margin={margin} multiplier={multiplier} onSummaryChange={onDtfSummaryChange} />}
 
-      {activeProduct === "dtfTransfers" && <DTFTransfers onSummaryChange={onDtfSummaryChange} />}
+      {activeProduct === "dtfTransfers" && <DTFTransfers onSummaryChange={onDtfSummaryChange} isAdminView={isAdminView} />}
 
       {activeProduct === "pvc" && (
         <Box title="PVC Options">
