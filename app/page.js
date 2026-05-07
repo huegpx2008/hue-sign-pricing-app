@@ -513,7 +513,7 @@ export default function Page() {
         }
       `}</style>
 
-      <h1>Hue pricing app beta V2</h1>
+      <h1>Hue Graphics Quote Form – Beta 2.1</h1>
       <div className="themeToggle">
         <button className={`modeBtn ${theme === "light" ? "active" : ""}`} onClick={() => setTheme("light")}>Light Mode</button>
         <button className={`modeBtn ${theme === "dark" ? "active" : ""}`} onClick={() => setTheme("dark")}>Dark Mode</button>
@@ -528,7 +528,8 @@ export default function Page() {
           <button className="modeBtn" onClick={unlockStaffMode}>Unlock Staff Mode</button>
         )}
       </div>
-      <p>Live quote calculator for signs, banners, ACM, vinyl, and poster paper.</p>
+      <p>Live Online Quote Form – Beta Version</p>
+      <p>Pricing shown is an estimate and may be adjusted after final review, artwork inspection, quantity confirmation, or production requirements.</p>
 
       <div className="layout">
         <section className="card">
