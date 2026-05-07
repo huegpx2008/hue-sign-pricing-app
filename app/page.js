@@ -377,8 +377,8 @@ export default function Page() {
           gap: 20px;
         }
 
-        .themeToggle{display:flex;gap:10px;align-items:center;margin:8px 0 14px;}
-        .modeBtn{padding:8px 12px;border-radius:999px;border:1px solid #94a3b8;background:linear-gradient(180deg,#fff,#e2e8f0);cursor:pointer;box-shadow:0 3px 8px rgba(15,23,42,.12);}
+        .themeToggle{display:flex;gap:8px;align-items:center;margin:8px 0 14px;flex-wrap:wrap;max-width:100%;}
+        .modeBtn{padding:6px 10px;border-radius:999px;border:1px solid #94a3b8;background:linear-gradient(180deg,#fff,#e2e8f0);cursor:pointer;box-shadow:0 3px 8px rgba(15,23,42,.12);font-size:13px;line-height:1.2;white-space:nowrap;}
         .modeBtn.active{background:linear-gradient(180deg,#1d4ed8,#1e293b);color:#fff;border-color:#60a5fa;box-shadow:inset 0 2px 6px rgba(0,0,0,.35),0 0 0 2px rgba(96,165,250,.3);}
         .appRoot.light{background:linear-gradient(160deg,#eff6ff,#f8fafc 45%,#fff);color:#0f172a;}
         .appRoot.dark{background:linear-gradient(160deg,#0b1220,#111827 52%,#1f2937);color:#e2e8f0;}
@@ -475,8 +475,8 @@ export default function Page() {
             flex-direction: column;
           }
 
-          .themeToggle{display:flex;gap:10px;align-items:center;margin:8px 0 14px;}
-        .modeBtn{padding:8px 12px;border-radius:999px;border:1px solid #94a3b8;background:linear-gradient(180deg,#fff,#e2e8f0);cursor:pointer;box-shadow:0 3px 8px rgba(15,23,42,.12);}
+          .themeToggle{display:flex;gap:6px;align-items:center;margin:8px 0 14px;flex-wrap:wrap;max-width:100%;}
+        .modeBtn{padding:6px 9px;border-radius:999px;border:1px solid #94a3b8;background:linear-gradient(180deg,#fff,#e2e8f0);cursor:pointer;box-shadow:0 3px 8px rgba(15,23,42,.12);font-size:12px;max-width:100%;}
         .modeBtn.active{background:linear-gradient(180deg,#1d4ed8,#1e293b);color:#fff;border-color:#60a5fa;box-shadow:inset 0 2px 6px rgba(0,0,0,.35),0 0 0 2px rgba(96,165,250,.3);}
         .appRoot.light{background:linear-gradient(160deg,#eff6ff,#f8fafc 45%,#fff);color:#0f172a;}
         .appRoot.dark{background:linear-gradient(160deg,#0b1220,#111827 52%,#1f2937);color:#e2e8f0;}
