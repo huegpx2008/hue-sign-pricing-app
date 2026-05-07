@@ -34,6 +34,14 @@ export default function ProductVisual({ product, comingSoon }) {
       </div>
     );
   }
+  if (product === "reflective") {
+    return (
+      <div style={visualBox}>
+        <div style={reflectiveVisual}>REFLECTIVE</div>
+        <p style={visualLabel}>Reflective Vinyl Selected</p>
+      </div>
+    );
+  }
 
   if (product === "poster") {
     return (
@@ -227,4 +235,15 @@ const dtfVisual = {
   fontSize: 30,
   fontWeight: "bold",
   border: "3px solid #22c55e",
+};
+
+const reflectiveVisual = {
+  display: "inline-block",
+  background: "linear-gradient(135deg, #f8fafc, #d1d5db)",
+  color: "#111827",
+  borderRadius: 8,
+  padding: "30px 45px",
+  fontSize: 28,
+  fontWeight: "bold",
+  border: "4px dashed #94a3b8",
 };

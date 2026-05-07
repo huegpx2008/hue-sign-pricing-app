@@ -106,23 +106,27 @@ export default function ProductOptions(props) {
 
   return (
     <>
-      {activeProduct === "vinyl" && (
-        <Box title="Printed Vinyl Options">
-          <label>Vinyl Type</label>
-          <select style={input} value={vinylType} onChange={(e) => setVinylType(e.target.value)}>
-            {Object.entries(vinylOptions).map(([key, v]) => (
-              <option key={key} value={key}>
-                {v.name} — {money(v.retail)}/sq ft
-              </option>
-            ))}
-          </select>
+      {(activeProduct === "vinyl" || activeProduct === "reflective") && (
+        <Box title={activeProduct === "reflective" ? "Reflective Vinyl Options" : "Printed Vinyl Options"}>
+          {activeProduct === "vinyl" && (
+            <>
+              <label>Vinyl Type</label>
+              <select style={input} value={vinylType} onChange={(e) => setVinylType(e.target.value)}>
+                {Object.entries(vinylOptions).map(([key, v]) => (
+                  <option key={key} value={key}>
+                    {v.name} — {money(v.retail)}/sq ft
+                  </option>
+                ))}
+              </select>
 
-          <label>Laminate</label>
-          <select style={input} value={vinylLaminate} onChange={(e) => setVinylLaminate(e.target.value)}>
-            <option>Gloss Laminate</option>
-            <option>Matte Laminate</option>
-            <option>No Laminate</option>
-          </select>
+              <label>Laminate</label>
+              <select style={input} value={vinylLaminate} onChange={(e) => setVinylLaminate(e.target.value)}>
+                <option>Gloss Laminate</option>
+                <option>Matte Laminate</option>
+                <option>No Laminate</option>
+              </select>
+            </>
+          )}
 
           <Check label="Contour Cut (+10%)" value={vinylContour} setValue={setVinylContour} />
           <Check label="Rush Order (2x)" value={vinylRush} setValue={setVinylRush} />

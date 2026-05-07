@@ -205,6 +205,10 @@ export default function Page() {
       { label: "12x12", w: 12, h: 12 }, { label: "12x24", w: 24, h: 12 }, { label: "24x24", w: 24, h: 24 },
       { label: "24x36", w: 36, h: 24 }, { label: "24x48", w: 48, h: 24 }, { label: "48x96", w: 96, h: 48 },
     ],
+    reflective: [
+      { label: "12x12", w: 12, h: 12 }, { label: "12x24", w: 24, h: 12 }, { label: "24x24", w: 24, h: 24 },
+      { label: "24x36", w: 36, h: 24 }, { label: "24x48", w: 48, h: 24 }, { label: "48x96", w: 96, h: 48 },
+    ],
     poster: [
       { label: "11x17", w: 17, h: 11 }, { label: "18x24", w: 24, h: 18 }, { label: "24x36", w: 36, h: 24 },
       { label: "36x48", w: 48, h: 36 }, { label: "48x72", w: 72, h: 48 }, { label: "48x96", w: 96, h: 48 },
@@ -292,6 +296,8 @@ export default function Page() {
     material:
       activeProduct === "vinyl"
         ? `${vinylOptions[vinylType].name} / ${vinylLaminate}`
+        : activeProduct === "reflective"
+        ? "Oralite 5600 Reflective Film"
         : activeProduct === "banner"
         ? bannerOptions[bannerType].name
         : activeProduct === "meshBanner"
@@ -314,17 +320,18 @@ export default function Page() {
     options: [
       activeProduct === "vinyl" ? `Vinyl Type: ${vinylOptions[vinylType].name}` : null,
       activeProduct === "vinyl" ? `Laminate: ${vinylLaminate}` : null,
+      activeProduct === "reflective" ? "Material: Oralite 5600 Reflective Film" : null,
       activeProduct === "banner" ? `Banner Type: ${bannerOptions[bannerType].name}` : null,
       activeProduct === "acm" ? `ACM Type: ${acmOptions[acmType].name}` : null,
       activeProduct === "acrylic" ? "Acrylic Type: Standard" : null,
       activeProduct === "coro" ? (coroDouble ? "Coro: Double-Sided" : "Coro: Single-Sided") : null,
-      activeProduct === "vinyl" && vinylContour ? "Contour Cut" : null,
-      activeProduct === "vinyl" && vinylRush ? "Rush Order" : null,
-      activeProduct === "vinyl" && gangVinyl ? "Gang Vinyl Layout" : null,
-      activeProduct === "vinyl" && vinylContour && gangVinyl
+      (activeProduct === "vinyl" || activeProduct === "reflective") && vinylContour ? "Contour Cut" : null,
+      (activeProduct === "vinyl" || activeProduct === "reflective") && vinylRush ? "Rush Order" : null,
+      (activeProduct === "vinyl" || activeProduct === "reflective") && gangVinyl ? "Gang Vinyl Layout" : null,
+      (activeProduct === "vinyl" || activeProduct === "reflective") && vinylContour && gangVinyl
         ? `Contour Padding: ${num(contourPadding, 0.5)}"`
         : null,
-      activeProduct === "vinyl" && vinylContour && gangVinyl
+      (activeProduct === "vinyl" || activeProduct === "reflective") && vinylContour && gangVinyl
         ? `Gang Waste: ${num(gangWastePercent, 0)}%`
         : null,
       activeProduct === "coro" ? `Flute Direction: ${coroFlute}` : null,
