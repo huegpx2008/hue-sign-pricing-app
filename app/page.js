@@ -286,6 +286,8 @@ export default function Page() {
   });
 
   const isAdminView = viewMode === "admin";
+  const isCustomerOnlineView = viewMode === "customer-online";
+  const showInternalFields = !isCustomerOnlineView;
   const isStaffUnlocked = staffUnlocked;
 
   const selectedDetails = {
@@ -368,9 +370,9 @@ export default function Page() {
       activeProduct === "pvc" && pvcContour ? "Contour Cut" : null,
       activeProduct === "pvc" && pvcRush ? "Rush Order" : null,
       activeProduct === "pvc" && pvcCustomCut ? "Custom Cut" : null,
-      useDesignFee ? `Design Fee: ${money(num(designFee))}` : null,
-      useSetupFee ? `Setup Fee: ${money(num(setupFee))}` : null,
-      num(delivery) > 0 ? `Delivery/Install: ${money(num(delivery))}` : null,
+      showInternalFields && useDesignFee ? `Design Fee: ${money(num(designFee))}` : null,
+      showInternalFields && useSetupFee ? `Setup Fee: ${money(num(setupFee))}` : null,
+      showInternalFields && num(delivery) > 0 ? `Delivery/Install: ${money(num(delivery))}` : null,
       isAdminView && num(multiplier, 1) !== 1 ? `Multiplier: ${num(multiplier, 1)}x` : null,
     ].filter(Boolean),
   };
@@ -652,7 +654,7 @@ export default function Page() {
               <Field label="Width Inches" value={width} setValue={setWidth} />
               <Field label="Height Inches" value={height} setValue={setHeight} />
               {isAdminView && <Field label="Margin %" value={margin} setValue={setMargin} />}
-              <Field label="Delivery / Install" value={delivery} setValue={setDelivery} />
+              {showInternalFields && <Field label="Delivery / Install" value={delivery} setValue={setDelivery} />}
               {isAdminView && <Field label="Price Multiplier" value={multiplier} setValue={setMultiplier} />}
             </div>
           )}
