@@ -81,6 +81,10 @@ export default function usePricingCalculator({
   pvcContour,
   pvcRush,
   pvcCustomCut,
+  vehicleMagnetMode,
+  vehicleMagnetPreset,
+  vehicleMagnetContour,
+  vehicleMagnetRush,
 }) {
   const calc = useMemo(() => {
     const q = Math.max(num(qty, 1), 1);
@@ -256,6 +260,26 @@ export default function usePricingCalculator({
       return { label: "PVC", quantity: q, retail, each: retail / q, cost: directCost, profit: retail - directCost, margin: retail ? ((retail - directCost) / retail) * 100 : 0, totalSqFt, materialCost, shipping, sheetsUsed, sheetsRounded, piecesPerSheet: layout.piecesPerSheet, sheetLayout: `${layout.across} across x ${layout.down} down${layout.rotated ? " (rotated)" : ""}`, sheetAcross: layout.across, sheetDown: layout.down, sheetRotated: layout.rotated, previewPieceW: layout.rotated ? h : w, previewPieceH: layout.rotated ? w : h, sheetPrice, costPerPiece, pvcType: pvcOptions[pvcType].name, costMarginPrice, basePrice };
     }
 
+    if (product === "vehicleMagnets") {
+      const standardBaseCosts = { "18x12": 11.95, "24x12": 14.95, "24x18": 20.95, "42x12": 29.95, "72x24": 89.7 };
+      let pieceCost = vehicleMagnetMode === "custom" ? sqInEach * 0.07 : (standardBaseCosts[vehicleMagnetPreset] || 11.95);
+      if (vehicleMagnetMode === "custom" && vehicleMagnetContour) pieceCost *= 1.1;
+      const materialCost = pieceCost * q;
+      let shipping = 10;
+      const totalSqIn = sqInEach * q;
+      if (vehicleMagnetMode === "standard") {
+        shipping = q >= 191 ? 199 : Math.ceil(q / 10) * 10;
+      } else {
+        shipping = totalSqIn >= 40500 ? 199 : 10;
+      }
+      const directCost = materialCost + shipping;
+      let costMarginPrice = materialCost / (1 - m);
+      if (vehicleMagnetRush) costMarginPrice *= 2;
+      costMarginPrice += shipping;
+      const retail = (costMarginPrice + fees) * mult;
+      return { label: vehicleMagnetMode === "custom" ? "Custom Cut Vehicle Magnets" : "Standard Vehicle Magnets", retail, each: retail / q, cost: directCost, profit: retail - directCost, margin: retail ? ((retail - directCost) / retail) * 100 : 0, totalSqFt, materialCost, shipping, totalSqIn, sqInEach, costMarginPrice, basePrice: costMarginPrice };
+    }
+
     const type = coroDouble ? "double" : "single";
     const scale = w === 18 && h === 12 ? 0.5 : 1;
     const tierEach = getTierPrice(q, type, coroPricing) * scale;
@@ -280,7 +304,7 @@ export default function usePricingCalculator({
     const retail = (basePrice + fees) * mult + stakeRetail;
 
     return { label: "Coroplast", retail, each: retail / q, cost: directCost, profit: retail - directCost, margin: retail ? ((retail - directCost) / retail) * 100 : 0, totalSqFt, materialCost, shipping, stakeRetail, stakeCost, sheetsUsed, sheetsRounded, piecesPerSheet: layout.piecesPerSheet, sheetLayout: `${layout.across} across x ${layout.down} down${layout.rotated ? " (rotated)" : ""}`, tierPrice, costMarginPrice, basePrice };
-  }, [product, width, height, qty, margin, multiplier, useDesignFee, useSetupFee, designFee, setupFee, delivery, activeProduct, productMap, coroDouble, coroFlute, stakes, heavyStakes, grommets, gloss, coroContour, coroRush, bannerType, polePocket, rope, windSlits, bannerRush, meshPolePocket, meshGrommets, meshWelding, meshRope, meshWebbing, meshRush, acmType, acmSqFtPrice, acmContour, roundedCorners, acrylicContour, acrylicRoundedCorners, acrylicStandOffs, acrylicStandOffQty, acrylicStandOffColor, vinylType, vinylLaminate, vinylContour, vinylRush, gangVinyl, contourPadding, gangWastePercent, posterRush, foamcoreDouble, foamcoreContour, foamcoreGloss, foamcoreRush, foamcoreCustomCut, pvcType, pvcContour, pvcRush, pvcCustomCut]);
+  }, [product, width, height, qty, margin, multiplier, useDesignFee, useSetupFee, designFee, setupFee, delivery, activeProduct, productMap, coroDouble, coroFlute, stakes, heavyStakes, grommets, gloss, coroContour, coroRush, bannerType, polePocket, rope, windSlits, bannerRush, meshPolePocket, meshGrommets, meshWelding, meshRope, meshWebbing, meshRush, acmType, acmSqFtPrice, acmContour, roundedCorners, acrylicContour, acrylicRoundedCorners, acrylicStandOffs, acrylicStandOffQty, acrylicStandOffColor, vinylType, vinylLaminate, vinylContour, vinylRush, gangVinyl, contourPadding, gangWastePercent, posterRush, foamcoreDouble, foamcoreContour, foamcoreGloss, foamcoreRush, foamcoreCustomCut, pvcType, pvcContour, pvcRush, pvcCustomCut, vehicleMagnetMode, vehicleMagnetPreset, vehicleMagnetContour, vehicleMagnetRush]);
 
   return calc;
 }

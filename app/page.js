@@ -86,6 +86,12 @@ export default function Page() {
   const [pvcContour, setPvcContour] = useState(false);
   const [pvcRush, setPvcRush] = useState(false);
   const [pvcCustomCut, setPvcCustomCut] = useState(false);
+  const [vehicleMagnetMode, setVehicleMagnetMode] = useState("standard");
+  const [vehicleMagnetPreset, setVehicleMagnetPreset] = useState("18x12");
+  const [vehicleMagnetContour, setVehicleMagnetContour] = useState(false);
+  const [vehicleMagnetRoundedCorners, setVehicleMagnetRoundedCorners] = useState(false);
+  const [vehicleMagnetRush, setVehicleMagnetRush] = useState(false);
+  const [vehicleMagnetNotes, setVehicleMagnetNotes] = useState("");
   const [theme, setTheme] = useState("light");
   const [viewMode, setViewMode] = useState("customer-online");
   const [staffUnlocked, setStaffUnlocked] = useState(false);
@@ -145,6 +151,15 @@ export default function Page() {
     setPresetProduct(linked);
   }, [activeProduct]);
 
+  useEffect(() => {
+    if (activeProduct !== "vehicleMagnets" || vehicleMagnetMode !== "standard") return;
+    const [w, h] = vehicleMagnetPreset.split("x").map(Number);
+    if (w && h) {
+      setWidth(w);
+      setHeight(h);
+    }
+  }, [activeProduct, vehicleMagnetMode, vehicleMagnetPreset]);
+
   function resetAll() {
     setProduct(""); setWidth(24); setHeight(18); setQty(1); setMargin(60); setMultiplier(1);
     setUseDesignFee(false); setUseSetupFee(false); setDesignFee(""); setSetupFee(""); setDelivery("");
@@ -157,6 +172,7 @@ export default function Page() {
     setPosterRush(false);
     setFoamcoreDouble(false); setFoamcoreContour(false); setFoamcoreGloss(false); setFoamcoreRush(false); setFoamcoreCustomCut(false);
     setPvcType("3-single"); setPvcContour(false); setPvcRush(false); setPvcCustomCut(false);
+    setVehicleMagnetMode("standard"); setVehicleMagnetPreset("18x12"); setVehicleMagnetContour(false); setVehicleMagnetRoundedCorners(false); setVehicleMagnetRush(false); setVehicleMagnetNotes("");
   }
 
   function preset(prod, w, h, double = false) {
@@ -285,6 +301,10 @@ export default function Page() {
     pvcContour,
     pvcRush,
     pvcCustomCut,
+    vehicleMagnetMode,
+    vehicleMagnetPreset,
+    vehicleMagnetContour,
+    vehicleMagnetRush,
   });
 
   const isAdminView = viewMode === "admin";
@@ -316,6 +336,8 @@ export default function Page() {
         ? foamcoreDouble ? "Foamcore Double-Sided" : "Foamcore Single-Sided"
         : activeProduct === "pvc"
         ? pvcOptions[pvcType].name
+        : activeProduct === "vehicleMagnets"
+        ? vehicleMagnetMode === "custom" ? "Custom Cut Vehicle Magnet" : "Standard Vehicle Magnet"
         : coroDouble
         ? "4mm Double-Sided Coroplast"
         : activeProduct === "coro"
@@ -372,6 +394,13 @@ export default function Page() {
       activeProduct === "pvc" && pvcContour ? "Contour Cut" : null,
       activeProduct === "pvc" && pvcRush ? "Rush Order" : null,
       activeProduct === "pvc" && pvcCustomCut ? "Custom Cut" : null,
+      activeProduct === "vehicleMagnets" ? `Magnet Type: ${vehicleMagnetMode === "custom" ? "Custom Cut" : "Standard"}` : null,
+      activeProduct === "vehicleMagnets" && vehicleMagnetMode !== "custom" ? `Size: ${vehicleMagnetPreset}` : null,
+      activeProduct === "vehicleMagnets" && vehicleMagnetMode === "custom" ? `Custom Size: ${num(width)}" x ${num(height)}"` : null,
+      activeProduct === "vehicleMagnets" && vehicleMagnetContour ? "Contour Cut" : null,
+      activeProduct === "vehicleMagnets" && vehicleMagnetRoundedCorners ? "Rounded Corners" : null,
+      activeProduct === "vehicleMagnets" && vehicleMagnetRush ? "Rush Order" : null,
+      activeProduct === "vehicleMagnets" && vehicleMagnetNotes.trim() ? `Notes: ${vehicleMagnetNotes.trim()}` : null,
       showInternalFields && useDesignFee ? `Design Fee: ${money(num(designFee))}` : null,
       showInternalFields && useSetupFee ? `Setup Fee: ${money(num(setupFee))}` : null,
       showInternalFields && num(delivery) > 0 ? `Delivery/Install: ${money(num(delivery))}` : null,
@@ -654,6 +683,18 @@ export default function Page() {
             setPvcRush={setPvcRush}
             pvcCustomCut={pvcCustomCut}
             setPvcCustomCut={setPvcCustomCut}
+            vehicleMagnetMode={vehicleMagnetMode}
+            setVehicleMagnetMode={setVehicleMagnetMode}
+            vehicleMagnetPreset={vehicleMagnetPreset}
+            setVehicleMagnetPreset={setVehicleMagnetPreset}
+            vehicleMagnetContour={vehicleMagnetContour}
+            setVehicleMagnetContour={setVehicleMagnetContour}
+            vehicleMagnetRoundedCorners={vehicleMagnetRoundedCorners}
+            setVehicleMagnetRoundedCorners={setVehicleMagnetRoundedCorners}
+            vehicleMagnetRush={vehicleMagnetRush}
+            setVehicleMagnetRush={setVehicleMagnetRush}
+            vehicleMagnetNotes={vehicleMagnetNotes}
+            setVehicleMagnetNotes={setVehicleMagnetNotes}
             isAdminView={isAdminView}
           />
 
@@ -661,8 +702,8 @@ export default function Page() {
           {activeProduct !== "dtfTransfers" && activeProduct !== "screenPrinting" && (
             <div className="formGrid" style={grid}>
               <Field label="Quantity" value={qty} setValue={setQty} />
-              <Field label="Width Inches" value={width} setValue={setWidth} />
-              <Field label="Height Inches" value={height} setValue={setHeight} />
+              {(activeProduct !== "vehicleMagnets" || vehicleMagnetMode === "custom") && <Field label="Width Inches" value={width} setValue={setWidth} />}
+              {(activeProduct !== "vehicleMagnets" || vehicleMagnetMode === "custom") && <Field label="Height Inches" value={height} setValue={setHeight} />}
               {isAdminView && <Field label="Margin %" value={margin} setValue={setMargin} />}
               {showInternalFields && <Field label="Delivery / Install" value={delivery} setValue={setDelivery} />}
               {isAdminView && <Field label="Price Multiplier" value={multiplier} setValue={setMultiplier} />}
