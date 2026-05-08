@@ -83,7 +83,7 @@ export default function PricingSummary({
     return [
       `Product: ${calc.label}`,
       `Size: ${selectedDetails?.size || `${num(width)}" x ${num(height)}"`}`,
-      `Quantity: ${num(qty, 1)}`,
+      `Quantity: ${selectedDetails?.qty || num(qty, 1)}`,
       ...(selectedDetails?.material ? [selectedDetails.material] : []),
       ...(selectedDetails?.options?.length ? [`Options: ${selectedDetails.options.join(", ")}`] : []),
       ...(selectedDetails?.printSize ? [`Print/Decal Size: ${selectedDetails.printSize}`] : []),

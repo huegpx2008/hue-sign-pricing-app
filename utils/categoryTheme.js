@@ -36,6 +36,8 @@ const productThemeMap = {
   footprints: { ...themes.vinyl, key: "footprints", accent: "#2dd4bf", accentSoft: "rgba(45,212,191,0.32)", accentGlow: "rgba(45,212,191,0.26)", divider: "rgba(45,212,191,0.35)", summaryBorder: "rgba(45,212,191,0.58)", mobileTint: "rgba(45,212,191,0.16)" },
   decals: themes.vinyl,
   poster: themes.paper,
+  businessCards: { ...themes.paper, key: "businessCards", accent: "#e2e8f0", accentSoft: "rgba(226,232,240,0.38)", accentGlow: "rgba(226,232,240,0.28)", divider: "rgba(226,232,240,0.38)", summaryBorder: "rgba(226,232,240,0.62)", mobileTint: "rgba(226,232,240,0.2)" },
+  handheld16ptPaper: { ...themes.screen, key: "handheld16ptPaper", accent: "#f59e0b", accentSoft: "rgba(245,158,11,0.35)", accentGlow: "rgba(245,158,11,0.26)", divider: "rgba(245,158,11,0.38)", summaryBorder: "rgba(245,158,11,0.58)", mobileTint: "rgba(245,158,11,0.2)" },
   vehicleMagnets: themes.magnets,
 };
 

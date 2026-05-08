@@ -110,6 +110,28 @@ export default function ProductOptions(props) {
     setVehicleMagnetRush,
     vehicleMagnetNotes,
     setVehicleMagnetNotes,
+    businessCardQty,
+    setBusinessCardQty,
+    businessCardSides,
+    setBusinessCardSides,
+    businessCardCoating,
+    setBusinessCardCoating,
+    businessCardOrientation,
+    setBusinessCardOrientation,
+    businessCardRush,
+    setBusinessCardRush,
+    handheldPaperSize,
+    handheldPaperSizeKey,
+    setHandheldPaperSizeKey,
+    handheldPaperSides,
+    setHandheldPaperSides,
+    handheldPaperCoating,
+    setHandheldPaperCoating,
+    handheldPaperOrientation,
+    setHandheldPaperOrientation,
+    handheldPaperRush,
+    setHandheldPaperRush,
+    qty,
     onDtfSummaryChange,
     margin,
     multiplier,
@@ -236,6 +258,35 @@ export default function ProductOptions(props) {
       {activeProduct === "poster" && (
         <Box title="Poster Paper Options">
           <Check label="Rush Order (2x)" value={posterRush} setValue={setPosterRush} />
+        </Box>
+      )}
+      {activeProduct === "businessCards" && (
+        <Box title="Business Cards Options">
+          <label>Quantity</label>
+          <select style={input} value={businessCardQty} onChange={(e) => setBusinessCardQty(Number(e.target.value))}>
+            <option value={250}>250</option><option value={500}>500</option><option value={1000}>1000</option>
+          </select>
+          <label>Print Sides</label>
+          <select style={input} value={businessCardSides} onChange={(e) => setBusinessCardSides(e.target.value)}>
+            <option value="single">Single Sided</option><option value="double">Double Sided</option>
+          </select>
+          <label>Coating</label><select style={input} value={businessCardCoating} onChange={(e) => setBusinessCardCoating(e.target.value)}><option>Gloss Laminate</option><option>No Coating</option></select>
+          <label>Orientation</label><select style={input} value={businessCardOrientation} onChange={(e) => setBusinessCardOrientation(e.target.value)}><option>Landscape</option><option>Portrait</option></select>
+          <Check label="Rush Order (2x)" value={businessCardRush} setValue={setBusinessCardRush} />
+        </Box>
+      )}
+      {activeProduct === "handheld16ptPaper" && (
+        <Box title="Handheld 16pt Paper Options">
+          <label>Size</label>
+          <select style={input} value={handheldPaperSizeKey} onChange={(e) => setHandheldPaperSizeKey(e.target.value)}>
+            {props.handheldPaperSizes.map((s) => <option key={s.key} value={s.key}>{s.label} ({s.perSheet} per sheet)</option>)}
+          </select>
+          <p style={{ margin: "6px 0" }}><strong>{handheldPaperSize?.perSheet || 1} fit per sheet</strong></p>
+          {(Number(qty) % (handheldPaperSize?.perSheet || 1) !== 0) && <p style={{ margin: "4px 0", fontSize: 13 }}>Next full sheet quantity: {Math.ceil(Number(qty || 1) / (handheldPaperSize?.perSheet || 1)) * (handheldPaperSize?.perSheet || 1)}</p>}
+          <label>Print Sides</label><select style={input} value={handheldPaperSides} onChange={(e) => setHandheldPaperSides(e.target.value)}><option value="single">Single Sided</option><option value="double">Double Sided</option></select>
+          <label>Coating</label><select style={input} value={handheldPaperCoating} onChange={(e) => setHandheldPaperCoating(e.target.value)}><option>Gloss Laminate</option><option>No Coating</option></select>
+          <label>Orientation</label><select style={input} value={handheldPaperOrientation} onChange={(e) => setHandheldPaperOrientation(e.target.value)}><option>Landscape</option><option>Portrait</option></select>
+          <Check label="Rush Order (2x)" value={handheldPaperRush} setValue={setHandheldPaperRush} />
         </Box>
       )}
 
