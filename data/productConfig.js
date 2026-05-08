@@ -27,7 +27,7 @@ export const productCategories = [
     { id: "acrylic", label: "Acrylic", calculator: "acrylic" }, { id: "foamcore", label: "Foamcore", calculator: "foamcore" },
     { id: "pvc", label: "PVC", calculator: "pvc" }, { id: "polystyrene", label: "Polystyrene" },
     { id: "aluminum", label: "Aluminum" }, { id: "backlit", label: "Backlit" },
-    { id: "vehicleMagnets", label: "Vehicle Magnets" },
+    { id: "vehicleMagnets", label: "Vehicle Magnets", calculator: "vehicleMagnets" },
   ] },
   { name: "Vinyl / Decals", items: [
     { id: "vinyl", label: "Printed Vinyl", calculator: "vinyl" },

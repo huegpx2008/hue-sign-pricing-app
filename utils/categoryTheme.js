@@ -16,6 +16,7 @@ const themes = {
   vinyl: { key: "vinyl", accent: "#a78bfa", accentSoft: "rgba(167,139,250,0.32)", accentGlow: "rgba(167,139,250,0.25)", divider: "rgba(167,139,250,0.34)", summaryBorder: "rgba(167,139,250,0.56)", mobileTint: "rgba(167,139,250,0.16)" },
   banners: { key: "banners", accent: "#ef4444", accentSoft: "rgba(239,68,68,0.3)", accentGlow: "rgba(239,68,68,0.24)", divider: "rgba(239,68,68,0.33)", summaryBorder: "rgba(239,68,68,0.55)", mobileTint: "rgba(239,68,68,0.16)" },
   paper: { key: "paper", accent: "#67e8f9", accentSoft: "rgba(103,232,249,0.3)", accentGlow: "rgba(103,232,249,0.23)", divider: "rgba(103,232,249,0.34)", summaryBorder: "rgba(103,232,249,0.56)", mobileTint: "rgba(103,232,249,0.15)" },
+  magnets: { key: "magnets", accent: "#d4a017", accentSoft: "rgba(212,160,23,0.3)", accentGlow: "rgba(212,160,23,0.24)", divider: "rgba(212,160,23,0.34)", summaryBorder: "rgba(212,160,23,0.56)", mobileTint: "rgba(212,160,23,0.15)" },
 };
 
 const productThemeMap = {
@@ -34,6 +35,7 @@ const productThemeMap = {
   reflective: themes.vinyl,
   decals: themes.vinyl,
   poster: themes.paper,
+  vehicleMagnets: themes.magnets,
 };
 
 export function getCategoryTheme(productId) {

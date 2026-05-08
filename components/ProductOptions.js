@@ -98,6 +98,18 @@ export default function ProductOptions(props) {
     setPvcRush,
     pvcCustomCut,
     setPvcCustomCut,
+    vehicleMagnetMode,
+    setVehicleMagnetMode,
+    vehicleMagnetPreset,
+    setVehicleMagnetPreset,
+    vehicleMagnetContour,
+    setVehicleMagnetContour,
+    vehicleMagnetRoundedCorners,
+    setVehicleMagnetRoundedCorners,
+    vehicleMagnetRush,
+    setVehicleMagnetRush,
+    vehicleMagnetNotes,
+    setVehicleMagnetNotes,
     onDtfSummaryChange,
     margin,
     multiplier,
@@ -253,6 +265,32 @@ export default function ProductOptions(props) {
           <Check label="Contour Cut (+10%)" value={pvcContour} setValue={setPvcContour} />
           <Check label="Rush Order (2x)" value={pvcRush} setValue={setPvcRush} />
           <Check label="Custom Cut (No additional cost)" value={pvcCustomCut} setValue={setPvcCustomCut} />
+        </Box>
+      )}
+      {activeProduct === "vehicleMagnets" && (
+        <Box title="Vehicle Magnets">
+          <label>Pricing Mode</label>
+          <select style={input} value={vehicleMagnetMode} onChange={(e) => setVehicleMagnetMode(e.target.value)}>
+            <option value="standard">Standard Vehicle Magnets</option>
+            <option value="custom">Custom Cut Vehicle Magnets</option>
+          </select>
+          {vehicleMagnetMode === "standard" && (
+            <>
+              <label>Preset Magnet Size</label>
+              <select style={input} value={vehicleMagnetPreset} onChange={(e) => setVehicleMagnetPreset(e.target.value)}>
+                <option value="18x12">18x12</option>
+                <option value="24x12">24x12</option>
+                <option value="24x18">24x18</option>
+                <option value="42x12">42x12</option>
+                <option value="72x24">72x24</option>
+              </select>
+            </>
+          )}
+          {vehicleMagnetMode === "custom" && <Check label="Contour Cut (+10%)" value={vehicleMagnetContour} setValue={setVehicleMagnetContour} />}
+          <Check label="Rounded Corners (No additional cost)" value={vehicleMagnetRoundedCorners} setValue={setVehicleMagnetRoundedCorners} />
+          <Check label="Rush Order (2x)" value={vehicleMagnetRush} setValue={setVehicleMagnetRush} />
+          <label>Optional Notes</label>
+          <input style={input} placeholder="Add notes for this item..." value={vehicleMagnetNotes} onChange={(e) => setVehicleMagnetNotes(e.target.value)} />
         </Box>
       )}
     </>
