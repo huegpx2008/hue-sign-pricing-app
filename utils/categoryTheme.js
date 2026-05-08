@@ -33,6 +33,7 @@ const productThemeMap = {
   pvc: themes.rigid,
   vinyl: themes.vinyl,
   reflective: themes.vinyl,
+  footprints: { ...themes.vinyl, key: "footprints", accent: "#2dd4bf", accentSoft: "rgba(45,212,191,0.32)", accentGlow: "rgba(45,212,191,0.26)", divider: "rgba(45,212,191,0.35)", summaryBorder: "rgba(45,212,191,0.58)", mobileTint: "rgba(45,212,191,0.16)" },
   decals: themes.vinyl,
   poster: themes.paper,
   vehicleMagnets: themes.magnets,

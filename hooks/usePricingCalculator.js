@@ -103,18 +103,19 @@ export default function usePricingCalculator({
     const sqFtEach = sqInEach / 144;
     const totalSqFt = sqFtEach * q;
 
-    if (product === "vinyl" || product === "reflective") {
+    if (product === "vinyl" || product === "reflective" || product === "footprints") {
       const v = vinylOptions[vinylType];
       const isReflective = product === "reflective";
-      const materialName = isReflective ? "Oralite 5600 Reflective Film" : v.name;
-      const rateCost = isReflective ? 8 : v.cost;
-      const rateRetail = isReflective ? 8 : v.retail;
+      const isFootprints = product === "footprints";
+      const materialName = isReflective ? "Oralite 5600 Reflective Film" : isFootprints ? "Footprints Vinyl" : v.name;
+      const rateCost = isReflective ? 8 : isFootprints ? 2.5 : v.cost;
+      const rateRetail = isReflective ? 8 : isFootprints ? 0 : v.retail;
       const vinylSqFt = getVinylBillableSqFt(w, h, q, gangVinyl, vinylContour, num(contourPadding, 0.5), num(gangWastePercent, 0), 52);
       const materialCost = vinylSqFt.totalBillable * rateCost;
       const shipping = vinylSqFt.totalBillable >= 1000 ? 199 : 10;
       const directCost = materialCost + shipping;
       const marginCostBase = materialCost;
-      let shopPrice = vinylSqFt.totalBillable * rateRetail;
+      let shopPrice = isFootprints ? 0 : vinylSqFt.totalBillable * rateRetail;
       let costMarginPrice = marginCostBase / (1 - m);
       if (vinylContour) {
         shopPrice *= 1.1;
@@ -125,9 +126,9 @@ export default function usePricingCalculator({
         costMarginPrice *= 2;
       }
       costMarginPrice += shipping;
-      const basePrice = Math.max(shopPrice, costMarginPrice);
+      const basePrice = isFootprints ? costMarginPrice : Math.max(shopPrice, costMarginPrice);
       const retail = (basePrice + fees) * mult;
-      return { label: isReflective ? "Reflective Vinyl" : "Printed Vinyl", retail, each: retail / q, cost: directCost, profit: retail - directCost, margin: retail ? ((retail - directCost) / retail) * 100 : 0, totalSqFt: vinylSqFt.totalBillable, actualTotalSqFt: vinylSqFt.actualEach * q, actualSqFtEach: vinylSqFt.actualEach, effectiveSqFtEach: vinylSqFt.effectiveEach, billableSqFtEach: vinylSqFt.billableEach, billingMode: vinylSqFt.mode, layoutWidth: vinylSqFt.layoutWidth, layoutHeight: vinylSqFt.layoutHeight, rawBillableSqFt: vinylSqFt.rawBillable, piecesAcross: vinylSqFt.piecesAcross, rows: vinylSqFt.rows, pieceW: vinylSqFt.pieceW, pieceH: vinylSqFt.pieceH, rotated: vinylSqFt.rotated, normalSqFt: vinylSqFt.normalSqFt, rotatedSqFt: vinylSqFt.rotatedSqFt, materialCost, shipping, shopPrice, costMarginPrice, basePrice, materialName };
+      return { label: isReflective ? "Reflective Vinyl" : isFootprints ? "Footprints Vinyl" : "Printed Vinyl", retail, each: retail / q, cost: directCost, profit: retail - directCost, margin: retail ? ((retail - directCost) / retail) * 100 : 0, totalSqFt: vinylSqFt.totalBillable, actualTotalSqFt: vinylSqFt.actualEach * q, actualSqFtEach: vinylSqFt.actualEach, effectiveSqFtEach: vinylSqFt.effectiveEach, billableSqFtEach: vinylSqFt.billableEach, billingMode: vinylSqFt.mode, layoutWidth: vinylSqFt.layoutWidth, layoutHeight: vinylSqFt.layoutHeight, rawBillableSqFt: vinylSqFt.rawBillable, piecesAcross: vinylSqFt.piecesAcross, rows: vinylSqFt.rows, pieceW: vinylSqFt.pieceW, pieceH: vinylSqFt.pieceH, rotated: vinylSqFt.rotated, normalSqFt: vinylSqFt.normalSqFt, rotatedSqFt: vinylSqFt.rotatedSqFt, materialCost, shipping, shopPrice, costMarginPrice, basePrice, materialName, rollWidth: 52 };
     }
 
     if (product === "poster") {
