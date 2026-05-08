@@ -20,6 +20,7 @@ export default function PricingSummary({
   setShowBreakdown,
   dtfSummary,
   isAdminView,
+  activeTheme,
 }) {
   const [customerName, setCustomerName] = useState("");
   const [customerEmail, setCustomerEmail] = useState("");
@@ -152,7 +153,7 @@ export default function PricingSummary({
 
   return (
     <>
-      <aside className="summary sticky" id="quote-summary-anchor">
+      <aside className="summary sticky" id="quote-summary-anchor" style={{ borderTop: `1px solid ${activeTheme?.accentSoft || "rgba(56,189,248,.35)"}`, boxShadow: `0 10px 30px rgba(15,23,42,.09), 0 0 0 1px ${activeTheme?.summaryBorder || "rgba(56,189,248,.5)"}, 0 0 20px ${activeTheme?.accentGlow || "rgba(56,189,248,.2)"}` }}>
         <div style={{ marginBottom: 14, padding: 12, borderRadius: 10, background: "rgba(255,255,255,0.09)" }}>
           <h3 style={{ marginTop: 0, marginBottom: 8 }}>Customer Contact</h3>
           <input style={{ width: "100%", marginBottom: 8, padding: 8, borderRadius: 8, border: "1px solid rgba(148,163,184,.5)" }} placeholder="Customer Name" value={customerName} onChange={(e) => setCustomerName(e.target.value)} />
@@ -173,7 +174,7 @@ export default function PricingSummary({
           ) : (
             <>
               {quoteItems.map((item, idx) => (
-                <div key={item.id} style={{ marginBottom: 8, padding: 8, borderRadius: 8, border: "1px solid rgba(148,163,184,.45)" }}>
+                <div key={item.id} style={{ marginBottom: 8, padding: 8, borderRadius: 8, border: `1px solid ${activeTheme?.divider || "rgba(148,163,184,.45)"}` }}>
                   <p style={{ margin: "0 0 4px" }}><strong>{idx + 1}. {item.product}</strong></p>
                   <p style={{ margin: "0 0 4px" }}>Qty {item.quantity} • {money(item.each || 0)} each • {money(item.total || 0)} total</p>
                   <p style={{ margin: "0 0 4px", fontSize: 13 }}>{(item.safeDetails || []).filter(Boolean).join(" • ")}</p>
@@ -190,7 +191,7 @@ export default function PricingSummary({
         <div style={{ fontSize: 42, fontWeight: "bold" }}>{money(hasProductSelected ? summaryCalc.retail : 0)}</div>
         {hasProductSelected && !(isScreenPrint && (dtfSummary.lineItems || []).length > 1) && <p>Each: <strong>{money(summaryCalc.each)}</strong></p>}
         {isAdminView && <p>Profit: <strong>{money(summaryCalc.profit)}</strong></p>}
-        <hr />
+        <hr style={{ borderColor: activeTheme?.divider }} />
         <p>Product: {hasProductSelected ? (isDtf ? "DTF Transfers" : isScreenPrint ? "Screen Printing" : calc.label) : "Select a product"}</p>
         {!isDtf && !isScreenPrint && isAdminView && <p>Total Sq Ft: {calc.totalSqFt?.toFixed(2)}</p>}
 
@@ -231,7 +232,7 @@ export default function PricingSummary({
           <>
             {showBreakdown && (
               <>
-                <hr />
+                <hr style={{ borderColor: activeTheme?.divider }} />
                 <p><strong>DTF Profit Breakdown</strong></p>
                 <p><strong>Apparel Profit:</strong> {money(dtfSummary.apparelRetailSubtotal - dtfSummary.apparelDirectCost)}</p>
                 <p><strong>DTF Material Profit:</strong> {money(dtfSummary.dtfRetailSubtotal - dtfSummary.dtfMaterialCost)}</p>
@@ -240,7 +241,7 @@ export default function PricingSummary({
                 <p><strong>Total Profit:</strong> {money(summaryCalc.profit)}</p>
               </>
             )}
-            <hr />
+            <hr style={{ borderColor: activeTheme?.divider }} />
             <p><strong>Apparel Direct:</strong> {money(dtfSummary.apparelDirectCost)}</p>
             <p><strong>Apparel Retail Subtotal:</strong> {money(dtfSummary.apparelRetailSubtotal)}</p>
             <p><strong>DTF Material Cost:</strong> {money(dtfSummary.dtfMaterialCost)}</p>
@@ -307,7 +308,7 @@ export default function PricingSummary({
         ) : <SelectedDetails details={selectedDetails} />}
       </aside>
 
-      <div className="mobilePrice" role="button" tabIndex={0} onClick={scrollToQuoteSummary} onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && scrollToQuoteSummary()} style={{ cursor: "pointer" }}>
+      <div className="mobilePrice" role="button" tabIndex={0} onClick={scrollToQuoteSummary} onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && scrollToQuoteSummary()} style={{ cursor: "pointer", borderColor: activeTheme?.summaryBorder, boxShadow: `0 10px 20px ${activeTheme?.accentGlow || "rgba(0,0,0,.35)"}`, background: `linear-gradient(160deg, rgba(11,23,56,.92), rgba(15,23,42,.95)), ${activeTheme?.mobileTint || "rgba(56,189,248,.1)"}` }}>
         <div className="mobilePriceTop"><strong>Suggested Retail {money(summaryCalc.retail).replace("$", "$ ")}</strong></div>
         {isDtf ? (
           <>

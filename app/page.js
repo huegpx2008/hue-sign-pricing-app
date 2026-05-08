@@ -7,6 +7,7 @@ import ProductNavigation from "../components/ProductNavigation";
 import { Box, Check, Field, input } from "../components/FormControls";
 import { money, num } from "../utils/pricingHelpers";
 import usePricingCalculator from "../hooks/usePricingCalculator";
+import { getCategoryTheme } from "../utils/categoryTheme";
 import { products, acrylicStandOffOptions, productCategories, bannerOptions, acmOptions, vinylOptions, pvcOptions } from "../data/productConfig";
 
 const productMap = Object.fromEntries(productCategories.flatMap((c) => c.items.map((i) => [i.id, i])));
@@ -93,6 +94,7 @@ export default function Page() {
   const [dtfSummary, setDtfSummary] = useState(null);
 
   const activeProduct = productMap[product]?.calculator || null;
+  const activeTheme = getCategoryTheme(product || activeProduct || "");
 
 
   useEffect(() => {
@@ -378,7 +380,7 @@ export default function Page() {
   };
 
   return (
-    <main className={`appRoot ${theme}`} style={{ fontFamily: "Inter, Arial", minHeight: "100vh", padding: 20 }}>
+    <main className={`appRoot ${theme}`} style={{ fontFamily: "Inter, Arial", minHeight: "100vh", padding: 20, "--accent": activeTheme.accent, "--accent-soft": activeTheme.accentSoft, "--accent-glow": activeTheme.accentGlow, "--divider": activeTheme.divider, "--summary-border": activeTheme.summaryBorder, "--mobile-tint": activeTheme.mobileTint }}>
       <style>{`
         .layout {
           display: grid;
@@ -394,10 +396,11 @@ export default function Page() {
         .summary {
           background: linear-gradient(160deg,#0f172a,#1e293b);
           color: white;
-          box-shadow:0 18px 35px rgba(2,6,23,.35);
+          border:1px solid var(--summary-border);
           padding: 20px;
           border-radius: 16px;
-          box-shadow:0 10px 30px rgba(15,23,42,.09);
+          box-shadow:0 10px 30px rgba(15,23,42,.09), inset 0 1px 0 var(--mobile-tint);
+          transition:border-color .25s ease, box-shadow .25s ease;
         }
 
         .summary.sticky{position:sticky;top:16px;align-self:start;}
@@ -406,6 +409,8 @@ export default function Page() {
           padding: 20px;
           border-radius: 16px;
           box-shadow:0 10px 30px rgba(15,23,42,.09);
+          border-top:1px solid var(--divider);
+          transition:border-color .25s ease, box-shadow .25s ease;
         }
 
         .buttonGrid {
@@ -416,7 +421,7 @@ export default function Page() {
         }
 
         .presetBtn, button {
-          transition:all .18s ease;
+          transition:all .25s ease;
         }
         .presetBtn {
           padding: 8px 10px;
@@ -426,15 +431,15 @@ export default function Page() {
           font-size: 14px;
         }
 
-        .presetBtn:hover{transform:translateY(-1px); box-shadow:0 8px 16px rgba(30,64,175,.18);}
+        .presetBtn:hover{transform:translateY(-1px); box-shadow:0 8px 16px var(--accent-glow);}
         .presetBtn:active{transform:translateY(1px);}
         .comingSoonBtn{opacity:.7;border-style:dashed;}
         .activePreset {
           background: linear-gradient(160deg,#0f172a,#1e293b);
           color: white;
           box-shadow:0 18px 35px rgba(2,6,23,.35);
-          border-color: #38bdf8;
-          box-shadow: 0 0 0 2px #38bdf8;
+          border-color: var(--accent);
+          box-shadow: 0 0 0 2px var(--accent-soft), 0 8px 16px var(--accent-glow);
           font-weight: 700;
         }
 
@@ -443,20 +448,20 @@ export default function Page() {
         .mobilePriceTop{display:flex;justify-content:space-between;align-items:center;}
         .mobileMeta{font-size:12px;opacity:.95;line-height:1.25;}
         .mobileOptions{font-size:11px;opacity:.88;line-height:1.25;}
-        .optionBox{background:#f8fafc;border:1px solid #e2e8f0;}
+        .optionBox{background:#f8fafc;border:1px solid #e2e8f0;border-top:1px solid var(--divider);box-shadow:0 0 0 1px var(--mobile-tint);transition:border-color .25s ease, box-shadow .25s ease;}
         .appRoot.dark .card{background:rgba(15,23,42,.85);color:#e5e7eb;border:1px solid rgba(96,165,250,.25);}
         .appRoot.dark .card h2, .appRoot.dark .card h3, .appRoot.dark .card label, .appRoot.dark .card p{color:#e5e7eb;}
         .appRoot.dark .optionBox{background:rgba(30,41,59,.85);border-color:rgba(148,163,184,.35);}
         .appRoot.dark input, .appRoot.dark select{background:#0f172a;color:#e5e7eb;border:1px solid #334155;}
         .appRoot.dark input::placeholder{color:#94a3b8;}
         .appRoot.dark .presetBtn{background:linear-gradient(180deg,#0f172a,#1e293b);color:#e2e8f0;border-color:#334155;}
-        .appRoot.dark .mobilePrice{background:linear-gradient(160deg,#0b1738,#0f172a);color:#f8fafc;border:1px solid rgba(96,165,250,.35);}
+        .appRoot.dark .mobilePrice{background:linear-gradient(160deg,#0b1738,#0f172a);color:#f8fafc;border:1px solid var(--summary-border); box-shadow:0 10px 22px var(--accent-glow), inset 0 0 0 1px var(--mobile-tint);}
 
         .appRoot.dark .activePreset{
-          background:linear-gradient(180deg,#60a5fa,#3b82f6);
+          background:linear-gradient(180deg,color-mix(in srgb, var(--accent) 70%, #ffffff 0%),color-mix(in srgb, var(--accent) 78%, #0f172a 22%));
           color:#0b1120;
-          border-color:#bfdbfe;
-          box-shadow:0 0 0 2px rgba(191,219,254,.95),0 10px 20px rgba(59,130,246,.45);
+          border-color:color-mix(in srgb, var(--accent) 65%, #ffffff 35%);
+          box-shadow:0 0 0 2px var(--accent-soft),0 10px 20px var(--accent-glow);
         }
         .appRoot.dark .modeBtn.active{
           background:linear-gradient(180deg,#93c5fd,#60a5fa);
@@ -464,6 +469,10 @@ export default function Page() {
           border-color:#dbeafe;
           box-shadow:0 0 0 2px rgba(147,197,253,.85), inset 0 1px 2px rgba(255,255,255,.35);
         }
+
+        hr{border:none;border-top:1px solid var(--divider);transition:border-color .25s ease;}
+
+        input[type="checkbox"], input[type="radio"]{accent-color:var(--accent); transition:accent-color .25s ease;}
 
         input, select {
           box-sizing: border-box;
@@ -501,7 +510,7 @@ export default function Page() {
           }
 
           .presetBtn, button {
-          transition:all .18s ease;
+          transition:all .25s ease;
         }
         .presetBtn {
             width: 100%;
@@ -536,6 +545,7 @@ export default function Page() {
       <div className="layout">
         <section className="card">
           <ProductNavigation
+            activeTheme={activeTheme}
             product={product}
             setProduct={setProduct}
             onProductSelect={handleProductSelect}
