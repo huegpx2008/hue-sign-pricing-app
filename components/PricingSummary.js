@@ -22,6 +22,9 @@ export default function PricingSummary({
   isAdminView,
   activeTheme,
 }) {
+  const formatSizeBreakdown = (sizeQty = {}) => Object.entries(sizeQty).filter(([, v]) => Number(v) > 0).map(([k, v]) => `${k}(${v})`).join(", ") || "None";
+  const formatPrintLocations = (printLines = []) => printLines.filter((pl) => pl?.colors > 0).map((pl) => `${pl.name} ${pl.colors}-color`).join(", ") || "None selected";
+
   const [customerName, setCustomerName] = useState("");
   const [customerEmail, setCustomerEmail] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
@@ -47,24 +50,54 @@ export default function PricingSummary({
   const isDtf = activeProduct === "dtfTransfers" && dtfSummary;
   const isScreenPrint = activeProduct === "screenPrinting" && dtfSummary;
   const summaryCalc = (isDtf || isScreenPrint) ? dtfSummary : calc;
-  const priceEachText = isScreenPrint
-    ? money(dtfSummary?.averagePricePerShirt || dtfSummary?.each || 0)
-    : money(summaryCalc.each || 0);
+  const getCurrentItemCustomerDetailLines = () => {
+    if (isDtf) {
+      return [
+        `Product: ${dtfSummary?.dtfMode === "dtfOnly" ? "DTF Transfers Only" : "DTF Transfers"}`,
+        `Style #: ${dtfSummary?.selectedStyle || "Not selected"}`,
+        `Garment: ${dtfSummary?.selectedTitle || "Not selected"}`,
+        `Color: ${dtfSummary?.selectedColor || "Not selected"}`,
+        `Sizes: ${formatSizeBreakdown(dtfSummary?.sizeQuantities || {})}`,
+        `Total Qty: ${dtfSummary?.totalGarmentQty || 0}`,
+        `Print Locations: ${((dtfSummary?.selectedPrintLocations || []).length ? dtfSummary.selectedPrintLocations.join(", ") : "None selected")}`,
+        `Price Each: ${money(dtfSummary?.each || 0)}`,
+        `Total: ${money(dtfSummary?.retail || 0)}`,
+      ];
+    }
+    if (isScreenPrint) {
+      const lineItems = (dtfSummary?.lineItems || []).flatMap((li) => {
+        if (!li || Number(li.totalQty || 0) <= 0) return [];
+        return [
+          `Style: ${li.style || "Not selected"}${li.title ? ` - ${li.title}` : ""}`,
+          `Color: ${li.color || "Not selected"}`,
+          `Sizes: ${formatSizeBreakdown(li.sizeQty || {})}`,
+          `Total Qty: ${li.totalQty || 0}`,
+          `Print Locations: ${formatPrintLocations(dtfSummary?.printLines || [])}`,
+          `Price Each: ${money(li.retailPerShirt || 0)}`,
+          `Item Total: ${money(li.finalRetailSubtotal || 0)}`,
+          "",
+        ];
+      });
+      return ["Product: Screen Printing", ...lineItems, `Grand Total: ${money(dtfSummary?.retail || 0)}`].filter((line, idx, arr) => !(line === "" && (idx === arr.length - 1 || arr[idx + 1] === "")));
+    }
+    return [
+      `Product: ${calc.label}`,
+      `Size: ${selectedDetails?.size || `${num(width)}" x ${num(height)}"`}`,
+      `Quantity: ${num(qty, 1)}`,
+      ...(selectedDetails?.material ? [selectedDetails.material] : []),
+      ...(selectedDetails?.options?.length ? [`Options: ${selectedDetails.options.join(", ")}`] : []),
+      ...(selectedDetails?.printSize ? [`Print/Decal Size: ${selectedDetails.printSize}`] : []),
+      `Price Each: ${money(summaryCalc.each || 0)}`,
+      `Total: ${money(summaryCalc.retail || 0)}`,
+    ];
+  };
   const buildCurrentQuoteItem = () => ({
     id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
     product: isDtf ? (dtfSummary?.dtfMode === "dtfOnly" ? "DTF Transfers Only" : "DTF Transfers") : isScreenPrint ? "Screen Printing" : calc.label,
     quantity: isDtf ? dtfSummary?.totalGarmentQty || 0 : isScreenPrint ? dtfSummary?.totalGarments || 0 : num(qty, 1),
     each: isScreenPrint ? dtfSummary?.averagePricePerShirt || dtfSummary?.each || 0 : summaryCalc.each || 0,
     total: summaryCalc.retail || 0,
-    safeDetails: isDtf
-      ? [
-          `Style #: ${dtfSummary?.selectedStyle || "Not selected"}`,
-          `Garment: ${dtfSummary?.selectedTitle || "Not selected"}`,
-          `Color: ${dtfSummary?.selectedColor || "Not selected"}`,
-        ]
-      : isScreenPrint
-      ? (dtfSummary?.lineItems || []).map((li) => `${li.style || "Style"} ${li.color ? `(${li.color})` : ""} Qty ${li.totalQty || 0}`)
-      : [selectedDetails.size, selectedDetails.material, ...(selectedDetails.options || [])],
+    safeDetails: getCurrentItemCustomerDetailLines(),
     adminDetails: [
       `Material Cost: ${money(summaryCalc.materialCost || 0)}`,
       `Direct Cost: ${money(summaryCalc.cost || 0)}`,
@@ -87,33 +120,7 @@ export default function PricingSummary({
     `Customer Phone: ${customerPhone || "Not provided"}`,
     "",
     "Quote Summary:",
-    `Product: ${isDtf ? "DTF Transfers" : isScreenPrint ? "Screen Printing" : calc.label}`,
-    `Quantity: ${isDtf ? dtfSummary?.totalGarmentQty || 0 : isScreenPrint ? dtfSummary?.totalGarments || 0 : num(qty, 1)}`,
-    `Price Each: ${priceEachText}`,
-    `Grand Total: ${money(summaryCalc.retail || 0)}`,
-    "",
-    "Selected Options/Details:",
-    ...(isDtf
-      ? [
-          `Style #: ${dtfSummary?.selectedStyle || "Not selected"}`,
-          `Garment: ${dtfSummary?.selectedTitle || "Not selected"}`,
-          `Color: ${dtfSummary?.selectedColor || "Not selected"}`,
-          `Sizes: ${Object.entries(dtfSummary?.sizeQuantities || {}).filter(([, v]) => Number(v) > 0).map(([k, v]) => `${k}(${v})`).join(", ") || "None"}`,
-          `Print Locations: ${(dtfSummary?.selectedPrintLocations || []).length ? dtfSummary.selectedPrintLocations.join(", ") : "None selected"}`,
-        ]
-      : isScreenPrint
-      ? [
-          ...((dtfSummary?.lineItems || []).map((li, idx) => {
-            const sizes = Object.entries(li.sizeQty || {}).filter(([, v]) => Number(v) > 0).map(([k, v]) => `${k}:${v}`).join(", ") || "None";
-            return `Line ${idx + 1}: ${li.style || "Style not selected"} ${li.color ? `(${li.color})` : ""} • Qty ${li.totalQty || 0} • Sizes ${sizes} • ${money(li.retailPerShirt || 0)}/shirt`;
-          })),
-          ...((dtfSummary?.printLines || []).map((pl) => `${pl.name}: ${pl.colors} colors • ${money(pl.pricePerPrint)}/print`)),
-          `Artwork/Setup Fee: ${money(dtfSummary?.setupFee || 0)}`,
-        ]
-      : selectedDetails.options.length
-      ? selectedDetails.options
-      : ["None"])
-    ,
+    ...getCurrentItemCustomerDetailLines(),
     "",
     "Please reply to this email if you’d like to move forward or have any questions.",
   ];
@@ -129,10 +136,7 @@ export default function PricingSummary({
         "Quote Items:",
         ...quoteItems.flatMap((item, idx) => [
           `${idx + 1}. ${item.product}`,
-          `   Qty: ${item.quantity}`,
-          `   Price Each: ${money(item.each || 0)}`,
-          `   Item Total: ${money(item.total || 0)}`,
-          `   Details: ${(item.safeDetails || []).filter(Boolean).join("; ") || "None"}`,
+          ...((item.safeDetails || []).map((line) => `   ${line}`)),
           "",
         ]),
         `Grand Total: ${money(quoteGrandTotal)}`,
