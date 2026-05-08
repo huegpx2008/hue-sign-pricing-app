@@ -223,6 +223,10 @@ export default function Page() {
       { label: "12x12", w: 12, h: 12 }, { label: "12x24", w: 24, h: 12 }, { label: "24x24", w: 24, h: 24 },
       { label: "24x36", w: 36, h: 24 }, { label: "24x48", w: 48, h: 24 }, { label: "48x96", w: 96, h: 48 },
     ],
+    footprints: [
+      { label: "12x12", w: 12, h: 12 }, { label: "12x24", w: 24, h: 12 }, { label: "24x24", w: 24, h: 24 },
+      { label: "24x36", w: 36, h: 24 }, { label: "24x48", w: 48, h: 24 }, { label: "48x96", w: 96, h: 48 },
+    ],
     reflective: [
       { label: "12x12", w: 12, h: 12 }, { label: "12x24", w: 24, h: 12 }, { label: "24x24", w: 24, h: 24 },
       { label: "24x36", w: 36, h: 24 }, { label: "24x48", w: 48, h: 24 }, { label: "48x96", w: 96, h: 48 },
@@ -322,6 +326,8 @@ export default function Page() {
         ? `${vinylOptions[vinylType].name} / ${vinylLaminate}`
         : activeProduct === "reflective"
         ? "Oralite 5600 Reflective Film"
+        : activeProduct === "footprints"
+        ? "Footprints Vinyl"
         : activeProduct === "banner"
         ? bannerOptions[bannerType].name
         : activeProduct === "meshBanner"
@@ -351,13 +357,13 @@ export default function Page() {
       activeProduct === "acm" ? `ACM Type: ${acmOptions[acmType].name}` : null,
       activeProduct === "acrylic" ? "Acrylic Type: Standard" : null,
       activeProduct === "coro" ? (coroDouble ? "Coro: Double-Sided" : "Coro: Single-Sided") : null,
-      (activeProduct === "vinyl" || activeProduct === "reflective") && vinylContour ? "Contour Cut" : null,
-      (activeProduct === "vinyl" || activeProduct === "reflective") && vinylRush ? "Rush Order" : null,
-      (activeProduct === "vinyl" || activeProduct === "reflective") && gangVinyl ? "Gang Vinyl Layout" : null,
-      (activeProduct === "vinyl" || activeProduct === "reflective") && vinylContour && gangVinyl
+      (["vinyl", "reflective", "footprints"].includes(activeProduct)) && vinylContour ? "Contour Cut" : null,
+      (["vinyl", "reflective", "footprints"].includes(activeProduct)) && vinylRush ? "Rush Order" : null,
+      (["vinyl", "reflective", "footprints"].includes(activeProduct)) && gangVinyl ? "Gang Vinyl Layout" : null,
+      (["vinyl", "reflective", "footprints"].includes(activeProduct)) && vinylContour && gangVinyl
         ? `Contour Padding: ${num(contourPadding, 0.5)}"`
         : null,
-      (activeProduct === "vinyl" || activeProduct === "reflective") && vinylContour && gangVinyl
+      (["vinyl", "reflective", "footprints"].includes(activeProduct)) && vinylContour && gangVinyl
         ? `Gang Waste: ${num(gangWastePercent, 0)}%`
         : null,
       activeProduct === "coro" ? `Flute Direction: ${coroFlute}` : null,

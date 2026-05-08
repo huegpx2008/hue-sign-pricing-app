@@ -118,9 +118,9 @@ export default function ProductOptions(props) {
 
   return (
     <>
-      {(activeProduct === "vinyl" || activeProduct === "reflective") && (
-        <Box title={activeProduct === "reflective" ? "Reflective Vinyl Options" : "Printed Vinyl Options"}>
-          {activeProduct === "vinyl" && (
+      {(["vinyl", "reflective", "footprints"].includes(activeProduct)) && (
+        <Box title={activeProduct === "reflective" ? "Reflective Vinyl Options" : activeProduct === "footprints" ? "Footprints Vinyl Options" : "Printed Vinyl Options"}>
+          {(activeProduct === "vinyl") && (
             <>
               <label>Vinyl Type</label>
               <select style={input} value={vinylType} onChange={(e) => setVinylType(e.target.value)}>

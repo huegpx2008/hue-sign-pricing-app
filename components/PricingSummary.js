@@ -258,7 +258,7 @@ export default function PricingSummary({
         )}
 
         {!isDtf && !isScreenPrint && <ProductVisual product={activeProduct || product} comingSoon={!activeProduct} />}
-        {!isDtf && (activeProduct === "vinyl" || activeProduct === "reflective") && <VinylLayoutPreview calc={calc} />}
+        {!isDtf && (["vinyl", "reflective", "footprints"].includes(activeProduct)) && <VinylLayoutPreview calc={calc} />}
         {!isDtf && (activeProduct === "foamcore" || activeProduct === "pvc") && <SheetLayoutPreview calc={calc} />}
         {isDtf ? (
           <div style={{ marginTop: 16, padding: 16, borderRadius: 16, background: "rgba(255,255,255,0.08)", color: "#e5e7eb", fontSize: 14, lineHeight: 1.35 }}>
