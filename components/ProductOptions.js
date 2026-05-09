@@ -281,8 +281,13 @@ export default function ProductOptions(props) {
           <select style={input} value={handheldPaperSizeKey} onChange={(e) => setHandheldPaperSizeKey(e.target.value)}>
             {props.handheldPaperSizes.map((s) => <option key={s.key} value={s.key}>{s.label} ({s.perSheet} per sheet)</option>)}
           </select>
-          <p style={{ margin: "6px 0" }}><strong>{handheldPaperSize?.perSheet || 1} fit per sheet</strong></p>
-          {(Number(qty) % (handheldPaperSize?.perSheet || 1) !== 0) && <p style={{ margin: "4px 0", fontSize: 13 }}>Next full sheet quantity: {Math.ceil(Number(qty || 1) / (handheldPaperSize?.perSheet || 1)) * (handheldPaperSize?.perSheet || 1)}</p>}
+          <p style={{ margin: "6px 0" }}><strong>{handheldPaperSize?.perSheet || 1} per sheet</strong></p>
+          {(Number(qty) % (handheldPaperSize?.perSheet || 1) !== 0) && (
+            <div style={{ margin: "4px 0 10px", fontSize: 13, opacity: 0.9 }}>
+              <div>Next full sheet quantity: {Math.ceil(Number(qty || 1) / (handheldPaperSize?.perSheet || 1)) * (handheldPaperSize?.perSheet || 1)}</div>
+              <div>Add {(Math.ceil(Number(qty || 1) / (handheldPaperSize?.perSheet || 1)) * (handheldPaperSize?.perSheet || 1)) - Number(qty || 1)} more to fill the sheet for best value.</div>
+            </div>
+          )}
           <label>Print Sides</label><select style={input} value={handheldPaperSides} onChange={(e) => setHandheldPaperSides(e.target.value)}><option value="single">Single Sided</option><option value="double">Double Sided</option></select>
           <label>Coating</label><select style={input} value={handheldPaperCoating} onChange={(e) => setHandheldPaperCoating(e.target.value)}><option>Gloss Laminate</option><option>No Coating</option></select>
           <label>Orientation</label><select style={input} value={handheldPaperOrientation} onChange={(e) => setHandheldPaperOrientation(e.target.value)}><option>Landscape</option><option>Portrait</option></select>

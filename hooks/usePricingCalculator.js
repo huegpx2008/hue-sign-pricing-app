@@ -166,14 +166,22 @@ export default function usePricingCalculator({
     }
 
     if (product === "handheld16ptPaper") {
-      const sheetsRequired = Math.max(Math.ceil(q / Math.max(Number(handheldPaperSize?.perSheet) || 1, 1)), 1);
+      const piecesPerSheet = Math.max(Number(handheldPaperSize?.perSheet) || 1, 1);
+      const sheetsRequired = Math.max(Math.ceil(q / piecesPerSheet), 1);
       const materialCost = sheetsRequired * 2;
       const shipping = Math.ceil(sheetsRequired / 100) * 10;
+      const areaEach = Math.max(Number(handheldPaperSize?.w) * Number(handheldPaperSize?.h) || 1, 1);
+      const bcArea = 7;
+      const ratePerSqIn = q >= 1000 ? (59.99 / 1000) / bcArea : q >= 500 ? (49.99 / 500) / bcArea : (39.99 / 250) / bcArea;
+      const areaBasedRetail = q * areaEach * ratePerSqIn;
       let costMarginPrice = materialCost / (1 - m);
-      if (handheldPaperRush) costMarginPrice *= 2;
-      const retail = (costMarginPrice + shipping + fees) * mult;
+      let basePrice = Math.max(areaBasedRetail, costMarginPrice);
+      if (handheldPaperRush) basePrice *= 2;
+      const retail = (basePrice + shipping + fees) * mult;
       const directCost = materialCost + shipping;
-      return { label: "Handheld 16pt Paper", retail, each: retail / q, cost: directCost, profit: retail - directCost, margin: retail ? ((retail - directCost) / retail) * 100 : 0, materialCost, shipping, sheetsRounded: sheetsRequired, piecesPerSheet: Number(handheldPaperSize?.perSheet) || 1, sideLabel: handheldPaperSides === "double" ? "Double Sided" : "Single Sided", recommendedQty: sheetsRequired * (Number(handheldPaperSize?.perSheet) || 1), costMarginPrice };
+      const nextFullSheetQty = Math.ceil(q / piecesPerSheet) * piecesPerSheet;
+      const addMoreQty = nextFullSheetQty > q ? nextFullSheetQty - q : piecesPerSheet;
+      return { label: "Handheld 16pt Paper", retail, each: retail / q, cost: directCost, profit: retail - directCost, margin: retail ? ((retail - directCost) / retail) * 100 : 0, materialCost, shipping, sheetsRounded: sheetsRequired, piecesPerSheet, sideLabel: handheldPaperSides === "double" ? "Double Sided" : "Single Sided", nextFullSheetQty, addMoreQty, costMarginPrice, areaEach, ratePerSqIn };
     }
 
     if (product === "banner") {

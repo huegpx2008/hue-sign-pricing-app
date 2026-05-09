@@ -86,6 +86,8 @@ export default function PricingSummary({
       `Quantity: ${selectedDetails?.qty || num(qty, 1)}`,
       ...(selectedDetails?.material ? [selectedDetails.material] : []),
       ...(selectedDetails?.options?.length ? [`Options: ${selectedDetails.options.join(", ")}`] : []),
+      ...(selectedDetails?.sheetHint ? [selectedDetails.sheetHint] : []),
+      ...(selectedDetails?.sheetAddMore ? [selectedDetails.sheetAddMore] : []),
       ...(selectedDetails?.printSize ? [`Print/Decal Size: ${selectedDetails.printSize}`] : []),
       `Price Each: ${money(summaryCalc.each || 0)}`,
       `Total: ${money(summaryCalc.retail || 0)}`,
@@ -146,6 +148,29 @@ export default function PricingSummary({
     : null;
   const quoteText = (multiItemQuoteLines || quoteLines).join("\n");
   const emailHref = `mailto:${encodeURIComponent(emailQuoteToHue || "jason@huegraphics.cc")}?${customerEmail ? `cc=${encodeURIComponent(customerEmail)}&` : ""}subject=${encodeURIComponent("Quote Request from Hue Graphics Quote Form")}&body=${encodeURIComponent(quoteText)}`;
+
+
+  const mobileMeta = (() => {
+    if (activeProduct === "businessCards") {
+      const side = selectedDetails?.options?.find((o) => o.includes("Sided")) || "Single Sided";
+      return {
+        line1: `Business Cards • Qty ${selectedDetails?.qty || num(qty, 1)} • ${side}`,
+        line2: `Price Each ${money(summaryCalc.each || 0)} • Total ${money(summaryCalc.retail || 0)}`,
+      };
+    }
+    if (activeProduct === "handheld16ptPaper") {
+      const size = selectedDetails?.size || "Handheld";
+      return {
+        line1: `Handheld 16pt Paper • ${size} • Qty ${num(qty, 1)}`,
+        line2: `${calc.piecesPerSheet || 1} per sheet • Requires ${calc.sheetsRounded || 1} sheets`,
+        line3: `Price Each ${money(summaryCalc.each || 0)} • Total ${money(summaryCalc.retail || 0)}`,
+      };
+    }
+    return {
+      line1: `${productMap[product]?.label || products[activeProduct]} • ${num(width)}" x ${num(height)}" • Qty ${num(qty, 1)}`,
+      line2: selectedDetails.options.length ? `Options: ${selectedDetails.options.join(", ")}` : "Options: None",
+    };
+  })();
 
   const handleCopyQuote = async () => {
     if (typeof navigator !== "undefined" && navigator.clipboard?.writeText) {
@@ -333,8 +358,9 @@ export default function PricingSummary({
           </>
         ) : (
           <>
-            <div className="mobileMeta">{productMap[product]?.label || products[activeProduct]} • {num(width)}&quot; x {num(height)}&quot; • Qty {num(qty, 1)}</div>
-            <div className="mobileOptions">{selectedDetails.options.length ? `Options: ${selectedDetails.options.join(", ")}` : "Options: None"}</div>
+            <div className="mobileMeta">{mobileMeta.line1}</div>
+            <div className="mobileOptions">{mobileMeta.line2}</div>
+            {mobileMeta.line3 && <div className="mobileOptions">{mobileMeta.line3}</div>}
           </>
         )}
       </div>
