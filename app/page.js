@@ -14,6 +14,22 @@ const productMap = Object.fromEntries(productCategories.flatMap((c) => c.items.m
 const allProducts = productCategories.flatMap((c) => c.items.map((i) => ({ ...i, category: c.name })));
 
 export default function Page() {
+  const handheldPaperSizes = [
+    { key: '3.5x2.5', label: '3.5"x2.5" Trading Card', perSheet: 56, w: 3.5, h: 2.5 },
+    { key: '5x3', label: '5"x3"', perSheet: 30, w: 5, h: 3 },
+    { key: '6x4', label: '6"x4"', perSheet: 21, w: 6, h: 4 },
+    { key: '7x5', label: '7"x5"', perSheet: 12, w: 7, h: 5 },
+    { key: '9x4', label: '9"x4"', perSheet: 14, w: 9, h: 4 },
+    { key: '9x6', label: '9"x6"', perSheet: 9, w: 9, h: 6 },
+    { key: '11x8.5', label: '11"x8.5"', perSheet: 5, w: 11, h: 8.5 },
+    { key: '14x11', label: '14"x11"', perSheet: 2, w: 14, h: 11 },
+    { key: '16x12', label: '16"x12"', perSheet: 2, w: 16, h: 12 },
+    { key: '17x11', label: '17"x11"', perSheet: 2, w: 17, h: 11 },
+    { key: '12x18', label: '12"x18"', perSheet: 2, w: 12, h: 18 },
+    { key: '20x16', label: '20"x16"', perSheet: 1, w: 20, h: 16 },
+    { key: '18x28', label: '18"x28"', perSheet: 1, w: 18, h: 28 },
+  ];
+
   const handleProductSelect = (nextProduct) => {
     setProduct(nextProduct);
     if (typeof window === "undefined" || window.innerWidth > 800) return;
@@ -92,6 +108,16 @@ export default function Page() {
   const [vehicleMagnetRoundedCorners, setVehicleMagnetRoundedCorners] = useState(false);
   const [vehicleMagnetRush, setVehicleMagnetRush] = useState(false);
   const [vehicleMagnetNotes, setVehicleMagnetNotes] = useState("");
+  const [businessCardQty, setBusinessCardQty] = useState(250);
+  const [businessCardSides, setBusinessCardSides] = useState("single");
+  const [businessCardCoating, setBusinessCardCoating] = useState("Gloss Laminate");
+  const [businessCardOrientation, setBusinessCardOrientation] = useState("Landscape");
+  const [businessCardRush, setBusinessCardRush] = useState(false);
+  const [handheldPaperSizeKey, setHandheldPaperSizeKey] = useState("3.5x2.5");
+  const [handheldPaperSides, setHandheldPaperSides] = useState("single");
+  const [handheldPaperCoating, setHandheldPaperCoating] = useState("Gloss Laminate");
+  const [handheldPaperOrientation, setHandheldPaperOrientation] = useState("Landscape");
+  const [handheldPaperRush, setHandheldPaperRush] = useState(false);
   const [theme, setTheme] = useState("light");
   const [viewMode, setViewMode] = useState("customer-online");
   const [staffUnlocked, setStaffUnlocked] = useState(false);
@@ -100,6 +126,7 @@ export default function Page() {
   const [dtfSummary, setDtfSummary] = useState(null);
 
   const activeProduct = productMap[product]?.calculator || null;
+  const handheldPaperSize = handheldPaperSizes.find((x) => x.key === handheldPaperSizeKey) || handheldPaperSizes[0];
   const activeTheme = getCategoryTheme(product || activeProduct || "");
 
 
@@ -173,6 +200,8 @@ export default function Page() {
     setFoamcoreDouble(false); setFoamcoreContour(false); setFoamcoreGloss(false); setFoamcoreRush(false); setFoamcoreCustomCut(false);
     setPvcType("3-single"); setPvcContour(false); setPvcRush(false); setPvcCustomCut(false);
     setVehicleMagnetMode("standard"); setVehicleMagnetPreset("18x12"); setVehicleMagnetContour(false); setVehicleMagnetRoundedCorners(false); setVehicleMagnetRush(false); setVehicleMagnetNotes("");
+    setBusinessCardQty(250); setBusinessCardSides("single"); setBusinessCardCoating("Gloss Laminate"); setBusinessCardOrientation("Landscape"); setBusinessCardRush(false);
+    setHandheldPaperSizeKey("3.5x2.5"); setHandheldPaperSides("single"); setHandheldPaperCoating("Gloss Laminate"); setHandheldPaperOrientation("Landscape"); setHandheldPaperRush(false);
   }
 
   function preset(prod, w, h, double = false) {
@@ -309,6 +338,12 @@ export default function Page() {
     vehicleMagnetPreset,
     vehicleMagnetContour,
     vehicleMagnetRush,
+    businessCardQty,
+    businessCardSides,
+    businessCardRush,
+    handheldPaperSize,
+    handheldPaperSides,
+    handheldPaperRush,
   });
 
   const isAdminView = viewMode === "admin";
@@ -319,8 +354,10 @@ export default function Page() {
   const selectedDetails = {
     product,
     productName: productMap[product]?.label || products[activeProduct] || "Unknown Product",
-    size: `${num(width)}" x ${num(height)}"`,
-    qty: num(qty, 1),
+    size: activeProduct === "handheld16ptPaper" ? handheldPaperSize.label : activeProduct === "businessCards" ? 'Standard Business Card' : `${num(width)}" x ${num(height)}"`,
+    qty: activeProduct === "businessCards" ? businessCardQty : num(qty, 1),
+    sheetHint: activeProduct === "handheld16ptPaper" ? `Next full sheet quantity: ${calc.nextFullSheetQty || handheldPaperSize.perSheet}` : null,
+    sheetAddMore: activeProduct === "handheld16ptPaper" ? `Add ${calc.addMoreQty || handheldPaperSize.perSheet} more to fill the sheet for best value.` : null,
     material:
       activeProduct === "vinyl"
         ? `${vinylOptions[vinylType].name} / ${vinylLaminate}`
@@ -344,6 +381,10 @@ export default function Page() {
         ? pvcOptions[pvcType].name
         : activeProduct === "vehicleMagnets"
         ? vehicleMagnetMode === "custom" ? "Custom Cut Vehicle Magnet" : "Standard Vehicle Magnet"
+        : activeProduct === "businessCards"
+        ? `Business Cards (${businessCardSides === "double" ? "Double" : "Single"} Sided)`
+        : activeProduct === "handheld16ptPaper"
+        ? `Handheld 16pt Paper (${handheldPaperSize.label})`
         : coroDouble
         ? "4mm Double-Sided Coroplast"
         : activeProduct === "coro"
@@ -407,6 +448,17 @@ export default function Page() {
       activeProduct === "vehicleMagnets" && vehicleMagnetRoundedCorners ? "Rounded Corners" : null,
       activeProduct === "vehicleMagnets" && vehicleMagnetRush ? "Rush Order" : null,
       activeProduct === "vehicleMagnets" && vehicleMagnetNotes.trim() ? `Notes: ${vehicleMagnetNotes.trim()}` : null,
+      activeProduct === "businessCards" ? `Quantity: ${businessCardQty}` : null,
+      activeProduct === "businessCards" ? `${businessCardSides === "double" ? "Double" : "Single"} Sided` : null,
+      activeProduct === "businessCards" ? `Coating: ${businessCardCoating}` : null,
+      activeProduct === "businessCards" ? `Orientation: ${businessCardOrientation}` : null,
+      activeProduct === "businessCards" && businessCardRush ? "Rush Order" : null,
+      activeProduct === "handheld16ptPaper" ? `Size: ${handheldPaperSize.label} (${handheldPaperSize.perSheet} per sheet)` : null,
+      activeProduct === "handheld16ptPaper" ? `Sides: ${handheldPaperSides === "double" ? "Double" : "Single"}` : null,
+      activeProduct === "handheld16ptPaper" ? `Sheets Required: ${calc.sheetsRounded || 1}` : null,
+      activeProduct === "handheld16ptPaper" ? `Coating: ${handheldPaperCoating}` : null,
+      activeProduct === "handheld16ptPaper" ? `Orientation: ${handheldPaperOrientation}` : null,
+      activeProduct === "handheld16ptPaper" && handheldPaperRush ? "Rush Order" : null,
       showInternalFields && useDesignFee ? `Design Fee: ${money(num(designFee))}` : null,
       showInternalFields && useSetupFee ? `Setup Fee: ${money(num(setupFee))}` : null,
       showInternalFields && num(delivery) > 0 ? `Delivery/Install: ${money(num(delivery))}` : null,
@@ -701,15 +753,38 @@ export default function Page() {
             setVehicleMagnetRush={setVehicleMagnetRush}
             vehicleMagnetNotes={vehicleMagnetNotes}
             setVehicleMagnetNotes={setVehicleMagnetNotes}
+            businessCardQty={businessCardQty}
+            setBusinessCardQty={setBusinessCardQty}
+            businessCardSides={businessCardSides}
+            setBusinessCardSides={setBusinessCardSides}
+            businessCardCoating={businessCardCoating}
+            setBusinessCardCoating={setBusinessCardCoating}
+            businessCardOrientation={businessCardOrientation}
+            setBusinessCardOrientation={setBusinessCardOrientation}
+            businessCardRush={businessCardRush}
+            setBusinessCardRush={setBusinessCardRush}
+            handheldPaperSizes={handheldPaperSizes}
+            handheldPaperSize={handheldPaperSize}
+            handheldPaperSizeKey={handheldPaperSizeKey}
+            setHandheldPaperSizeKey={setHandheldPaperSizeKey}
+            handheldPaperSides={handheldPaperSides}
+            setHandheldPaperSides={setHandheldPaperSides}
+            handheldPaperCoating={handheldPaperCoating}
+            setHandheldPaperCoating={setHandheldPaperCoating}
+            handheldPaperOrientation={handheldPaperOrientation}
+            setHandheldPaperOrientation={setHandheldPaperOrientation}
+            handheldPaperRush={handheldPaperRush}
+            setHandheldPaperRush={setHandheldPaperRush}
+            qty={qty}
             isAdminView={isAdminView}
           />
 
 
           {activeProduct !== "dtfTransfers" && activeProduct !== "screenPrinting" && (
             <div className="formGrid" style={grid}>
-              <Field label="Quantity" value={qty} setValue={setQty} />
-              {(activeProduct !== "vehicleMagnets" || vehicleMagnetMode === "custom") && <Field label="Width Inches" value={width} setValue={setWidth} />}
-              {(activeProduct !== "vehicleMagnets" || vehicleMagnetMode === "custom") && <Field label="Height Inches" value={height} setValue={setHeight} />}
+              {activeProduct !== "businessCards" && <Field label="Quantity" value={qty} setValue={setQty} />}
+              {(activeProduct !== "vehicleMagnets" || vehicleMagnetMode === "custom") && !["businessCards", "handheld16ptPaper"].includes(activeProduct) && <Field label="Width Inches" value={width} setValue={setWidth} />}
+              {(activeProduct !== "vehicleMagnets" || vehicleMagnetMode === "custom") && !["businessCards", "handheld16ptPaper"].includes(activeProduct) && <Field label="Height Inches" value={height} setValue={setHeight} />}
               {isAdminView && <Field label="Margin %" value={margin} setValue={setMargin} />}
               {showInternalFields && <Field label="Delivery / Install" value={delivery} setValue={setDelivery} />}
               {isAdminView && <Field label="Price Multiplier" value={multiplier} setValue={setMultiplier} />}

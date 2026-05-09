@@ -85,6 +85,12 @@ export default function usePricingCalculator({
   vehicleMagnetPreset,
   vehicleMagnetContour,
   vehicleMagnetRush,
+  businessCardQty,
+  businessCardSides,
+  businessCardRush,
+  handheldPaperSize,
+  handheldPaperSides,
+  handheldPaperRush,
 }) {
   const calc = useMemo(() => {
     const q = Math.max(num(qty, 1), 1);
@@ -143,6 +149,39 @@ export default function usePricingCalculator({
       const basePrice = costMarginPrice;
       const retail = (basePrice + fees) * mult;
       return { label: "Poster Paper", retail, each: retail / q, cost: directCost, profit: retail - directCost, margin: retail ? ((retail - directCost) / retail) * 100 : 0, totalSqFt, materialCost, shipping, supplierRate: rate, costMarginPrice, basePrice };
+    }
+
+    if (product === "businessCards") {
+      const pricing = {
+        250: { single: 39.99, double: 49.99 },
+        500: { single: 49.99, double: 59.99 },
+        1000: { single: 59.99, double: 69.99 },
+      };
+      const baseRetail = pricing[businessCardQty]?.[businessCardSides] || 0;
+      const shipping = Math.ceil(1 / 100) * 10;
+      const basePrice = businessCardRush ? baseRetail * 2 : baseRetail;
+      const retail = (basePrice + fees) * mult;
+      const directCost = shipping;
+      return { label: "Business Cards", retail, each: retail / Math.max(Number(businessCardQty) || 1, 1), cost: directCost, profit: retail - directCost, margin: retail ? ((retail - directCost) / retail) * 100 : 0, shipping, materialCost: 0, sheetsRounded: 1, piecesPerSheet: Number(businessCardQty) || 0 };
+    }
+
+    if (product === "handheld16ptPaper") {
+      const piecesPerSheet = Math.max(Number(handheldPaperSize?.perSheet) || 1, 1);
+      const sheetsRequired = Math.max(Math.ceil(q / piecesPerSheet), 1);
+      const materialCost = sheetsRequired * 2;
+      const shipping = Math.ceil(sheetsRequired / 100) * 10;
+      const areaEach = Math.max(Number(handheldPaperSize?.w) * Number(handheldPaperSize?.h) || 1, 1);
+      const bcArea = 7;
+      const ratePerSqIn = q >= 1000 ? (59.99 / 1000) / bcArea : q >= 500 ? (49.99 / 500) / bcArea : (39.99 / 250) / bcArea;
+      const areaBasedRetail = q * areaEach * ratePerSqIn;
+      let costMarginPrice = materialCost / (1 - m);
+      let basePrice = Math.max(areaBasedRetail, costMarginPrice);
+      if (handheldPaperRush) basePrice *= 2;
+      const retail = (basePrice + shipping + fees) * mult;
+      const directCost = materialCost + shipping;
+      const nextFullSheetQty = Math.ceil(q / piecesPerSheet) * piecesPerSheet;
+      const addMoreQty = nextFullSheetQty > q ? nextFullSheetQty - q : piecesPerSheet;
+      return { label: "Handheld 16pt Paper", retail, each: retail / q, cost: directCost, profit: retail - directCost, margin: retail ? ((retail - directCost) / retail) * 100 : 0, materialCost, shipping, sheetsRounded: sheetsRequired, piecesPerSheet, sideLabel: handheldPaperSides === "double" ? "Double Sided" : "Single Sided", nextFullSheetQty, addMoreQty, costMarginPrice, areaEach, ratePerSqIn };
     }
 
     if (product === "banner") {
@@ -305,7 +344,7 @@ export default function usePricingCalculator({
     const retail = (basePrice + fees) * mult + stakeRetail;
 
     return { label: "Coroplast", retail, each: retail / q, cost: directCost, profit: retail - directCost, margin: retail ? ((retail - directCost) / retail) * 100 : 0, totalSqFt, materialCost, shipping, stakeRetail, stakeCost, sheetsUsed, sheetsRounded, piecesPerSheet: layout.piecesPerSheet, sheetLayout: `${layout.across} across x ${layout.down} down${layout.rotated ? " (rotated)" : ""}`, tierPrice, costMarginPrice, basePrice };
-  }, [product, width, height, qty, margin, multiplier, useDesignFee, useSetupFee, designFee, setupFee, delivery, activeProduct, productMap, coroDouble, coroFlute, stakes, heavyStakes, grommets, gloss, coroContour, coroRush, bannerType, polePocket, rope, windSlits, bannerRush, meshPolePocket, meshGrommets, meshWelding, meshRope, meshWebbing, meshRush, acmType, acmSqFtPrice, acmContour, roundedCorners, acrylicContour, acrylicRoundedCorners, acrylicStandOffs, acrylicStandOffQty, acrylicStandOffColor, vinylType, vinylLaminate, vinylContour, vinylRush, gangVinyl, contourPadding, gangWastePercent, posterRush, foamcoreDouble, foamcoreContour, foamcoreGloss, foamcoreRush, foamcoreCustomCut, pvcType, pvcContour, pvcRush, pvcCustomCut, vehicleMagnetMode, vehicleMagnetPreset, vehicleMagnetContour, vehicleMagnetRush]);
+  }, [product, width, height, qty, margin, multiplier, useDesignFee, useSetupFee, designFee, setupFee, delivery, activeProduct, productMap, coroDouble, coroFlute, stakes, heavyStakes, grommets, gloss, coroContour, coroRush, bannerType, polePocket, rope, windSlits, bannerRush, meshPolePocket, meshGrommets, meshWelding, meshRope, meshWebbing, meshRush, acmType, acmSqFtPrice, acmContour, roundedCorners, acrylicContour, acrylicRoundedCorners, acrylicStandOffs, acrylicStandOffQty, acrylicStandOffColor, vinylType, vinylLaminate, vinylContour, vinylRush, gangVinyl, contourPadding, gangWastePercent, posterRush, foamcoreDouble, foamcoreContour, foamcoreGloss, foamcoreRush, foamcoreCustomCut, pvcType, pvcContour, pvcRush, pvcCustomCut, vehicleMagnetMode, vehicleMagnetPreset, vehicleMagnetContour, vehicleMagnetRush, businessCardQty, businessCardSides, businessCardRush, handheldPaperSize, handheldPaperSides, handheldPaperRush]);
 
   return calc;
 }

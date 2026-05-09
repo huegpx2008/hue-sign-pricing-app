@@ -42,7 +42,8 @@ export const productCategories = [
     { id: "embroidery", label: "Embroidery" },
   ] },
   { name: "Paper Printing", items: [
-    { id: "businessCards", label: "Business Cards" },
+    { id: "businessCards", label: "Business Cards", calculator: "businessCards" },
+    { id: "handheld16ptPaper", label: "Handheld 16pt Paper", calculator: "handheld16ptPaper" },
     { id: "carbonless", label: "Carbonless Forms" },
     { id: "doorHangers", label: "Door Hangers" },
     { id: "notepads", label: "Notepads" },
