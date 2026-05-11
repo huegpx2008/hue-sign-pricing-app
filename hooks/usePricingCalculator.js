@@ -107,7 +107,6 @@ export default function usePricingCalculator({
   doorHangerBackPrinting,
   doorHangerPerforation,
   doorHangerShrinkWrap,
-  doorHangerProof,
 }) {
   const calc = useMemo(() => {
     const q = Math.max(num(qty, 1), 1);
@@ -283,9 +282,8 @@ export default function usePricingCalculator({
       }
       const wrapScale = { "Shrink Wrap 250": 1, "Shrink Wrap 25s": 1.05, "Shrink Wrap 50s": 1.03, "Shrink Wrap 100s": 1.02 };
       directCost *= (wrapScale[doorHangerShrinkWrap] || 1);
-      if (doorHangerProof === "Please Send Proof") directCost += 10;
       const retail = (directCost / 0.4 + fees) * mult;
-      return { label: "Door Hangers", retail, each: retail / qDoor, cost: directCost, materialCost: directCost, shipping: 0, quantity: qDoor, profit: retail - directCost, margin: retail ? ((retail - directCost) / retail) * 100 : 0, optionBreakdown: { doorHangerSize, doorHangerType, doorHangerInk, doorHangerBackPrinting, doorHangerPerforation, doorHangerShrinkWrap, doorHangerProof } };
+      return { label: "Door Hangers", retail, each: retail / qDoor, cost: directCost, materialCost: directCost, shipping: 0, quantity: qDoor, profit: retail - directCost, margin: retail ? ((retail - directCost) / retail) * 100 : 0, optionBreakdown: { doorHangerSize, doorHangerType, doorHangerInk, doorHangerBackPrinting, doorHangerPerforation, doorHangerShrinkWrap } };
     }
 
     if (product === "banner") {
@@ -448,7 +446,7 @@ export default function usePricingCalculator({
     const retail = (basePrice + fees) * mult + stakeRetail;
 
     return { label: "Coroplast", retail, each: retail / q, cost: directCost, profit: retail - directCost, margin: retail ? ((retail - directCost) / retail) * 100 : 0, totalSqFt, materialCost, shipping, stakeRetail, stakeCost, sheetsUsed, sheetsRounded, piecesPerSheet: layout.piecesPerSheet, sheetLayout: `${layout.across} across x ${layout.down} down${layout.rotated ? " (rotated)" : ""}`, tierPrice, costMarginPrice, basePrice };
-  }, [product, width, height, qty, margin, multiplier, useDesignFee, useSetupFee, designFee, setupFee, delivery, activeProduct, productMap, coroDouble, coroFlute, stakes, heavyStakes, grommets, gloss, coroContour, coroRush, bannerType, polePocket, rope, windSlits, bannerRush, meshPolePocket, meshGrommets, meshWelding, meshRope, meshWebbing, meshRush, acmType, acmSqFtPrice, acmContour, roundedCorners, acrylicContour, acrylicRoundedCorners, acrylicStandOffs, acrylicStandOffQty, acrylicStandOffColor, vinylType, vinylLaminate, vinylContour, vinylRush, gangVinyl, contourPadding, gangWastePercent, posterRush, foamcoreDouble, foamcoreContour, foamcoreGloss, foamcoreRush, foamcoreCustomCut, pvcType, pvcContour, pvcRush, pvcCustomCut, vehicleMagnetMode, vehicleMagnetPreset, vehicleMagnetContour, vehicleMagnetRush, businessCardQty, businessCardSides, businessCardRush, handheldPaperSize, handheldPaperSides, handheldPaperRush, carbonlessFormType, carbonlessSize, carbonlessQty, carbonlessPrintType, carbonlessPrintSides, carbonlessNumbering, carbonlessWraparound, carbonlessBookedSets, carbonlessRush, doorHangerSize, doorHangerQty, doorHangerType, doorHangerInk, doorHangerBackPrinting, doorHangerPerforation, doorHangerShrinkWrap, doorHangerProof]);
+  }, [product, width, height, qty, margin, multiplier, useDesignFee, useSetupFee, designFee, setupFee, delivery, activeProduct, productMap, coroDouble, coroFlute, stakes, heavyStakes, grommets, gloss, coroContour, coroRush, bannerType, polePocket, rope, windSlits, bannerRush, meshPolePocket, meshGrommets, meshWelding, meshRope, meshWebbing, meshRush, acmType, acmSqFtPrice, acmContour, roundedCorners, acrylicContour, acrylicRoundedCorners, acrylicStandOffs, acrylicStandOffQty, acrylicStandOffColor, vinylType, vinylLaminate, vinylContour, vinylRush, gangVinyl, contourPadding, gangWastePercent, posterRush, foamcoreDouble, foamcoreContour, foamcoreGloss, foamcoreRush, foamcoreCustomCut, pvcType, pvcContour, pvcRush, pvcCustomCut, vehicleMagnetMode, vehicleMagnetPreset, vehicleMagnetContour, vehicleMagnetRush, businessCardQty, businessCardSides, businessCardRush, handheldPaperSize, handheldPaperSides, handheldPaperRush, carbonlessFormType, carbonlessSize, carbonlessQty, carbonlessPrintType, carbonlessPrintSides, carbonlessNumbering, carbonlessWraparound, carbonlessBookedSets, carbonlessRush, doorHangerSize, doorHangerQty, doorHangerType, doorHangerInk, doorHangerBackPrinting, doorHangerPerforation, doorHangerShrinkWrap]);
 
   return calc;
 }

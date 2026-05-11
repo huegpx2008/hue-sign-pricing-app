@@ -163,8 +163,6 @@ export default function ProductOptions(props) {
     setDoorHangerPerforation,
     doorHangerShrinkWrap,
     setDoorHangerShrinkWrap,
-    doorHangerProof,
-    setDoorHangerProof,
     qty,
     onDtfSummaryChange,
     margin,
@@ -374,7 +372,6 @@ export default function ProductOptions(props) {
           <label>Back Printing</label><select style={input} value={doorHangerBackPrinting} onChange={(e) => setDoorHangerBackPrinting(e.target.value)}><option>No</option><option>Standard Black</option><option>Full Color</option></select>
           <label>Perforation</label><select style={input} value={doorHangerPerforation} onChange={(e) => setDoorHangerPerforation(e.target.value)}><option>No</option><option>Yes (1 Perforation)</option><option>Yes (2 Perforations)</option><option>Yes (3 Perforations)</option><option>Yes (4 Perforations)</option></select>
           <label>Shrink Wrap</label><select style={input} value={doorHangerShrinkWrap} onChange={(e) => setDoorHangerShrinkWrap(e.target.value)}><option>Shrink Wrap 250</option><option>Shrink Wrap 25s</option><option>Shrink Wrap 50s</option><option>Shrink Wrap 100s</option></select>
-          <label>Proof</label><select style={input} value={doorHangerProof} onChange={(e) => setDoorHangerProof(e.target.value)}><option>No Proof Required</option><option>Please Send Proof</option></select>
           <DoorHangerPreview size={doorHangerSize} />
         </Box>
       )}

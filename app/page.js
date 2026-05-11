@@ -134,7 +134,6 @@ export default function Page() {
   const [doorHangerBackPrinting, setDoorHangerBackPrinting] = useState("No");
   const [doorHangerPerforation, setDoorHangerPerforation] = useState("No");
   const [doorHangerShrinkWrap, setDoorHangerShrinkWrap] = useState("Shrink Wrap 250");
-  const [doorHangerProof, setDoorHangerProof] = useState("No Proof Required");
   const [theme, setTheme] = useState("light");
   const [viewMode, setViewMode] = useState("customer-online");
   const [staffUnlocked, setStaffUnlocked] = useState(false);
@@ -377,7 +376,6 @@ export default function Page() {
     doorHangerBackPrinting,
     doorHangerPerforation,
     doorHangerShrinkWrap,
-    doorHangerProof,
   });
 
   const isAdminView = viewMode === "admin";
@@ -507,7 +505,6 @@ export default function Page() {
       activeProduct === "doorHangers" ? `Back Printing: ${doorHangerBackPrinting}` : null,
       activeProduct === "doorHangers" ? `Perforation: ${doorHangerPerforation}` : null,
       activeProduct === "doorHangers" ? `Shrink Wrap: ${doorHangerShrinkWrap}` : null,
-      activeProduct === "doorHangers" ? `Proof: ${doorHangerProof}` : null,
       showInternalFields && useDesignFee ? `Design Fee: ${money(num(designFee))}` : null,
       showInternalFields && useSetupFee ? `Setup Fee: ${money(num(setupFee))}` : null,
       showInternalFields && num(delivery) > 0 ? `Delivery/Install: ${money(num(delivery))}` : null,
@@ -856,8 +853,6 @@ export default function Page() {
             setDoorHangerPerforation={setDoorHangerPerforation}
             doorHangerShrinkWrap={doorHangerShrinkWrap}
             setDoorHangerShrinkWrap={setDoorHangerShrinkWrap}
-            doorHangerProof={doorHangerProof}
-            setDoorHangerProof={setDoorHangerProof}
             qty={qty}
             isAdminView={isAdminView}
           />

@@ -173,6 +173,17 @@ export default function PricingSummary({
         line3: `Price Each ${money(summaryCalc.each || 0)} • Total ${money(summaryCalc.retail || 0)}`,
       };
     }
+    if (activeProduct === "doorHangers") {
+      const typeLine = selectedDetails?.options?.find((o) => o.startsWith("Type/Color:"))?.replace("Type/Color: ", "") || "";
+      const inkLine = selectedDetails?.options?.find((o) => o.startsWith("Ink:"))?.replace("Ink: ", "") || "";
+      const backLine = selectedDetails?.options?.find((o) => o.startsWith("Back Printing:"))?.replace("Back Printing: ", "") || "No";
+      const perfLine = selectedDetails?.options?.find((o) => o.startsWith("Perforation:"))?.replace("Perforation: ", "") || "No";
+      return {
+        line1: `Door Hangers • ${selectedDetails?.size || ""} • Qty ${selectedDetails?.qty || num(qty, 1)}`,
+        line2: typeLine,
+        line3: `${inkLine} • ${backLine === "No" ? "No Back Printing" : backLine}${perfLine !== "No" ? ` • ${perfLine}` : ""}`,
+      };
+    }
     return {
       line1: `${productMap[product]?.label || products[activeProduct]} • ${num(width)}" x ${num(height)}" • Qty ${num(qty, 1)}`,
       line2: selectedDetails.options.length ? `Options: ${selectedDetails.options.join(", ")}` : "Options: None",
@@ -369,6 +380,7 @@ export default function PricingSummary({
             <div className="mobileMeta">{mobileMeta.line1}</div>
             <div className="mobileOptions">{mobileMeta.line2}</div>
             {mobileMeta.line3 && <div className="mobileOptions">{mobileMeta.line3}</div>}
+            {activeProduct === "doorHangers" && <div className="mobileOptions">{`Price Each ${money(summaryCalc.each || 0)} • Total ${money(summaryCalc.retail || 0)}`}</div>}
           </>
         )}
       </div>
