@@ -372,6 +372,20 @@ export default function DTFTransfers({ onSummaryChange, isAdminView = false }) {
   ), [apparelRetailSubtotal, dtfRetailSubtotal, sizeUpchargeTotal, sleeveRetailAddOnTotal, byoaRetailFee]);
 
   const pricePerGarment = useMemo(() => (totalGarmentQty > 0 ? finalRetail / totalGarmentQty : 0), [finalRetail, totalGarmentQty]);
+  const dtfSizePriceBreakdown = useMemo(() => {
+    const baseEach = pricePerGarment;
+    const tiers = [
+      { label: "S-XL", qty: toNumber(qtyS) + toNumber(qtyM) + toNumber(qtyL) + toNumber(qtyXl), upcharge: 0 },
+      { label: "2XL", qty: toNumber(qty2xl), upcharge: 2.5 },
+      { label: "3XL", qty: toNumber(qty3xl), upcharge: 3.5 },
+      { label: "4XL", qty: toNumber(qty4xl), upcharge: 4.5 },
+      { label: "5XL", qty: toNumber(qty5xl), upcharge: 5 },
+    ];
+    return tiers.filter((tier) => tier.qty > 0).map((tier) => ({
+      ...tier,
+      priceEach: Math.max(0, baseEach + tier.upcharge),
+    }));
+  }, [pricePerGarment, qtyS, qtyM, qtyL, qtyXl, qty2xl, qty3xl, qty4xl, qty5xl]);
 
   useEffect(() => {
     if (!onSummaryChange) return;
@@ -399,6 +413,7 @@ export default function DTFTransfers({ onSummaryChange, isAdminView = false }) {
       directCost,
       finalRetail,
       pricePerGarment,
+      sizePriceBreakdown: dtfSizePriceBreakdown,
       productDisplay: selectedProduct ? `${selectedProduct.style} — ${selectedProduct.title} (${selectedProduct.color})` : "No SanMar item selected",
       selectedStyle: selectedProduct?.style || "",
       selectedTitle: selectedProduct?.title || "",
@@ -425,7 +440,7 @@ export default function DTFTransfers({ onSummaryChange, isAdminView = false }) {
       rollLengthUsed: dtfLayout.rollLengthUsed,
       transferCount: totalTransferCount,
     });
-  }, [onSummaryChange, dtfMode, bringYourOwnApparel, dtfOnlyWidth, dtfOnlyHeight, dtfOnlyQty, byoaRetailFee, finalRetail, pricePerGarment, directCost, apparelDirectCost, dtfMaterialCost, DTF_SHIPPING_FLAT, apparelRetailSubtotal, dtfRetailSubtotal, sizeUpchargeTotal, sleeveRetailAddOnTotal, selectedProduct, baseApparelCostUsed, totalGarmentQty, frontSelected, resolvedFrontSize, backSelected, resolvedBackSize, leftSleeve, resolvedLeftSleeveSize, rightSleeve, resolvedRightSleeveSize, dtfLayout.rollLengthUsed, totalTransferCount, qtyXs, qtyS, qtyM, qtyL, qtyXl, qty2xl, qty3xl, qty4xl, qty5xl]);
+  }, [onSummaryChange, dtfMode, bringYourOwnApparel, dtfOnlyWidth, dtfOnlyHeight, dtfOnlyQty, byoaRetailFee, finalRetail, pricePerGarment, dtfSizePriceBreakdown, directCost, apparelDirectCost, dtfMaterialCost, DTF_SHIPPING_FLAT, apparelRetailSubtotal, dtfRetailSubtotal, sizeUpchargeTotal, sleeveRetailAddOnTotal, selectedProduct, baseApparelCostUsed, totalGarmentQty, frontSelected, resolvedFrontSize, backSelected, resolvedBackSize, leftSleeve, resolvedLeftSleeveSize, rightSleeve, resolvedRightSleeveSize, dtfLayout.rollLengthUsed, totalTransferCount, qtyXs, qtyS, qtyM, qtyL, qtyXl, qty2xl, qty3xl, qty4xl, qty5xl]);
 
   const loadedRef = useRef(false);
 
@@ -812,7 +827,14 @@ export default function DTFTransfers({ onSummaryChange, isAdminView = false }) {
             <div><strong>Back print:</strong> {backSelected ? `${backPreset}${resolvedBackSize ? ` (${resolvedBackSize.width}" x ${resolvedBackSize.height}")` : ""}` : "None"}</div>
             <div><strong>Left sleeve:</strong> {leftSleeve ? `Selected (${resolvedLeftSleeveSize.width}" x ${resolvedLeftSleeveSize.height}")` : "None"}</div>
             <div><strong>Right sleeve:</strong> {rightSleeve ? `Selected (${resolvedRightSleeveSize.width}" x ${resolvedRightSleeveSize.height}")` : "None"}</div>
-            <div><strong>Price per garment:</strong> ${pricePerGarment.toFixed(2)}</div>
+            {dtfMode !== "dtfOnly" && (
+              <div>
+                <strong>Price breakdown:</strong> {dtfSizePriceBreakdown.length
+                  ? dtfSizePriceBreakdown.map((tier) => `${tier.label}: ${tier.qty} @ $${tier.priceEach.toFixed(2)} each`).join(" • ")
+                  : "None"}
+              </div>
+            )}
+            {dtfMode === "dtfOnly" && <div><strong>Price per garment:</strong> ${pricePerGarment.toFixed(2)}</div>}
             <div><strong>Final total:</strong> ${finalRetail.toFixed(2)}</div>
           </div>
         ) : (

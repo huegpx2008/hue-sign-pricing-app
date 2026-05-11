@@ -24,6 +24,20 @@ export default function PricingSummary({
 }) {
   const formatSizeBreakdown = (sizeQty = {}) => Object.entries(sizeQty).filter(([, v]) => Number(v) > 0).map(([k, v]) => `${k}(${v})`).join(", ") || "None";
   const formatPrintLocations = (printLines = []) => printLines.filter((pl) => pl?.colors > 0).map((pl) => `${pl.name} ${pl.colors}-color`).join(", ") || "None selected";
+  const formatSizePriceBreakdown = (tiers = []) => tiers.filter((t) => Number(t?.qty || 0) > 0).map((t) => `${t.label || t.size}: ${t.qty} @ ${money(t.priceEach ?? t.garmentPriceEach ?? 0)} each`);
+  const screenPriceLabel = (size) => (["S", "M", "L", "XL"].includes(size) ? "S-XL" : size);
+  const getScreenCustomerPriceTiers = (lineItem = {}) => {
+    const grouped = new Map();
+    (lineItem.sizePriceBreakdown || []).forEach((tier) => {
+      const label = screenPriceLabel(tier.size);
+      const existing = grouped.get(label);
+      const qty = Number(tier.qty || 0);
+      const priceEach = Number(tier.garmentPriceEach || 0) + Number(lineItem.printChargePerShirt || 0);
+      if (!existing) grouped.set(label, { label, qty, priceEach });
+      else grouped.set(label, { ...existing, qty: existing.qty + qty, priceEach: Math.min(existing.priceEach, priceEach) });
+    });
+    return ["S-XL", "2XL", "3XL", "4XL", "5XL", "6XL"].map((label) => grouped.get(label)).filter((x) => x && x.qty > 0);
+  };
 
   const [customerName, setCustomerName] = useState("");
   const [customerEmail, setCustomerEmail] = useState("");
@@ -61,7 +75,9 @@ export default function PricingSummary({
         `Sizes: ${formatSizeBreakdown(dtfSummary?.sizeQuantities || {})}`,
         `Total Qty: ${dtfSummary?.totalGarmentQty || 0}`,
         `Print Locations: ${((dtfSummary?.selectedPrintLocations || []).length ? dtfSummary.selectedPrintLocations.join(", ") : "None selected")}`,
-        `Price Each: ${money(dtfSummary?.each || 0)}`,
+        ...((dtfSummary?.sizePriceBreakdown || []).length
+          ? ["Price Breakdown:", ...formatSizePriceBreakdown(dtfSummary?.sizePriceBreakdown || []).map((line) => `- ${line}`)]
+          : [`Price Each: ${money(dtfSummary?.each || 0)}`]),
         `Total: ${money(dtfSummary?.retail || 0)}`,
       ];
     }
@@ -74,7 +90,9 @@ export default function PricingSummary({
           `Sizes: ${formatSizeBreakdown(li.sizeQty || {})}`,
           `Total Qty: ${li.totalQty || 0}`,
           `Print Locations: ${formatPrintLocations(dtfSummary?.printLines || [])}`,
-          `Price Each: ${money(li.retailPerShirt || 0)}`,
+          ...((li.sizePriceBreakdown || []).length
+            ? ["Price Breakdown:", ...getScreenCustomerPriceTiers(li).map((tier) => `- ${tier.label} Price Each: ${money(tier.priceEach)}`)]
+            : [`Price Each: ${money(li.retailPerShirt || 0)}`]),
           `Item Total: ${money(li.finalRetailSubtotal || 0)}`,
           "",
         ];
@@ -237,7 +255,23 @@ export default function PricingSummary({
         </div>
         <h2>{isAdminView ? "Suggested Retail" : "Selected Item Preview"}</h2>
         <div style={{ fontSize: 42, fontWeight: "bold" }}>{money(hasProductSelected ? summaryCalc.retail : 0)}</div>
-        {hasProductSelected && !(isScreenPrint && (dtfData.lineItems || []).length > 1) && <p>Each: <strong>{money(summaryCalc.each || 0)}</strong></p>}
+        {hasProductSelected && !isScreenPrint && !isDtf && !(isScreenPrint && (dtfData.lineItems || []).length > 1) && <p>Each: <strong>{money(summaryCalc.each || 0)}</strong></p>}
+        {hasProductSelected && isDtf && (dtfData.dtfMode !== "dtfOnly") && (
+          <div>
+            {(dtfData.sizePriceBreakdown || []).filter((tier) => Number(tier.qty || 0) > 0).map((tier) => (
+              <p key={`top-dtf-${tier.label}`} style={{ margin: "2px 0" }}><strong>{tier.label} Price Each:</strong> {money(tier.priceEach || 0)}</p>
+            ))}
+          </div>
+        )}
+        {hasProductSelected && isDtf && (dtfData.dtfMode === "dtfOnly") && <p>Each: <strong>{money(summaryCalc.each || 0)}</strong></p>}
+        {hasProductSelected && isScreenPrint && !isAdminView && (dtfData.lineItems || []).filter((li) => Number(li.totalQty || 0) > 0).map((li, idx) => (
+          <div key={`top-sp-tier-${li.id || idx}`}>
+            {(dtfData.lineItems || []).length > 1 && <p style={{ marginBottom: 4 }}><strong>{li.style}</strong> {li.color ? `(${li.color})` : ""}</p>}
+            {getScreenCustomerPriceTiers(li).map((tier) => (
+              <p key={`top-sp-${li.id || idx}-${tier.label}`} style={{ margin: "2px 0" }}><strong>{tier.label} Price Each:</strong> {money(tier.priceEach)}</p>
+            ))}
+          </div>
+        ))}
         {isAdminView && <p>Profit: <strong>{money(summaryCalc.profit)}</strong></p>}
         <hr style={{ borderColor: activeTheme?.divider }} />
         <p>Product: {hasProductSelected ? (isDtf ? "DTF Transfers" : isScreenPrint ? "Screen Printing" : calc.label) : "Select a product"}</p>
@@ -317,7 +351,11 @@ export default function PricingSummary({
             {dtfData.dtfMode !== "dtfOnly" && <p><strong>Sizes:</strong> {Object.entries(dtfData.sizeQuantities || {}).filter(([, v]) => Number(v) > 0).map(([k, v]) => `${k}(${v})`).join(", ") || "None"}</p>}
             {dtfData.dtfMode !== "dtfOnly" && <p><strong>Print Locations:</strong> {(dtfData.selectedPrintLocations || []).length ? dtfData.selectedPrintLocations.join(", ") : "None selected"}</p>}
             {dtfData.bringYourOwnApparel && !isAdminView && <p><strong>Bring your own apparel selected.</strong> Bring your own apparel option available. Please call for details.</p>}
-            <p><strong>Price per garment:</strong> {money(dtfData.each || 0)}</p>
+            {(dtfData.sizePriceBreakdown || []).length ? (
+              <p><strong>Price breakdown:</strong> {formatSizePriceBreakdown(dtfData.sizePriceBreakdown).join(" • ")}</p>
+            ) : (
+              <p><strong>Price per garment:</strong> {money(dtfData.each || 0)}</p>
+            )}
             <p><strong>Final total:</strong> {money(dtfData.retail || 0)}</p>
             {isAdminView && <p><strong>SanMar Item:</strong> {dtfData.productDisplay || "Not selected"}</p>}
             {isAdminView && <p><strong>Apparel Cost Used:</strong> {money(dtfData.apparelCostUsed || 0)}</p>}
@@ -337,21 +375,25 @@ export default function PricingSummary({
                 <p><strong>Total Qty:</strong> {li.totalQty}</p>
                 {isAdminView && <p><strong>CASE_PRICE (avg):</strong> {money(li.casePrice || 0)}</p>}
                 {isAdminView && <p><strong>Product Markup %:</strong> {li.productMarkupPercent || dtfSummary.productMarkupPercent}%</p>}
-                <p><strong>Final Retail Subtotal:</strong> {money(li.finalRetailSubtotal || 0)}</p>
-                <p><strong>Print Charge Per Shirt:</strong> {money(li.printChargePerShirt || 0)}</p>
-                <p><strong>Final Retail Per Shirt:</strong> {money(li.retailPerShirt || 0)}</p>
+                {isAdminView && <p><strong>Final Retail Subtotal:</strong> {money(li.finalRetailSubtotal || 0)}</p>}
+                {isAdminView && <p><strong>Print Charge Per Shirt:</strong> {money(li.printChargePerShirt || 0)}</p>}
+                {(li.sizePriceBreakdown || []).length ? (
+                  <p><strong>Price breakdown:</strong> {(isAdminView ? formatSizePriceBreakdown(li.sizePriceBreakdown).join(" • ") : getScreenCustomerPriceTiers(li).map((tier) => `${tier.label} Price Each: ${money(tier.priceEach)}`).join(" • "))}</p>
+                ) : (
+                  <p><strong>Final Retail Per Shirt:</strong> {money(li.retailPerShirt || 0)}</p>
+                )}
               </div>
             ))}
             <p><strong>Total Garments:</strong> {dtfSummary.totalGarments}</p>
             {(dtfSummary.printLines || []).map((pl, idx) => (
-              <p key={`${pl.id}-${idx}`}><strong>{pl.name}:</strong> {pl.colors} colors • {pl.pricingType} • {money(pl.pricePerPrint)}/print • {money(pl.subtotal)}</p>
+              <p key={`${pl.id}-${idx}`}><strong>{pl.name}:</strong> {pl.colors} colors{isAdminView ? ` • ${pl.pricingType} • ${money(pl.pricePerPrint)}/print • ${money(pl.subtotal)}` : ""}</p>
             ))}
-            <p><strong>Artwork/Setup Fee:</strong> {money(dtfSummary.setupFee)}</p>
+            {Number(dtfSummary.setupFee || 0) > 0 && <p><strong>Artwork/Setup Fee:</strong> {money(dtfSummary.setupFee)}</p>}
             {isAdminView && <p><strong>Apparel Direct Cost:</strong> {money(dtfSummary.apparelDirectCost)}</p>}
-            <p><strong>Apparel Retail Subtotal:</strong> {money(dtfSummary.apparelRetailSubtotal)}</p>
-            <p><strong>Print Charge Subtotal:</strong> {money(dtfSummary.printChargeSubtotal)}</p>
+            {isAdminView && <p><strong>Apparel Retail Subtotal:</strong> {money(dtfSummary.apparelRetailSubtotal)}</p>}
+            {isAdminView && <p><strong>Print Charge Subtotal:</strong> {money(dtfSummary.printChargeSubtotal)}</p>}
             <p><strong>Final Retail:</strong> {money(dtfSummary.retail)}</p>
-            <p><strong>Average price per shirt:</strong> {money(dtfSummary.averagePricePerShirt || dtfSummary.each)}</p>
+            {((dtfSummary.lineItems || []).length <= 1) && <p><strong>Average price per shirt:</strong> {money(dtfSummary.averagePricePerShirt || dtfSummary.each)}</p>}
             {isAdminView && <p><strong>Profit:</strong> {money(dtfSummary.profit)}</p>}
           </div>
         ) : <SelectedDetails details={selectedDetails} />}
