@@ -25,6 +25,19 @@ export default function PricingSummary({
   const formatSizeBreakdown = (sizeQty = {}) => Object.entries(sizeQty).filter(([, v]) => Number(v) > 0).map(([k, v]) => `${k}(${v})`).join(", ") || "None";
   const formatPrintLocations = (printLines = []) => printLines.filter((pl) => pl?.colors > 0).map((pl) => `${pl.name} ${pl.colors}-color`).join(", ") || "None selected";
   const formatSizePriceBreakdown = (tiers = []) => tiers.filter((t) => Number(t?.qty || 0) > 0).map((t) => `${t.label || t.size}: ${t.qty} @ ${money(t.priceEach ?? t.garmentPriceEach ?? 0)} each`);
+  const screenPriceLabel = (size) => (["S", "M", "L", "XL"].includes(size) ? "S-XL" : size);
+  const getScreenCustomerPriceTiers = (lineItem = {}) => {
+    const grouped = new Map();
+    (lineItem.sizePriceBreakdown || []).forEach((tier) => {
+      const label = screenPriceLabel(tier.size);
+      const existing = grouped.get(label);
+      const qty = Number(tier.qty || 0);
+      const priceEach = Number(tier.garmentPriceEach || 0) + Number(lineItem.printChargePerShirt || 0);
+      if (!existing) grouped.set(label, { label, qty, priceEach });
+      else grouped.set(label, { ...existing, qty: existing.qty + qty, priceEach: Math.min(existing.priceEach, priceEach) });
+    });
+    return ["S-XL", "2XL", "3XL", "4XL", "5XL", "6XL"].map((label) => grouped.get(label)).filter((x) => x && x.qty > 0);
+  };
 
   const [customerName, setCustomerName] = useState("");
   const [customerEmail, setCustomerEmail] = useState("");
@@ -78,7 +91,7 @@ export default function PricingSummary({
           `Total Qty: ${li.totalQty || 0}`,
           `Print Locations: ${formatPrintLocations(dtfSummary?.printLines || [])}`,
           ...((li.sizePriceBreakdown || []).length
-            ? ["Price Breakdown:", ...formatSizePriceBreakdown(li.sizePriceBreakdown || []).map((line) => `- ${line}`)]
+            ? ["Price Breakdown:", ...getScreenCustomerPriceTiers(li).map((tier) => `- ${tier.label} Price Each: ${money(tier.priceEach)}`)]
             : [`Price Each: ${money(li.retailPerShirt || 0)}`]),
           `Item Total: ${money(li.finalRetailSubtotal || 0)}`,
           "",
@@ -242,7 +255,15 @@ export default function PricingSummary({
         </div>
         <h2>{isAdminView ? "Suggested Retail" : "Selected Item Preview"}</h2>
         <div style={{ fontSize: 42, fontWeight: "bold" }}>{money(hasProductSelected ? summaryCalc.retail : 0)}</div>
-        {hasProductSelected && !(isScreenPrint && (dtfData.lineItems || []).length > 1) && <p>Each: <strong>{money(summaryCalc.each || 0)}</strong></p>}
+        {hasProductSelected && !isScreenPrint && !(isScreenPrint && (dtfData.lineItems || []).length > 1) && <p>Each: <strong>{money(summaryCalc.each || 0)}</strong></p>}
+        {hasProductSelected && isScreenPrint && !isAdminView && (dtfData.lineItems || []).filter((li) => Number(li.totalQty || 0) > 0).map((li, idx) => (
+          <div key={`top-sp-tier-${li.id || idx}`}>
+            {(dtfData.lineItems || []).length > 1 && <p style={{ marginBottom: 4 }}><strong>{li.style}</strong> {li.color ? `(${li.color})` : ""}</p>}
+            {getScreenCustomerPriceTiers(li).map((tier) => (
+              <p key={`top-sp-${li.id || idx}-${tier.label}`} style={{ margin: "2px 0" }}><strong>{tier.label} Price Each:</strong> {money(tier.priceEach)}</p>
+            ))}
+          </div>
+        ))}
         {isAdminView && <p>Profit: <strong>{money(summaryCalc.profit)}</strong></p>}
         <hr style={{ borderColor: activeTheme?.divider }} />
         <p>Product: {hasProductSelected ? (isDtf ? "DTF Transfers" : isScreenPrint ? "Screen Printing" : calc.label) : "Select a product"}</p>
@@ -346,10 +367,10 @@ export default function PricingSummary({
                 <p><strong>Total Qty:</strong> {li.totalQty}</p>
                 {isAdminView && <p><strong>CASE_PRICE (avg):</strong> {money(li.casePrice || 0)}</p>}
                 {isAdminView && <p><strong>Product Markup %:</strong> {li.productMarkupPercent || dtfSummary.productMarkupPercent}%</p>}
-                <p><strong>Final Retail Subtotal:</strong> {money(li.finalRetailSubtotal || 0)}</p>
-                <p><strong>Print Charge Per Shirt:</strong> {money(li.printChargePerShirt || 0)}</p>
+                {isAdminView && <p><strong>Final Retail Subtotal:</strong> {money(li.finalRetailSubtotal || 0)}</p>}
+                {isAdminView && <p><strong>Print Charge Per Shirt:</strong> {money(li.printChargePerShirt || 0)}</p>}
                 {(li.sizePriceBreakdown || []).length ? (
-                  <p><strong>Price breakdown:</strong> {formatSizePriceBreakdown(li.sizePriceBreakdown).join(" • ")}</p>
+                  <p><strong>Price breakdown:</strong> {(isAdminView ? formatSizePriceBreakdown(li.sizePriceBreakdown).join(" • ") : getScreenCustomerPriceTiers(li).map((tier) => `${tier.label} Price Each: ${money(tier.priceEach)}`).join(" • "))}</p>
                 ) : (
                   <p><strong>Final Retail Per Shirt:</strong> {money(li.retailPerShirt || 0)}</p>
                 )}
@@ -357,12 +378,12 @@ export default function PricingSummary({
             ))}
             <p><strong>Total Garments:</strong> {dtfSummary.totalGarments}</p>
             {(dtfSummary.printLines || []).map((pl, idx) => (
-              <p key={`${pl.id}-${idx}`}><strong>{pl.name}:</strong> {pl.colors} colors • {pl.pricingType} • {money(pl.pricePerPrint)}/print • {money(pl.subtotal)}</p>
+              <p key={`${pl.id}-${idx}`}><strong>{pl.name}:</strong> {pl.colors} colors{isAdminView ? ` • ${pl.pricingType} • ${money(pl.pricePerPrint)}/print • ${money(pl.subtotal)}` : ""}</p>
             ))}
-            <p><strong>Artwork/Setup Fee:</strong> {money(dtfSummary.setupFee)}</p>
+            {Number(dtfSummary.setupFee || 0) > 0 && <p><strong>Artwork/Setup Fee:</strong> {money(dtfSummary.setupFee)}</p>}
             {isAdminView && <p><strong>Apparel Direct Cost:</strong> {money(dtfSummary.apparelDirectCost)}</p>}
-            <p><strong>Apparel Retail Subtotal:</strong> {money(dtfSummary.apparelRetailSubtotal)}</p>
-            <p><strong>Print Charge Subtotal:</strong> {money(dtfSummary.printChargeSubtotal)}</p>
+            {isAdminView && <p><strong>Apparel Retail Subtotal:</strong> {money(dtfSummary.apparelRetailSubtotal)}</p>}
+            {isAdminView && <p><strong>Print Charge Subtotal:</strong> {money(dtfSummary.printChargeSubtotal)}</p>}
             <p><strong>Final Retail:</strong> {money(dtfSummary.retail)}</p>
             {((dtfSummary.lineItems || []).length <= 1) && <p><strong>Average price per shirt:</strong> {money(dtfSummary.averagePricePerShirt || dtfSummary.each)}</p>}
             {isAdminView && <p><strong>Profit:</strong> {money(dtfSummary.profit)}</p>}
