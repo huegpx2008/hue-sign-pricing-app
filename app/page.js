@@ -825,7 +825,7 @@ export default function Page() {
           />
 
 
-          {activeProduct !== "dtfTransfers" && activeProduct !== "screenPrinting" && (
+          {activeProduct !== "dtfTransfers" && activeProduct !== "screenPrinting" && activeProduct !== "carbonless" && (
             <div className="formGrid" style={grid}>
               {activeProduct !== "businessCards" && <Field label="Quantity" value={qty} setValue={setQty} />}
               {(activeProduct !== "vehicleMagnets" || vehicleMagnetMode === "custom") && !["businessCards", "handheld16ptPaper"].includes(activeProduct) && <Field label="Width Inches" value={width} setValue={setWidth} />}
@@ -836,7 +836,7 @@ export default function Page() {
             </div>
           )}
 
-          <button className="resetBtn" onClick={resetAll}>Reset to Defaults</button>
+          {activeProduct !== "carbonless" && <button className="resetBtn" onClick={resetAll}>Reset to Defaults</button>}
 
           {isAdminView && activeProduct !== "screenPrinting" && <Box title="Optional Fees">
             <Check label="Add Design Fee" value={useDesignFee} setValue={setUseDesignFee} />
