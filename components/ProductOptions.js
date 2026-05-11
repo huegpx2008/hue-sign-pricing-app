@@ -316,15 +316,15 @@ export default function ProductOptions(props) {
         <Box title="Carbonless Forms Options">
           <label>Form Type</label>
           <select style={input} value={carbonlessFormType} onChange={(e) => setCarbonlessFormType(e.target.value)}>
-            <option>2 Part</option><option>3 Part</option>
+            <option>2 Part</option><option>3 Part</option><option>4 Part</option>
           </select>
           <label>Size</label>
           <select style={input} value={carbonlessSize} onChange={(e) => setCarbonlessSize(e.target.value)}>
-            <option>8.5" x 11"</option><option>5.5" x 8.5"</option>
+            <option>8.5" x 11"</option><option>5.5" x 8.5"</option><option>8.5" x 14"</option>
           </select>
           <label>Quantity</label>
           <select style={input} value={carbonlessQty} onChange={(e) => setCarbonlessQty(Number(e.target.value))}>
-            <option value={100}>100</option><option value={250}>250</option><option value={500}>500</option><option value={1000}>1000</option>
+            <option value={100}>100</option><option value={250}>250</option><option value={500}>500</option><option value={1000}>1000</option><option value={2000}>2000</option><option value={2500}>2500</option><option value={5000}>5000</option><option value={7500}>7500</option><option value={10000}>10000</option>
           </select>
           <label>Print Type</label>
           <select style={input} value={carbonlessPrintType} onChange={(e) => setCarbonlessPrintType(e.target.value)}>
