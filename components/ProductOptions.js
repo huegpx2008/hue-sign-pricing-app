@@ -131,6 +131,24 @@ export default function ProductOptions(props) {
     setHandheldPaperOrientation,
     handheldPaperRush,
     setHandheldPaperRush,
+    carbonlessFormType,
+    setCarbonlessFormType,
+    carbonlessSize,
+    setCarbonlessSize,
+    carbonlessQty,
+    setCarbonlessQty,
+    carbonlessPrintType,
+    setCarbonlessPrintType,
+    carbonlessPrintSides,
+    setCarbonlessPrintSides,
+    carbonlessNumbering,
+    setCarbonlessNumbering,
+    carbonlessWraparound,
+    setCarbonlessWraparound,
+    carbonlessBookedSets,
+    setCarbonlessBookedSets,
+    carbonlessRush,
+    setCarbonlessRush,
     qty,
     onDtfSummaryChange,
     margin,
@@ -292,6 +310,34 @@ export default function ProductOptions(props) {
           <label>Coating</label><select style={input} value={handheldPaperCoating} onChange={(e) => setHandheldPaperCoating(e.target.value)}><option>Gloss Laminate</option><option>No Coating</option></select>
           <label>Orientation</label><select style={input} value={handheldPaperOrientation} onChange={(e) => setHandheldPaperOrientation(e.target.value)}><option>Landscape</option><option>Portrait</option></select>
           <Check label="Rush Order (2x)" value={handheldPaperRush} setValue={setHandheldPaperRush} />
+        </Box>
+      )}
+      {activeProduct === "carbonless" && (
+        <Box title="Carbonless Forms Options">
+          <label>Form Type</label>
+          <select style={input} value={carbonlessFormType} onChange={(e) => setCarbonlessFormType(e.target.value)}>
+            <option>2 Part</option><option>3 Part</option><option>4 Part</option>
+          </select>
+          <label>Size</label>
+          <select style={input} value={carbonlessSize} onChange={(e) => setCarbonlessSize(e.target.value)}>
+            <option>8.5" x 11"</option><option>5.5" x 8.5"</option><option>8.5" x 14"</option>
+          </select>
+          <label>Quantity</label>
+          <select style={input} value={carbonlessQty} onChange={(e) => setCarbonlessQty(Number(e.target.value))}>
+            <option value={100}>100</option><option value={250}>250</option><option value={500}>500</option><option value={1000}>1000</option><option value={2000}>2000</option><option value={2500}>2500</option><option value={5000}>5000</option><option value={7500}>7500</option><option value={10000}>10000</option>
+          </select>
+          <label>Print Type</label>
+          <select style={input} value={carbonlessPrintType} onChange={(e) => setCarbonlessPrintType(e.target.value)}>
+            <option>Black Ink</option><option>Full Color</option>
+          </select>
+          <label>Print Sides</label>
+          <select style={input} value={carbonlessPrintSides} onChange={(e) => setCarbonlessPrintSides(e.target.value)}>
+            <option>Front Only</option><option>Front and Back</option>
+          </select>
+          <Check label="Sequential Numbering" value={carbonlessNumbering} setValue={setCarbonlessNumbering} />
+          <Check label="Wraparound Cover" value={carbonlessWraparound} setValue={setCarbonlessWraparound} />
+          <Check label="Booked Sets" value={carbonlessBookedSets} setValue={setCarbonlessBookedSets} />
+          <Check label="Rush Order (+100%)" value={carbonlessRush} setValue={setCarbonlessRush} />
         </Box>
       )}
 

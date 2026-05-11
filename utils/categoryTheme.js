@@ -17,6 +17,7 @@ const themes = {
   banners: { key: "banners", accent: "#ef4444", accentSoft: "rgba(239,68,68,0.3)", accentGlow: "rgba(239,68,68,0.24)", divider: "rgba(239,68,68,0.33)", summaryBorder: "rgba(239,68,68,0.55)", mobileTint: "rgba(239,68,68,0.16)" },
   paper: { key: "paper", accent: "#67e8f9", accentSoft: "rgba(103,232,249,0.3)", accentGlow: "rgba(103,232,249,0.23)", divider: "rgba(103,232,249,0.34)", summaryBorder: "rgba(103,232,249,0.56)", mobileTint: "rgba(103,232,249,0.15)" },
   magnets: { key: "magnets", accent: "#d4a017", accentSoft: "rgba(212,160,23,0.3)", accentGlow: "rgba(212,160,23,0.24)", divider: "rgba(212,160,23,0.34)", summaryBorder: "rgba(212,160,23,0.56)", mobileTint: "rgba(212,160,23,0.15)" },
+  carbonless: { key: "carbonless", accent: "#facc15", accentSoft: "rgba(250,204,21,0.32)", accentGlow: "rgba(250,204,21,0.25)", divider: "rgba(250,204,21,0.34)", summaryBorder: "rgba(250,204,21,0.56)", mobileTint: "rgba(250,204,21,0.16)" },
 };
 
 const productThemeMap = {
@@ -38,6 +39,7 @@ const productThemeMap = {
   poster: themes.paper,
   businessCards: { ...themes.paper, key: "businessCards", accent: "#e2e8f0", accentSoft: "rgba(226,232,240,0.38)", accentGlow: "rgba(226,232,240,0.28)", divider: "rgba(226,232,240,0.38)", summaryBorder: "rgba(226,232,240,0.62)", mobileTint: "rgba(226,232,240,0.2)" },
   handheld16ptPaper: { ...themes.screen, key: "handheld16ptPaper", accent: "#f59e0b", accentSoft: "rgba(245,158,11,0.35)", accentGlow: "rgba(245,158,11,0.26)", divider: "rgba(245,158,11,0.38)", summaryBorder: "rgba(245,158,11,0.58)", mobileTint: "rgba(245,158,11,0.2)" },
+  carbonless: themes.carbonless,
   vehicleMagnets: themes.magnets,
 };
 

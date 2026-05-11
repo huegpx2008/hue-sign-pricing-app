@@ -44,7 +44,7 @@ export const productCategories = [
   { name: "Paper Printing", items: [
     { id: "businessCards", label: "Business Cards", calculator: "businessCards" },
     { id: "handheld16ptPaper", label: "Handheld 16pt Paper", calculator: "handheld16ptPaper" },
-    { id: "carbonless", label: "Carbonless Forms" },
+    { id: "carbonless", label: "Carbonless Forms", calculator: "carbonless" },
     { id: "doorHangers", label: "Door Hangers" },
     { id: "notepads", label: "Notepads" },
     { id: "envelopes", label: "Envelopes" },

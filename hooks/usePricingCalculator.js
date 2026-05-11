@@ -91,6 +91,15 @@ export default function usePricingCalculator({
   handheldPaperSize,
   handheldPaperSides,
   handheldPaperRush,
+  carbonlessFormType,
+  carbonlessSize,
+  carbonlessQty,
+  carbonlessPrintType,
+  carbonlessPrintSides,
+  carbonlessNumbering,
+  carbonlessWraparound,
+  carbonlessBookedSets,
+  carbonlessRush,
 }) {
   const calc = useMemo(() => {
     const q = Math.max(num(qty, 1), 1);
@@ -182,6 +191,73 @@ export default function usePricingCalculator({
       const nextFullSheetQty = Math.ceil(q / piecesPerSheet) * piecesPerSheet;
       const addMoreQty = nextFullSheetQty > q ? nextFullSheetQty - q : piecesPerSheet;
       return { label: "Handheld 16pt Paper", retail, each: retail / q, cost: directCost, profit: retail - directCost, margin: retail ? ((retail - directCost) / retail) * 100 : 0, materialCost, shipping, sheetsRounded: sheetsRequired, piecesPerSheet, sideLabel: handheldPaperSides === "double" ? "Double Sided" : "Single Sided", nextFullSheetQty, addMoreQty, costMarginPrice, areaEach, ratePerSqIn };
+    }
+    if (product === "carbonless") {
+      const qCarbonless = Math.max(Number(carbonlessQty) || 100, 1);
+      const directCostTables = {
+        "Black Ink": {
+          '8.5" x 11"': {
+            "2 Part": { 100: 65, 250: 82, 500: 102, 1000: 175, 2000: 316, 2500: 363, 5000: 645, 7500: 935, 10000: 1208 },
+            "3 Part": { 100: 79, 250: 102, 500: 131, 1000: 246, 2000: 441, 2500: 522, 5000: 965, 7500: 1433, 10000: 1799 },
+            "4 Part": { 100: 115, 250: 133, 500: 220, 1000: 367, 2000: 661, 2500: 776, 5000: 1299, 7500: 1860, 10000: 2356 },
+          },
+          '5.5" x 8.5"': {
+            "2 Part": { 100: 45, 250: 63, 500: 80, 1000: 127, 2000: 208, 2500: 244, 5000: 406, 7500: 545, 10000: 720 },
+            "3 Part": { 100: 63, 250: 80, 500: 111, 1000: 173, 2000: 286, 2500: 325, 5000: 545, 7500: 801, 10000: 1046 },
+            "4 Part": { 100: 92, 250: 110, 500: 123, 1000: 207, 2000: 358, 2500: 414, 5000: 705, 7500: 1028, 10000: 1284 },
+          },
+          '8.5" x 14"': {
+            "2 Part": { 100: 92, 250: 110, 500: 145, 1000: 230, 2000: 438, 2500: 474, 5000: 855, 7500: 1130, 10000: 1428 },
+            "3 Part": { 100: 109, 250: 141, 500: 191, 1000: 311, 2000: 600, 2500: 666, 5000: 1175, 7500: 1640, 10000: 2081 },
+            "4 Part": { 100: 138, 250: 179, 500: 248, 1000: 416, 2000: 801, 2500: 934, 5000: 1576, 7500: 2325, 10000: 2983 },
+          },
+        },
+        "Full Color": {
+          '8.5" x 11"': {
+            "2 Part": { 100: 69, 250: 129, 500: 249, 1000: 419, 2500: 829, 5000: 1229 },
+            "3 Part": { 100: 99, 250: 179, 500: 309, 1000: 599, 2500: 1059, 5000: 1549 },
+            "4 Part": { 100: 129, 250: 229, 500: 429, 1000: 819, 2500: 1269, 5000: 1939 },
+          },
+          '5.5" x 8.5"': {
+            "2 Part": { 100: 49, 250: 89, 500: 139, 1000: 259, 2500: 499, 5000: 849 },
+            "3 Part": { 100: 69, 250: 129, 500: 189, 1000: 319, 2500: 649, 5000: 1099 },
+            "4 Part": { 100: 79, 250: 149, 500: 239, 1000: 439, 2500: 859, 5000: 1299 },
+          },
+        },
+      };
+      const blackFallback = directCostTables["Black Ink"]?.[carbonlessSize]?.[carbonlessFormType]?.[qCarbonless] || 0;
+      let directCost = directCostTables[carbonlessPrintType]?.[carbonlessSize]?.[carbonlessFormType]?.[qCarbonless] || 0;
+      if (!directCost && carbonlessPrintType === "Full Color" && blackFallback) {
+        directCost = blackFallback * 1.25;
+      }
+      if (carbonlessPrintSides === "Front and Back") directCost *= 1.2;
+      if (carbonlessNumbering) {
+        if (qCarbonless >= 5000) directCost += 60;
+        else if (qCarbonless >= 2500) directCost += 40;
+        else if (qCarbonless >= 1000) directCost += 25;
+        else directCost += 15;
+      }
+      if (carbonlessWraparound) directCost += 35;
+      if (carbonlessBookedSets) directCost += 25;
+      const basePrice = directCost * 2.7;
+      const rushMultiplier = carbonlessRush ? 2 : 1;
+      const retailBeforeFees = basePrice * rushMultiplier;
+      const retail = (retailBeforeFees + fees) * mult;
+      const retailMultiplier = directCost ? (retailBeforeFees / directCost) : 0;
+      return {
+        label: "Carbonless Forms",
+        retail,
+        each: retail / qCarbonless,
+        cost: directCost,
+        materialCost: directCost,
+        shipping: 0,
+        profit: retail - directCost,
+        margin: retail ? ((retail - directCost) / retail) * 100 : 0,
+        quantity: qCarbonless,
+        retailMultiplier,
+        rushMultiplier,
+        optionBreakdown: { carbonlessFormType, carbonlessSize, carbonlessPrintType, carbonlessPrintSides, carbonlessNumbering, carbonlessWraparound, carbonlessBookedSets, carbonlessRush },
+      };
     }
 
     if (product === "banner") {
@@ -344,7 +420,7 @@ export default function usePricingCalculator({
     const retail = (basePrice + fees) * mult + stakeRetail;
 
     return { label: "Coroplast", retail, each: retail / q, cost: directCost, profit: retail - directCost, margin: retail ? ((retail - directCost) / retail) * 100 : 0, totalSqFt, materialCost, shipping, stakeRetail, stakeCost, sheetsUsed, sheetsRounded, piecesPerSheet: layout.piecesPerSheet, sheetLayout: `${layout.across} across x ${layout.down} down${layout.rotated ? " (rotated)" : ""}`, tierPrice, costMarginPrice, basePrice };
-  }, [product, width, height, qty, margin, multiplier, useDesignFee, useSetupFee, designFee, setupFee, delivery, activeProduct, productMap, coroDouble, coroFlute, stakes, heavyStakes, grommets, gloss, coroContour, coroRush, bannerType, polePocket, rope, windSlits, bannerRush, meshPolePocket, meshGrommets, meshWelding, meshRope, meshWebbing, meshRush, acmType, acmSqFtPrice, acmContour, roundedCorners, acrylicContour, acrylicRoundedCorners, acrylicStandOffs, acrylicStandOffQty, acrylicStandOffColor, vinylType, vinylLaminate, vinylContour, vinylRush, gangVinyl, contourPadding, gangWastePercent, posterRush, foamcoreDouble, foamcoreContour, foamcoreGloss, foamcoreRush, foamcoreCustomCut, pvcType, pvcContour, pvcRush, pvcCustomCut, vehicleMagnetMode, vehicleMagnetPreset, vehicleMagnetContour, vehicleMagnetRush, businessCardQty, businessCardSides, businessCardRush, handheldPaperSize, handheldPaperSides, handheldPaperRush]);
+  }, [product, width, height, qty, margin, multiplier, useDesignFee, useSetupFee, designFee, setupFee, delivery, activeProduct, productMap, coroDouble, coroFlute, stakes, heavyStakes, grommets, gloss, coroContour, coroRush, bannerType, polePocket, rope, windSlits, bannerRush, meshPolePocket, meshGrommets, meshWelding, meshRope, meshWebbing, meshRush, acmType, acmSqFtPrice, acmContour, roundedCorners, acrylicContour, acrylicRoundedCorners, acrylicStandOffs, acrylicStandOffQty, acrylicStandOffColor, vinylType, vinylLaminate, vinylContour, vinylRush, gangVinyl, contourPadding, gangWastePercent, posterRush, foamcoreDouble, foamcoreContour, foamcoreGloss, foamcoreRush, foamcoreCustomCut, pvcType, pvcContour, pvcRush, pvcCustomCut, vehicleMagnetMode, vehicleMagnetPreset, vehicleMagnetContour, vehicleMagnetRush, businessCardQty, businessCardSides, businessCardRush, handheldPaperSize, handheldPaperSides, handheldPaperRush, carbonlessFormType, carbonlessSize, carbonlessQty, carbonlessPrintType, carbonlessPrintSides, carbonlessNumbering, carbonlessWraparound, carbonlessBookedSets, carbonlessRush]);
 
   return calc;
 }

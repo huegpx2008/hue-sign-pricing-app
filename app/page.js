@@ -118,6 +118,15 @@ export default function Page() {
   const [handheldPaperCoating, setHandheldPaperCoating] = useState("Gloss Laminate");
   const [handheldPaperOrientation, setHandheldPaperOrientation] = useState("Landscape");
   const [handheldPaperRush, setHandheldPaperRush] = useState(false);
+  const [carbonlessFormType, setCarbonlessFormType] = useState("2 Part");
+  const [carbonlessSize, setCarbonlessSize] = useState('8.5" x 11"');
+  const [carbonlessQty, setCarbonlessQty] = useState(100);
+  const [carbonlessPrintType, setCarbonlessPrintType] = useState("Black Ink");
+  const [carbonlessPrintSides, setCarbonlessPrintSides] = useState("Front Only");
+  const [carbonlessNumbering, setCarbonlessNumbering] = useState(false);
+  const [carbonlessWraparound, setCarbonlessWraparound] = useState(false);
+  const [carbonlessBookedSets, setCarbonlessBookedSets] = useState(false);
+  const [carbonlessRush, setCarbonlessRush] = useState(false);
   const [theme, setTheme] = useState("light");
   const [viewMode, setViewMode] = useState("customer-online");
   const [staffUnlocked, setStaffUnlocked] = useState(false);
@@ -344,6 +353,15 @@ export default function Page() {
     handheldPaperSize,
     handheldPaperSides,
     handheldPaperRush,
+    carbonlessFormType,
+    carbonlessSize,
+    carbonlessQty,
+    carbonlessPrintType,
+    carbonlessPrintSides,
+    carbonlessNumbering,
+    carbonlessWraparound,
+    carbonlessBookedSets,
+    carbonlessRush,
   });
 
   const isAdminView = viewMode === "admin";
@@ -354,8 +372,8 @@ export default function Page() {
   const selectedDetails = {
     product,
     productName: productMap[product]?.label || products[activeProduct] || "Unknown Product",
-    size: activeProduct === "handheld16ptPaper" ? handheldPaperSize.label : activeProduct === "businessCards" ? 'Standard Business Card' : `${num(width)}" x ${num(height)}"`,
-    qty: activeProduct === "businessCards" ? businessCardQty : num(qty, 1),
+    size: activeProduct === "handheld16ptPaper" ? handheldPaperSize.label : activeProduct === "businessCards" ? 'Standard Business Card' : activeProduct === "carbonless" ? carbonlessSize : `${num(width)}" x ${num(height)}"`,
+    qty: activeProduct === "businessCards" ? businessCardQty : activeProduct === "carbonless" ? carbonlessQty : num(qty, 1),
     sheetHint: activeProduct === "handheld16ptPaper" ? `Next full sheet quantity: ${calc.nextFullSheetQty || handheldPaperSize.perSheet}` : null,
     sheetAddMore: activeProduct === "handheld16ptPaper" ? `Add ${calc.addMoreQty || handheldPaperSize.perSheet} more to fill the sheet for best value.` : null,
     material:
@@ -385,6 +403,8 @@ export default function Page() {
         ? `Business Cards (${businessCardSides === "double" ? "Double" : "Single"} Sided)`
         : activeProduct === "handheld16ptPaper"
         ? `Handheld 16pt Paper (${handheldPaperSize.label})`
+        : activeProduct === "carbonless"
+        ? `Carbonless Forms (${carbonlessFormType})`
         : coroDouble
         ? "4mm Double-Sided Coroplast"
         : activeProduct === "coro"
@@ -459,6 +479,13 @@ export default function Page() {
       activeProduct === "handheld16ptPaper" ? `Coating: ${handheldPaperCoating}` : null,
       activeProduct === "handheld16ptPaper" ? `Orientation: ${handheldPaperOrientation}` : null,
       activeProduct === "handheld16ptPaper" && handheldPaperRush ? "Rush Order" : null,
+      activeProduct === "carbonless" ? `Form Type: ${carbonlessFormType}` : null,
+      activeProduct === "carbonless" ? `Print Type: ${carbonlessPrintType}` : null,
+      activeProduct === "carbonless" ? `Print Sides: ${carbonlessPrintSides}` : null,
+      activeProduct === "carbonless" && carbonlessNumbering ? "Sequential Numbering" : null,
+      activeProduct === "carbonless" && carbonlessWraparound ? "Wraparound Cover" : null,
+      activeProduct === "carbonless" && carbonlessBookedSets ? "Booked Sets" : null,
+      activeProduct === "carbonless" && carbonlessRush ? "Rush Order" : null,
       showInternalFields && useDesignFee ? `Design Fee: ${money(num(designFee))}` : null,
       showInternalFields && useSetupFee ? `Setup Fee: ${money(num(setupFee))}` : null,
       showInternalFields && num(delivery) > 0 ? `Delivery/Install: ${money(num(delivery))}` : null,
@@ -775,12 +802,30 @@ export default function Page() {
             setHandheldPaperOrientation={setHandheldPaperOrientation}
             handheldPaperRush={handheldPaperRush}
             setHandheldPaperRush={setHandheldPaperRush}
+            carbonlessFormType={carbonlessFormType}
+            setCarbonlessFormType={setCarbonlessFormType}
+            carbonlessSize={carbonlessSize}
+            setCarbonlessSize={setCarbonlessSize}
+            carbonlessQty={carbonlessQty}
+            setCarbonlessQty={setCarbonlessQty}
+            carbonlessPrintType={carbonlessPrintType}
+            setCarbonlessPrintType={setCarbonlessPrintType}
+            carbonlessPrintSides={carbonlessPrintSides}
+            setCarbonlessPrintSides={setCarbonlessPrintSides}
+            carbonlessNumbering={carbonlessNumbering}
+            setCarbonlessNumbering={setCarbonlessNumbering}
+            carbonlessWraparound={carbonlessWraparound}
+            setCarbonlessWraparound={setCarbonlessWraparound}
+            carbonlessBookedSets={carbonlessBookedSets}
+            setCarbonlessBookedSets={setCarbonlessBookedSets}
+            carbonlessRush={carbonlessRush}
+            setCarbonlessRush={setCarbonlessRush}
             qty={qty}
             isAdminView={isAdminView}
           />
 
 
-          {activeProduct !== "dtfTransfers" && activeProduct !== "screenPrinting" && (
+          {activeProduct !== "dtfTransfers" && activeProduct !== "screenPrinting" && activeProduct !== "carbonless" && (
             <div className="formGrid" style={grid}>
               {activeProduct !== "businessCards" && <Field label="Quantity" value={qty} setValue={setQty} />}
               {(activeProduct !== "vehicleMagnets" || vehicleMagnetMode === "custom") && !["businessCards", "handheld16ptPaper"].includes(activeProduct) && <Field label="Width Inches" value={width} setValue={setWidth} />}
@@ -791,7 +836,7 @@ export default function Page() {
             </div>
           )}
 
-          <button className="resetBtn" onClick={resetAll}>Reset to Defaults</button>
+          {activeProduct !== "carbonless" && <button className="resetBtn" onClick={resetAll}>Reset to Defaults</button>}
 
           {isAdminView && activeProduct !== "screenPrinting" && <Box title="Optional Fees">
             <Check label="Add Design Fee" value={useDesignFee} setValue={setUseDesignFee} />
