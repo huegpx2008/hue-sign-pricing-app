@@ -91,6 +91,15 @@ export default function usePricingCalculator({
   handheldPaperSize,
   handheldPaperSides,
   handheldPaperRush,
+  carbonlessFormType,
+  carbonlessSize,
+  carbonlessQty,
+  carbonlessPrintType,
+  carbonlessPrintSides,
+  carbonlessNumbering,
+  carbonlessWraparound,
+  carbonlessBookedSets,
+  carbonlessRush,
 }) {
   const calc = useMemo(() => {
     const q = Math.max(num(qty, 1), 1);
@@ -182,6 +191,34 @@ export default function usePricingCalculator({
       const nextFullSheetQty = Math.ceil(q / piecesPerSheet) * piecesPerSheet;
       const addMoreQty = nextFullSheetQty > q ? nextFullSheetQty - q : piecesPerSheet;
       return { label: "Handheld 16pt Paper", retail, each: retail / q, cost: directCost, profit: retail - directCost, margin: retail ? ((retail - directCost) / retail) * 100 : 0, materialCost, shipping, sheetsRounded: sheetsRequired, piecesPerSheet, sideLabel: handheldPaperSides === "double" ? "Double Sided" : "Single Sided", nextFullSheetQty, addMoreQty, costMarginPrice, areaEach, ratePerSqIn };
+    }
+    if (product === "carbonless") {
+      const qCarbonless = Math.max(Number(carbonlessQty) || 100, 1);
+      const baseCosts = {
+        "2 Part": { 100: 65, 250: 82, 500: 102, 1000: 175 },
+        "3 Part": { 100: 79, 250: 102, 500: 131, 1000: 246 },
+      };
+      let directCost = baseCosts[carbonlessFormType]?.[qCarbonless] || 0;
+      if (carbonlessPrintSides === "Front and Back") directCost *= 1.2;
+      if (carbonlessPrintType === "Full Color") directCost *= 1.25;
+      if (carbonlessNumbering) directCost += 15;
+      if (carbonlessWraparound) directCost += 35;
+      if (carbonlessBookedSets) directCost += 25;
+      if (carbonlessRush) directCost *= 2;
+      const basePrice = directCost / (1 - m);
+      const retail = (basePrice + fees) * mult;
+      return {
+        label: "Carbonless Forms",
+        retail,
+        each: retail / qCarbonless,
+        cost: directCost,
+        materialCost: directCost,
+        shipping: 0,
+        profit: retail - directCost,
+        margin: retail ? ((retail - directCost) / retail) * 100 : 0,
+        quantity: qCarbonless,
+        optionBreakdown: { carbonlessFormType, carbonlessSize, carbonlessPrintType, carbonlessPrintSides, carbonlessNumbering, carbonlessWraparound, carbonlessBookedSets, carbonlessRush },
+      };
     }
 
     if (product === "banner") {
@@ -344,7 +381,7 @@ export default function usePricingCalculator({
     const retail = (basePrice + fees) * mult + stakeRetail;
 
     return { label: "Coroplast", retail, each: retail / q, cost: directCost, profit: retail - directCost, margin: retail ? ((retail - directCost) / retail) * 100 : 0, totalSqFt, materialCost, shipping, stakeRetail, stakeCost, sheetsUsed, sheetsRounded, piecesPerSheet: layout.piecesPerSheet, sheetLayout: `${layout.across} across x ${layout.down} down${layout.rotated ? " (rotated)" : ""}`, tierPrice, costMarginPrice, basePrice };
-  }, [product, width, height, qty, margin, multiplier, useDesignFee, useSetupFee, designFee, setupFee, delivery, activeProduct, productMap, coroDouble, coroFlute, stakes, heavyStakes, grommets, gloss, coroContour, coroRush, bannerType, polePocket, rope, windSlits, bannerRush, meshPolePocket, meshGrommets, meshWelding, meshRope, meshWebbing, meshRush, acmType, acmSqFtPrice, acmContour, roundedCorners, acrylicContour, acrylicRoundedCorners, acrylicStandOffs, acrylicStandOffQty, acrylicStandOffColor, vinylType, vinylLaminate, vinylContour, vinylRush, gangVinyl, contourPadding, gangWastePercent, posterRush, foamcoreDouble, foamcoreContour, foamcoreGloss, foamcoreRush, foamcoreCustomCut, pvcType, pvcContour, pvcRush, pvcCustomCut, vehicleMagnetMode, vehicleMagnetPreset, vehicleMagnetContour, vehicleMagnetRush, businessCardQty, businessCardSides, businessCardRush, handheldPaperSize, handheldPaperSides, handheldPaperRush]);
+  }, [product, width, height, qty, margin, multiplier, useDesignFee, useSetupFee, designFee, setupFee, delivery, activeProduct, productMap, coroDouble, coroFlute, stakes, heavyStakes, grommets, gloss, coroContour, coroRush, bannerType, polePocket, rope, windSlits, bannerRush, meshPolePocket, meshGrommets, meshWelding, meshRope, meshWebbing, meshRush, acmType, acmSqFtPrice, acmContour, roundedCorners, acrylicContour, acrylicRoundedCorners, acrylicStandOffs, acrylicStandOffQty, acrylicStandOffColor, vinylType, vinylLaminate, vinylContour, vinylRush, gangVinyl, contourPadding, gangWastePercent, posterRush, foamcoreDouble, foamcoreContour, foamcoreGloss, foamcoreRush, foamcoreCustomCut, pvcType, pvcContour, pvcRush, pvcCustomCut, vehicleMagnetMode, vehicleMagnetPreset, vehicleMagnetContour, vehicleMagnetRush, businessCardQty, businessCardSides, businessCardRush, handheldPaperSize, handheldPaperSides, handheldPaperRush, carbonlessFormType, carbonlessSize, carbonlessQty, carbonlessPrintType, carbonlessPrintSides, carbonlessNumbering, carbonlessWraparound, carbonlessBookedSets, carbonlessRush]);
 
   return calc;
 }

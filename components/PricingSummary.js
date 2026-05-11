@@ -96,7 +96,7 @@ export default function PricingSummary({
   const buildCurrentQuoteItem = () => ({
     id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
     product: isDtf ? (dtfSummary?.dtfMode === "dtfOnly" ? "DTF Transfers Only" : "DTF Transfers") : isScreenPrint ? "Screen Printing" : calc.label,
-    quantity: isDtf ? dtfSummary?.totalGarmentQty || 0 : isScreenPrint ? dtfSummary?.totalGarments || 0 : num(qty, 1),
+    quantity: isDtf ? dtfSummary?.totalGarmentQty || 0 : isScreenPrint ? dtfSummary?.totalGarments || 0 : selectedDetails?.qty || num(qty, 1),
     each: isScreenPrint ? dtfSummary?.averagePricePerShirt || dtfSummary?.each || 0 : summaryCalc.each || 0,
     total: summaryCalc.retail || 0,
     safeDetails: getCurrentItemCustomerDetailLines(),
@@ -163,6 +163,13 @@ export default function PricingSummary({
       return {
         line1: `Handheld 16pt Paper • ${size} • Qty ${num(qty, 1)}`,
         line2: `${calc.piecesPerSheet || 1} per sheet • Requires ${calc.sheetsRounded || 1} sheets`,
+        line3: `Price Each ${money(summaryCalc.each || 0)} • Total ${money(summaryCalc.retail || 0)}`,
+      };
+    }
+    if (activeProduct === "carbonless") {
+      return {
+        line1: `Carbonless Forms • ${selectedDetails?.options?.find((o) => o.startsWith("Form Type:"))?.replace("Form Type: ", "") || ""} • Qty ${selectedDetails?.qty || num(qty, 1)}`,
+        line2: `${selectedDetails?.size || ""} • ${selectedDetails?.options?.filter((o) => ["Print Type", "Print Sides", "Sequential Numbering", "Wraparound Cover", "Booked Sets", "Rush Order"].some((k) => o.includes(k))).join(" • ") || "Options: None"}`,
         line3: `Price Each ${money(summaryCalc.each || 0)} • Total ${money(summaryCalc.retail || 0)}`,
       };
     }
