@@ -255,7 +255,15 @@ export default function PricingSummary({
         </div>
         <h2>{isAdminView ? "Suggested Retail" : "Selected Item Preview"}</h2>
         <div style={{ fontSize: 42, fontWeight: "bold" }}>{money(hasProductSelected ? summaryCalc.retail : 0)}</div>
-        {hasProductSelected && !isScreenPrint && !(isScreenPrint && (dtfData.lineItems || []).length > 1) && <p>Each: <strong>{money(summaryCalc.each || 0)}</strong></p>}
+        {hasProductSelected && !isScreenPrint && !isDtf && !(isScreenPrint && (dtfData.lineItems || []).length > 1) && <p>Each: <strong>{money(summaryCalc.each || 0)}</strong></p>}
+        {hasProductSelected && isDtf && (dtfData.dtfMode !== "dtfOnly") && (
+          <div>
+            {(dtfData.sizePriceBreakdown || []).filter((tier) => Number(tier.qty || 0) > 0).map((tier) => (
+              <p key={`top-dtf-${tier.label}`} style={{ margin: "2px 0" }}><strong>{tier.label} Price Each:</strong> {money(tier.priceEach || 0)}</p>
+            ))}
+          </div>
+        )}
+        {hasProductSelected && isDtf && (dtfData.dtfMode === "dtfOnly") && <p>Each: <strong>{money(summaryCalc.each || 0)}</strong></p>}
         {hasProductSelected && isScreenPrint && !isAdminView && (dtfData.lineItems || []).filter((li) => Number(li.totalQty || 0) > 0).map((li, idx) => (
           <div key={`top-sp-tier-${li.id || idx}`}>
             {(dtfData.lineItems || []).length > 1 && <p style={{ marginBottom: 4 }}><strong>{li.style}</strong> {li.color ? `(${li.color})` : ""}</p>}
