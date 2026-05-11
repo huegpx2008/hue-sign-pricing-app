@@ -49,6 +49,7 @@ export default function PricingSummary({
   const hasProductSelected = Boolean(product);
   const isDtf = activeProduct === "dtfTransfers" && dtfSummary;
   const isScreenPrint = activeProduct === "screenPrinting" && dtfSummary;
+  const dtfData = dtfSummary || {};
   const summaryCalc = (isDtf || isScreenPrint) ? dtfSummary : calc;
   const getCurrentItemCustomerDetailLines = () => {
     if (isDtf) {
@@ -236,7 +237,7 @@ export default function PricingSummary({
         </div>
         <h2>{isAdminView ? "Suggested Retail" : "Selected Item Preview"}</h2>
         <div style={{ fontSize: 42, fontWeight: "bold" }}>{money(hasProductSelected ? summaryCalc.retail : 0)}</div>
-        {hasProductSelected && !(isScreenPrint && (dtfSummary.lineItems || []).length > 1) && <p>Each: <strong>{money(summaryCalc.each)}</strong></p>}
+        {hasProductSelected && !(isScreenPrint && (dtfData.lineItems || []).length > 1) && <p>Each: <strong>{money(summaryCalc.each || 0)}</strong></p>}
         {isAdminView && <p>Profit: <strong>{money(summaryCalc.profit)}</strong></p>}
         <hr style={{ borderColor: activeTheme?.divider }} />
         <p>Product: {hasProductSelected ? (isDtf ? "DTF Transfers" : isScreenPrint ? "Screen Printing" : calc.label) : "Select a product"}</p>
@@ -274,7 +275,7 @@ export default function PricingSummary({
         )}
         {isAdminView && <p>Shipping: {money(summaryCalc.shipping)}</p>}
         {isAdminView && <p>Direct Cost: {money(summaryCalc.cost)}</p>}
-        {isAdminView && <p>Actual Margin: {summaryCalc.margin.toFixed(1)}%</p>}
+        {isAdminView && <p>Actual Margin: {Number(summaryCalc.margin || 0).toFixed(1)}%</p>}
         {isAdminView && <p>Multiplier: {num(multiplier, 1)}x</p>}
         {isAdminView && isDtf && (
           <>
@@ -282,22 +283,22 @@ export default function PricingSummary({
               <>
                 <hr style={{ borderColor: activeTheme?.divider }} />
                 <p><strong>DTF Profit Breakdown</strong></p>
-                <p><strong>Apparel Profit:</strong> {money(dtfSummary.apparelRetailSubtotal - dtfSummary.apparelDirectCost)}</p>
-                <p><strong>DTF Material Profit:</strong> {money(dtfSummary.dtfRetailSubtotal - dtfSummary.dtfMaterialCost)}</p>
-                <p><strong>Sleeve Add-On Retail:</strong> {money(dtfSummary.sleeveRetailAddOnTotal)}</p>
-                <p><strong>Sleeve Add-On Profit:</strong> {money(dtfSummary.sleeveRetailAddOnTotal)}</p>
+                <p><strong>Apparel Profit:</strong> {money((dtfData.apparelRetailSubtotal || 0) - (dtfData.apparelDirectCost || 0))}</p>
+                <p><strong>DTF Material Profit:</strong> {money((dtfData.dtfRetailSubtotal || 0) - (dtfData.dtfMaterialCost || 0))}</p>
+                <p><strong>Sleeve Add-On Retail:</strong> {money(dtfData.sleeveRetailAddOnTotal || 0)}</p>
+                <p><strong>Sleeve Add-On Profit:</strong> {money(dtfData.sleeveRetailAddOnTotal || 0)}</p>
                 <p><strong>Total Profit:</strong> {money(summaryCalc.profit)}</p>
               </>
             )}
             <hr style={{ borderColor: activeTheme?.divider }} />
-            <p><strong>Apparel Direct:</strong> {money(dtfSummary.apparelDirectCost)}</p>
-            <p><strong>Apparel Retail Subtotal:</strong> {money(dtfSummary.apparelRetailSubtotal)}</p>
-            <p><strong>DTF Material Cost:</strong> {money(dtfSummary.dtfMaterialCost)}</p>
-            <p><strong>DTF Retail Subtotal:</strong> {money(dtfSummary.dtfRetailSubtotal)}</p>
-            <p><strong>Size Upcharges:</strong> {money(dtfSummary.sizeUpchargeTotal)}</p>
-            <p><strong>Sleeve Retail Add-On:</strong> {money(dtfSummary.sleeveRetailAddOnTotal)}</p>
-            <p><strong>Roll Length Used:</strong> {dtfSummary.rollLengthUsed.toFixed(2)}"</p>
-            <p><strong>Transfer Count:</strong> {dtfSummary.transferCount}</p>
+            <p><strong>Apparel Direct:</strong> {money(dtfData.apparelDirectCost || 0)}</p>
+            <p><strong>Apparel Retail Subtotal:</strong> {money(dtfData.apparelRetailSubtotal || 0)}</p>
+            <p><strong>DTF Material Cost:</strong> {money(dtfData.dtfMaterialCost || 0)}</p>
+            <p><strong>DTF Retail Subtotal:</strong> {money(dtfData.dtfRetailSubtotal || 0)}</p>
+            <p><strong>Size Upcharges:</strong> {money(dtfData.sizeUpchargeTotal || 0)}</p>
+            <p><strong>Sleeve Retail Add-On:</strong> {money(dtfData.sleeveRetailAddOnTotal || 0)}</p>
+            <p><strong>Roll Length Used:</strong> {Number(dtfData.rollLengthUsed || 0).toFixed(2)}"</p>
+            <p><strong>Transfer Count:</strong> {dtfData.transferCount || 0}</p>
           </>
         )}
 
@@ -307,22 +308,22 @@ export default function PricingSummary({
         {isDtf ? (
           <div style={{ marginTop: 16, padding: 16, borderRadius: 16, background: "rgba(255,255,255,0.08)", color: "#e5e7eb", fontSize: 14, lineHeight: 1.35 }}>
             <h3 style={{ marginTop: 0 }}>{isAdminView ? "Selected Details" : "DTF Customer Quote"}</h3>
-            <p><strong>Product:</strong> {dtfSummary.dtfMode === "dtfOnly" ? "DTF Transfers Only" : "DTF Transfers"}</p>
-            {dtfSummary.dtfMode !== "dtfOnly" && <p><strong>Style #:</strong> {dtfSummary.selectedStyle || "Not selected"}</p>}
-            {dtfSummary.dtfMode !== "dtfOnly" && <p><strong>Garment:</strong> {dtfSummary.selectedTitle || "Not selected"}</p>}
-            {dtfSummary.dtfMode !== "dtfOnly" && <p><strong>Color:</strong> {dtfSummary.selectedColor || "Not selected"}</p>}
-            {dtfSummary.dtfMode === "dtfOnly" && <p><strong>Transfer Size:</strong> {dtfSummary.dtfOnlyWidth}" x {dtfSummary.dtfOnlyHeight}"</p>}
-            <p><strong>{dtfSummary.dtfMode === "dtfOnly" ? "DTF Quantity" : "Total Garments"}:</strong> {dtfSummary.totalGarmentQty}</p>
-            {dtfSummary.dtfMode !== "dtfOnly" && <p><strong>Sizes:</strong> {Object.entries(dtfSummary.sizeQuantities || {}).filter(([, v]) => Number(v) > 0).map(([k, v]) => `${k}(${v})`).join(", ") || "None"}</p>}
-            {dtfSummary.dtfMode !== "dtfOnly" && <p><strong>Print Locations:</strong> {dtfSummary.selectedPrintLocations.length ? dtfSummary.selectedPrintLocations.join(", ") : "None selected"}</p>}
-            {dtfSummary.bringYourOwnApparel && !isAdminView && <p><strong>Bring your own apparel selected.</strong> Bring your own apparel option available. Please call for details.</p>}
-            <p><strong>Price per garment:</strong> {money(dtfSummary.each)}</p>
-            <p><strong>Final total:</strong> {money(dtfSummary.retail)}</p>
-            {isAdminView && <p><strong>SanMar Item:</strong> {dtfSummary.productDisplay}</p>}
-            {isAdminView && <p><strong>Apparel Cost Used:</strong> {money(dtfSummary.apparelCostUsed)}</p>}
-            {isAdminView && <p><strong>Roll Length Used:</strong> {dtfSummary.rollLengthUsed.toFixed(2)}"</p>}
-            {isAdminView && <p><strong>Transfer Count:</strong> {dtfSummary.transferCount}</p>}
-            {isAdminView && <p><strong>Size Upcharges:</strong> {money(dtfSummary.sizeUpchargeTotal)}</p>}
+            <p><strong>Product:</strong> {dtfData.dtfMode === "dtfOnly" ? "DTF Transfers Only" : "DTF Transfers"}</p>
+            {dtfData.dtfMode !== "dtfOnly" && <p><strong>Style #:</strong> {dtfData.selectedStyle || "Not selected"}</p>}
+            {dtfData.dtfMode !== "dtfOnly" && <p><strong>Garment:</strong> {dtfData.selectedTitle || "Not selected"}</p>}
+            {dtfData.dtfMode !== "dtfOnly" && <p><strong>Color:</strong> {dtfData.selectedColor || "Not selected"}</p>}
+            {dtfData.dtfMode === "dtfOnly" && <p><strong>Transfer Size:</strong> {dtfData.dtfOnlyWidth || 0}" x {dtfData.dtfOnlyHeight || 0}"</p>}
+            <p><strong>{dtfData.dtfMode === "dtfOnly" ? "DTF Quantity" : "Total Garments"}:</strong> {dtfData.totalGarmentQty || 0}</p>
+            {dtfData.dtfMode !== "dtfOnly" && <p><strong>Sizes:</strong> {Object.entries(dtfData.sizeQuantities || {}).filter(([, v]) => Number(v) > 0).map(([k, v]) => `${k}(${v})`).join(", ") || "None"}</p>}
+            {dtfData.dtfMode !== "dtfOnly" && <p><strong>Print Locations:</strong> {(dtfData.selectedPrintLocations || []).length ? dtfData.selectedPrintLocations.join(", ") : "None selected"}</p>}
+            {dtfData.bringYourOwnApparel && !isAdminView && <p><strong>Bring your own apparel selected.</strong> Bring your own apparel option available. Please call for details.</p>}
+            <p><strong>Price per garment:</strong> {money(dtfData.each || 0)}</p>
+            <p><strong>Final total:</strong> {money(dtfData.retail || 0)}</p>
+            {isAdminView && <p><strong>SanMar Item:</strong> {dtfData.productDisplay || "Not selected"}</p>}
+            {isAdminView && <p><strong>Apparel Cost Used:</strong> {money(dtfData.apparelCostUsed || 0)}</p>}
+            {isAdminView && <p><strong>Roll Length Used:</strong> {Number(dtfData.rollLengthUsed || 0).toFixed(2)}"</p>}
+            {isAdminView && <p><strong>Transfer Count:</strong> {dtfData.transferCount || 0}</p>}
+            {isAdminView && <p><strong>Size Upcharges:</strong> {money(dtfData.sizeUpchargeTotal || 0)}</p>}
           </div>
         ) : isScreenPrint ? (
           <div style={{ marginTop: 16, padding: 16, borderRadius: 16, background: "rgba(255,255,255,0.08)", color: "#e5e7eb", fontSize: 14, lineHeight: 1.35 }}>
@@ -361,13 +362,13 @@ export default function PricingSummary({
         {isDtf ? (
           <>
             <div className="mobileMeta">
-              DTF Transfers • {dtfSummary.totalGarmentQty || 0} garments
-              {dtfSummary.productDisplay ? ` • ${dtfSummary.productDisplay}` : ""}
+              DTF Transfers • {dtfData.totalGarmentQty || 0} garments
+              {dtfData.productDisplay ? ` • ${dtfData.productDisplay}` : ""}
             </div>
             <div className="mobileOptions">
-              {(dtfSummary.selectedPrintLocations || []).length ? dtfSummary.selectedPrintLocations.join(" • ") : "No print locations selected"}
-              {dtfSummary.each ? ` • ${money(dtfSummary.each)}/garment` : ""}
-              {` • Total: ${money(dtfSummary.retail)}`}
+              {(dtfData.selectedPrintLocations || []).length ? dtfData.selectedPrintLocations.join(" • ") : "No print locations selected"}
+              {dtfData.each ? ` • ${money(dtfData.each)}/garment` : ""}
+              {` • Total: ${money(dtfData.retail || 0)}`}
             </div>
           </>
         ) : isScreenPrint ? (
