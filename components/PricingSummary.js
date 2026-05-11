@@ -24,6 +24,7 @@ export default function PricingSummary({
 }) {
   const formatSizeBreakdown = (sizeQty = {}) => Object.entries(sizeQty).filter(([, v]) => Number(v) > 0).map(([k, v]) => `${k}(${v})`).join(", ") || "None";
   const formatPrintLocations = (printLines = []) => printLines.filter((pl) => pl?.colors > 0).map((pl) => `${pl.name} ${pl.colors}-color`).join(", ") || "None selected";
+  const formatSizePriceBreakdown = (tiers = []) => tiers.filter((t) => Number(t?.qty || 0) > 0).map((t) => `${t.label || t.size}: ${t.qty} @ ${money(t.priceEach ?? t.garmentPriceEach ?? 0)} each`);
 
   const [customerName, setCustomerName] = useState("");
   const [customerEmail, setCustomerEmail] = useState("");
@@ -61,7 +62,9 @@ export default function PricingSummary({
         `Sizes: ${formatSizeBreakdown(dtfSummary?.sizeQuantities || {})}`,
         `Total Qty: ${dtfSummary?.totalGarmentQty || 0}`,
         `Print Locations: ${((dtfSummary?.selectedPrintLocations || []).length ? dtfSummary.selectedPrintLocations.join(", ") : "None selected")}`,
-        `Price Each: ${money(dtfSummary?.each || 0)}`,
+        ...((dtfSummary?.sizePriceBreakdown || []).length
+          ? ["Price Breakdown:", ...formatSizePriceBreakdown(dtfSummary?.sizePriceBreakdown || []).map((line) => `- ${line}`)]
+          : [`Price Each: ${money(dtfSummary?.each || 0)}`]),
         `Total: ${money(dtfSummary?.retail || 0)}`,
       ];
     }
@@ -74,7 +77,9 @@ export default function PricingSummary({
           `Sizes: ${formatSizeBreakdown(li.sizeQty || {})}`,
           `Total Qty: ${li.totalQty || 0}`,
           `Print Locations: ${formatPrintLocations(dtfSummary?.printLines || [])}`,
-          `Price Each: ${money(li.retailPerShirt || 0)}`,
+          ...((li.sizePriceBreakdown || []).length
+            ? ["Price Breakdown:", ...formatSizePriceBreakdown(li.sizePriceBreakdown || []).map((line) => `- ${line}`)]
+            : [`Price Each: ${money(li.retailPerShirt || 0)}`]),
           `Item Total: ${money(li.finalRetailSubtotal || 0)}`,
           "",
         ];
@@ -317,7 +322,11 @@ export default function PricingSummary({
             {dtfData.dtfMode !== "dtfOnly" && <p><strong>Sizes:</strong> {Object.entries(dtfData.sizeQuantities || {}).filter(([, v]) => Number(v) > 0).map(([k, v]) => `${k}(${v})`).join(", ") || "None"}</p>}
             {dtfData.dtfMode !== "dtfOnly" && <p><strong>Print Locations:</strong> {(dtfData.selectedPrintLocations || []).length ? dtfData.selectedPrintLocations.join(", ") : "None selected"}</p>}
             {dtfData.bringYourOwnApparel && !isAdminView && <p><strong>Bring your own apparel selected.</strong> Bring your own apparel option available. Please call for details.</p>}
-            <p><strong>Price per garment:</strong> {money(dtfData.each || 0)}</p>
+            {(dtfData.sizePriceBreakdown || []).length ? (
+              <p><strong>Price breakdown:</strong> {formatSizePriceBreakdown(dtfData.sizePriceBreakdown).join(" • ")}</p>
+            ) : (
+              <p><strong>Price per garment:</strong> {money(dtfData.each || 0)}</p>
+            )}
             <p><strong>Final total:</strong> {money(dtfData.retail || 0)}</p>
             {isAdminView && <p><strong>SanMar Item:</strong> {dtfData.productDisplay || "Not selected"}</p>}
             {isAdminView && <p><strong>Apparel Cost Used:</strong> {money(dtfData.apparelCostUsed || 0)}</p>}
@@ -339,7 +348,11 @@ export default function PricingSummary({
                 {isAdminView && <p><strong>Product Markup %:</strong> {li.productMarkupPercent || dtfSummary.productMarkupPercent}%</p>}
                 <p><strong>Final Retail Subtotal:</strong> {money(li.finalRetailSubtotal || 0)}</p>
                 <p><strong>Print Charge Per Shirt:</strong> {money(li.printChargePerShirt || 0)}</p>
-                <p><strong>Final Retail Per Shirt:</strong> {money(li.retailPerShirt || 0)}</p>
+                {(li.sizePriceBreakdown || []).length ? (
+                  <p><strong>Price breakdown:</strong> {formatSizePriceBreakdown(li.sizePriceBreakdown).join(" • ")}</p>
+                ) : (
+                  <p><strong>Final Retail Per Shirt:</strong> {money(li.retailPerShirt || 0)}</p>
+                )}
               </div>
             ))}
             <p><strong>Total Garments:</strong> {dtfSummary.totalGarments}</p>
@@ -351,7 +364,7 @@ export default function PricingSummary({
             <p><strong>Apparel Retail Subtotal:</strong> {money(dtfSummary.apparelRetailSubtotal)}</p>
             <p><strong>Print Charge Subtotal:</strong> {money(dtfSummary.printChargeSubtotal)}</p>
             <p><strong>Final Retail:</strong> {money(dtfSummary.retail)}</p>
-            <p><strong>Average price per shirt:</strong> {money(dtfSummary.averagePricePerShirt || dtfSummary.each)}</p>
+            {((dtfSummary.lineItems || []).length <= 1) && <p><strong>Average price per shirt:</strong> {money(dtfSummary.averagePricePerShirt || dtfSummary.each)}</p>}
             {isAdminView && <p><strong>Profit:</strong> {money(dtfSummary.profit)}</p>}
           </div>
         ) : <SelectedDetails details={selectedDetails} />}
