@@ -127,6 +127,14 @@ export default function Page() {
   const [carbonlessWraparound, setCarbonlessWraparound] = useState(false);
   const [carbonlessBookedSets, setCarbonlessBookedSets] = useState(false);
   const [carbonlessRush, setCarbonlessRush] = useState(false);
+  const [doorHangerSize, setDoorHangerSize] = useState("3.5 x 8.5");
+  const [doorHangerQty, setDoorHangerQty] = useState(500);
+  const [doorHangerType, setDoorHangerType] = useState("14pt Gloss Front - Uncoated Back");
+  const [doorHangerInk, setDoorHangerInk] = useState("Standard Black");
+  const [doorHangerBackPrinting, setDoorHangerBackPrinting] = useState("No");
+  const [doorHangerPerforation, setDoorHangerPerforation] = useState("No");
+  const [doorHangerShrinkWrap, setDoorHangerShrinkWrap] = useState("Shrink Wrap 250");
+  const [doorHangerProof, setDoorHangerProof] = useState("No Proof Required");
   const [theme, setTheme] = useState("light");
   const [viewMode, setViewMode] = useState("customer-online");
   const [staffUnlocked, setStaffUnlocked] = useState(false);
@@ -362,6 +370,14 @@ export default function Page() {
     carbonlessWraparound,
     carbonlessBookedSets,
     carbonlessRush,
+    doorHangerSize,
+    doorHangerQty,
+    doorHangerType,
+    doorHangerInk,
+    doorHangerBackPrinting,
+    doorHangerPerforation,
+    doorHangerShrinkWrap,
+    doorHangerProof,
   });
 
   const isAdminView = viewMode === "admin";
@@ -372,8 +388,8 @@ export default function Page() {
   const selectedDetails = {
     product,
     productName: productMap[product]?.label || products[activeProduct] || "Unknown Product",
-    size: activeProduct === "handheld16ptPaper" ? handheldPaperSize.label : activeProduct === "businessCards" ? 'Standard Business Card' : activeProduct === "carbonless" ? carbonlessSize : `${num(width)}" x ${num(height)}"`,
-    qty: activeProduct === "businessCards" ? businessCardQty : activeProduct === "carbonless" ? carbonlessQty : num(qty, 1),
+    size: activeProduct === "handheld16ptPaper" ? handheldPaperSize.label : activeProduct === "businessCards" ? 'Standard Business Card' : activeProduct === "carbonless" ? carbonlessSize : activeProduct === "doorHangers" ? doorHangerSize : `${num(width)}" x ${num(height)}"`,
+    qty: activeProduct === "businessCards" ? businessCardQty : activeProduct === "carbonless" ? carbonlessQty : activeProduct === "doorHangers" ? doorHangerQty : num(qty, 1),
     sheetHint: activeProduct === "handheld16ptPaper" ? `Next full sheet quantity: ${calc.nextFullSheetQty || handheldPaperSize.perSheet}` : null,
     sheetAddMore: activeProduct === "handheld16ptPaper" ? `Add ${calc.addMoreQty || handheldPaperSize.perSheet} more to fill the sheet for best value.` : null,
     material:
@@ -486,6 +502,12 @@ export default function Page() {
       activeProduct === "carbonless" && carbonlessWraparound ? "Wraparound Cover" : null,
       activeProduct === "carbonless" && carbonlessBookedSets ? "Booked Sets" : null,
       activeProduct === "carbonless" && carbonlessRush ? "Rush Order" : null,
+      activeProduct === "doorHangers" ? `Type/Color: ${doorHangerType}` : null,
+      activeProduct === "doorHangers" ? `Ink: ${doorHangerInk}` : null,
+      activeProduct === "doorHangers" ? `Back Printing: ${doorHangerBackPrinting}` : null,
+      activeProduct === "doorHangers" ? `Perforation: ${doorHangerPerforation}` : null,
+      activeProduct === "doorHangers" ? `Shrink Wrap: ${doorHangerShrinkWrap}` : null,
+      activeProduct === "doorHangers" ? `Proof: ${doorHangerProof}` : null,
       showInternalFields && useDesignFee ? `Design Fee: ${money(num(designFee))}` : null,
       showInternalFields && useSetupFee ? `Setup Fee: ${money(num(setupFee))}` : null,
       showInternalFields && num(delivery) > 0 ? `Delivery/Install: ${money(num(delivery))}` : null,
@@ -820,6 +842,22 @@ export default function Page() {
             setCarbonlessBookedSets={setCarbonlessBookedSets}
             carbonlessRush={carbonlessRush}
             setCarbonlessRush={setCarbonlessRush}
+            doorHangerSize={doorHangerSize}
+            setDoorHangerSize={setDoorHangerSize}
+            doorHangerQty={doorHangerQty}
+            setDoorHangerQty={setDoorHangerQty}
+            doorHangerType={doorHangerType}
+            setDoorHangerType={setDoorHangerType}
+            doorHangerInk={doorHangerInk}
+            setDoorHangerInk={setDoorHangerInk}
+            doorHangerBackPrinting={doorHangerBackPrinting}
+            setDoorHangerBackPrinting={setDoorHangerBackPrinting}
+            doorHangerPerforation={doorHangerPerforation}
+            setDoorHangerPerforation={setDoorHangerPerforation}
+            doorHangerShrinkWrap={doorHangerShrinkWrap}
+            setDoorHangerShrinkWrap={setDoorHangerShrinkWrap}
+            doorHangerProof={doorHangerProof}
+            setDoorHangerProof={setDoorHangerProof}
             qty={qty}
             isAdminView={isAdminView}
           />
@@ -828,8 +866,8 @@ export default function Page() {
           {activeProduct !== "dtfTransfers" && activeProduct !== "screenPrinting" && activeProduct !== "carbonless" && (
             <div className="formGrid" style={grid}>
               {activeProduct !== "businessCards" && <Field label="Quantity" value={qty} setValue={setQty} />}
-              {(activeProduct !== "vehicleMagnets" || vehicleMagnetMode === "custom") && !["businessCards", "handheld16ptPaper"].includes(activeProduct) && <Field label="Width Inches" value={width} setValue={setWidth} />}
-              {(activeProduct !== "vehicleMagnets" || vehicleMagnetMode === "custom") && !["businessCards", "handheld16ptPaper"].includes(activeProduct) && <Field label="Height Inches" value={height} setValue={setHeight} />}
+              {(activeProduct !== "vehicleMagnets" || vehicleMagnetMode === "custom") && !["businessCards", "handheld16ptPaper", "doorHangers"].includes(activeProduct) && <Field label="Width Inches" value={width} setValue={setWidth} />}
+              {(activeProduct !== "vehicleMagnets" || vehicleMagnetMode === "custom") && !["businessCards", "handheld16ptPaper", "doorHangers"].includes(activeProduct) && <Field label="Height Inches" value={height} setValue={setHeight} />}
               {isAdminView && <Field label="Margin %" value={margin} setValue={setMargin} />}
               {showInternalFields && <Field label="Delivery / Install" value={delivery} setValue={setDelivery} />}
               {isAdminView && <Field label="Price Multiplier" value={multiplier} setValue={setMultiplier} />}
