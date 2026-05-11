@@ -6,7 +6,7 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body style={{ fontFamily: 'Arial, Helvetica, "Segoe UI", Verdana, sans-serif' }}>{children}</body>
     </html>
   );
 }

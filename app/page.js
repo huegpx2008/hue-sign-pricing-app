@@ -513,8 +513,16 @@ export default function Page() {
   };
 
   return (
-    <main className={`appRoot ${theme}`} style={{ fontFamily: "Inter, Arial", minHeight: "100vh", padding: 20, "--accent": activeTheme.accent, "--accent-soft": activeTheme.accentSoft, "--accent-glow": activeTheme.accentGlow, "--divider": activeTheme.divider, "--summary-border": activeTheme.summaryBorder, "--mobile-tint": activeTheme.mobileTint }}>
+    <main className={`appRoot ${theme}`} style={{ fontFamily: 'Arial, Helvetica, "Segoe UI", Verdana, sans-serif', minHeight: "100vh", padding: 20, "--accent": activeTheme.accent, "--accent-soft": activeTheme.accentSoft, "--accent-glow": activeTheme.accentGlow, "--divider": activeTheme.divider, "--summary-border": activeTheme.summaryBorder, "--mobile-tint": activeTheme.mobileTint }}>
       <style>{`
+        body, .appRoot, .summary, .mobilePrice, button, input, select, textarea {
+          font-family: Arial, Helvetica, "Segoe UI", Verdana, sans-serif;
+        }
+
+        button, input, select, textarea {
+          font-family: inherit;
+        }
+
         .layout {
           display: grid;
           grid-template-columns: 1fr 360px;
