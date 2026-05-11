@@ -149,6 +149,20 @@ export default function ProductOptions(props) {
     setCarbonlessBookedSets,
     carbonlessRush,
     setCarbonlessRush,
+    doorHangerSize,
+    setDoorHangerSize,
+    doorHangerQty,
+    setDoorHangerQty,
+    doorHangerType,
+    setDoorHangerType,
+    doorHangerInk,
+    setDoorHangerInk,
+    doorHangerBackPrinting,
+    setDoorHangerBackPrinting,
+    doorHangerPerforation,
+    setDoorHangerPerforation,
+    doorHangerShrinkWrap,
+    setDoorHangerShrinkWrap,
     qty,
     onDtfSummaryChange,
     margin,
@@ -340,6 +354,27 @@ export default function ProductOptions(props) {
           <Check label="Rush Order (+100%)" value={carbonlessRush} setValue={setCarbonlessRush} />
         </Box>
       )}
+      {activeProduct === "doorHangers" && (
+        <Box title="Door Hangers Options">
+          <label>Size</label>
+          <select style={input} value={doorHangerSize} onChange={(e) => setDoorHangerSize(e.target.value)}>
+            <option>3.5 x 8.5</option><option>4 x 11</option><option>5.25 x 8.5</option><option>8.5 x 11</option>
+          </select>
+          <label>Quantity</label>
+          <select style={input} value={doorHangerQty} onChange={(e) => setDoorHangerQty(Number(e.target.value))}>
+            {[250, 500, 1000, 1500, 2000, 2500, 3000, 4000, 5000, 6000, 7000, 7500, 8000, 9000, 10000].map((q) => <option key={q} value={q}>{q}</option>)}
+          </select>
+          <label>Type / Color</label>
+          <select style={input} value={doorHangerType} onChange={(e) => setDoorHangerType(e.target.value)}>
+            {["White 80lb Cover Uncoated","White 80lb Cover Gloss","14pt Gloss Front - Uncoated Back","14pt Gloss Front and Back","14pt Uncoated Front and Back","14pt Matte Front - Uncoated Back","14pt Matte Front and Back","16pt Matte Front - Uncoated Back","16pt Matte Front and Back","16pt Uncoated Front and Back","16pt Gloss Front and Back","16pt Gloss Front - Uncoated Back","18pt Gloss Front - Uncoated Back","18pt Matte Front - Uncoated Back","65lb Shocking Pink Cover Uncoated","65lb Yellow Light Cover Uncoated","65lb Shocking Green Cover Uncoated","65lb Blue Light Cover Uncoated","65lb Orange Light Cover Uncoated"].map((t) => <option key={t}>{t}</option>)}
+          </select>
+          <label>Ink</label><select style={input} value={doorHangerInk} onChange={(e) => setDoorHangerInk(e.target.value)}><option>Standard Black</option><option>Full Color</option></select>
+          <label>Back Printing</label><select style={input} value={doorHangerBackPrinting} onChange={(e) => setDoorHangerBackPrinting(e.target.value)}><option>No</option><option>Standard Black</option><option>Full Color</option></select>
+          <label>Perforation</label><select style={input} value={doorHangerPerforation} onChange={(e) => setDoorHangerPerforation(e.target.value)}><option>No</option><option>Yes (1 Perforation)</option><option>Yes (2 Perforations)</option><option>Yes (3 Perforations)</option><option>Yes (4 Perforations)</option></select>
+          <label>Shrink Wrap</label><select style={input} value={doorHangerShrinkWrap} onChange={(e) => setDoorHangerShrinkWrap(e.target.value)}><option>Shrink Wrap 250</option><option>Shrink Wrap 25s</option><option>Shrink Wrap 50s</option><option>Shrink Wrap 100s</option></select>
+          <DoorHangerPreview size={doorHangerSize} />
+        </Box>
+      )}
 
       {activeProduct === "foamcore" && (
         <Box title="Foamcore Options">
@@ -396,5 +431,25 @@ export default function ProductOptions(props) {
         </Box>
       )}
     </>
+  );
+}
+
+function DoorHangerPreview({ size }) {
+  const [w, h] = size.split(" x ").map(Number);
+  const boxHeight = 220;
+  const boxWidth = Math.max(80, Math.round((w / h) * boxHeight));
+  return (
+    <div style={{ marginTop: 12, textAlign: "center" }}>
+      <svg width={Math.max(180, boxWidth + 70)} height={boxHeight + 50} viewBox={`0 0 ${Math.max(180, boxWidth + 70)} ${boxHeight + 50}`}>
+        <rect x="35" y="12" width={boxWidth} height="34" fill="#d1d5db" opacity="0.5" />
+        <rect x="35" y="12" width={boxWidth} height={boxHeight} fill="#fff" stroke="#64748b" strokeWidth="2" rx="4" />
+        <circle cx={35 + (boxWidth / 2)} cy="43" r="15" fill="#f8fafc" stroke="#64748b" strokeWidth="2" />
+        <line x1={35 + (boxWidth / 2) + 11} y1="53" x2={35 + boxWidth - 12} y2="90" stroke="#64748b" strokeWidth="2" />
+        <line x1="35" y1="55" x2={35 + boxWidth} y2="55" stroke="#dc2626" strokeWidth="2" strokeDasharray="6 4" />
+        <text x={35 + boxWidth + 8} y="58" fontSize="10" fill="#dc2626">Allow 2 inches at top for die cut</text>
+        <text x={35 + boxWidth / 2} y={boxHeight + 32} fontSize="11" textAnchor="middle" fill="#334155">{w}" W</text>
+        <text x="10" y={12 + boxHeight / 2} fontSize="11" fill="#334155" transform={`rotate(-90 10 ${12 + boxHeight / 2})`}>{h}" H</text>
+      </svg>
+    </div>
   );
 }

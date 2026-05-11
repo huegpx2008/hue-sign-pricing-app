@@ -100,6 +100,13 @@ export default function usePricingCalculator({
   carbonlessWraparound,
   carbonlessBookedSets,
   carbonlessRush,
+  doorHangerSize,
+  doorHangerQty,
+  doorHangerType,
+  doorHangerInk,
+  doorHangerBackPrinting,
+  doorHangerPerforation,
+  doorHangerShrinkWrap,
 }) {
   const calc = useMemo(() => {
     const q = Math.max(num(qty, 1), 1);
@@ -258,6 +265,25 @@ export default function usePricingCalculator({
         rushMultiplier,
         optionBreakdown: { carbonlessFormType, carbonlessSize, carbonlessPrintType, carbonlessPrintSides, carbonlessNumbering, carbonlessWraparound, carbonlessBookedSets, carbonlessRush },
       };
+    }
+    if (product === "doorHangers") {
+      const sizeAreas = { "3.5 x 8.5": 29.75, "4 x 11": 44, "5.25 x 8.5": 44.625, "8.5 x 11": 93.5 };
+      const refArea = sizeAreas["3.5 x 8.5"];
+      const qDoor = Math.max(Number(doorHangerQty) || 500, 1);
+      const qtyScale = qDoor / 500;
+      const sizeScale = (sizeAreas[doorHangerSize] || refArea) / refArea;
+      let directCost = 131 * qtyScale * sizeScale;
+      if (doorHangerInk === "Full Color") directCost *= 1.2;
+      if (doorHangerBackPrinting === "Standard Black") directCost *= 1.12;
+      if (doorHangerBackPrinting === "Full Color") directCost *= 1.2;
+      if (doorHangerPerforation !== "No") {
+        const perfCount = Number((doorHangerPerforation.match(/\d+/) || [1])[0]);
+        directCost *= 1 + (perfCount * 0.03);
+      }
+      const wrapScale = { "Shrink Wrap 250": 1, "Shrink Wrap 25s": 1.05, "Shrink Wrap 50s": 1.03, "Shrink Wrap 100s": 1.02 };
+      directCost *= (wrapScale[doorHangerShrinkWrap] || 1);
+      const retail = (directCost / 0.4 + fees) * mult;
+      return { label: "Door Hangers", retail, each: retail / qDoor, cost: directCost, materialCost: directCost, shipping: 0, quantity: qDoor, profit: retail - directCost, margin: retail ? ((retail - directCost) / retail) * 100 : 0, optionBreakdown: { doorHangerSize, doorHangerType, doorHangerInk, doorHangerBackPrinting, doorHangerPerforation, doorHangerShrinkWrap } };
     }
 
     if (product === "banner") {
@@ -420,7 +446,7 @@ export default function usePricingCalculator({
     const retail = (basePrice + fees) * mult + stakeRetail;
 
     return { label: "Coroplast", retail, each: retail / q, cost: directCost, profit: retail - directCost, margin: retail ? ((retail - directCost) / retail) * 100 : 0, totalSqFt, materialCost, shipping, stakeRetail, stakeCost, sheetsUsed, sheetsRounded, piecesPerSheet: layout.piecesPerSheet, sheetLayout: `${layout.across} across x ${layout.down} down${layout.rotated ? " (rotated)" : ""}`, tierPrice, costMarginPrice, basePrice };
-  }, [product, width, height, qty, margin, multiplier, useDesignFee, useSetupFee, designFee, setupFee, delivery, activeProduct, productMap, coroDouble, coroFlute, stakes, heavyStakes, grommets, gloss, coroContour, coroRush, bannerType, polePocket, rope, windSlits, bannerRush, meshPolePocket, meshGrommets, meshWelding, meshRope, meshWebbing, meshRush, acmType, acmSqFtPrice, acmContour, roundedCorners, acrylicContour, acrylicRoundedCorners, acrylicStandOffs, acrylicStandOffQty, acrylicStandOffColor, vinylType, vinylLaminate, vinylContour, vinylRush, gangVinyl, contourPadding, gangWastePercent, posterRush, foamcoreDouble, foamcoreContour, foamcoreGloss, foamcoreRush, foamcoreCustomCut, pvcType, pvcContour, pvcRush, pvcCustomCut, vehicleMagnetMode, vehicleMagnetPreset, vehicleMagnetContour, vehicleMagnetRush, businessCardQty, businessCardSides, businessCardRush, handheldPaperSize, handheldPaperSides, handheldPaperRush, carbonlessFormType, carbonlessSize, carbonlessQty, carbonlessPrintType, carbonlessPrintSides, carbonlessNumbering, carbonlessWraparound, carbonlessBookedSets, carbonlessRush]);
+  }, [product, width, height, qty, margin, multiplier, useDesignFee, useSetupFee, designFee, setupFee, delivery, activeProduct, productMap, coroDouble, coroFlute, stakes, heavyStakes, grommets, gloss, coroContour, coroRush, bannerType, polePocket, rope, windSlits, bannerRush, meshPolePocket, meshGrommets, meshWelding, meshRope, meshWebbing, meshRush, acmType, acmSqFtPrice, acmContour, roundedCorners, acrylicContour, acrylicRoundedCorners, acrylicStandOffs, acrylicStandOffQty, acrylicStandOffColor, vinylType, vinylLaminate, vinylContour, vinylRush, gangVinyl, contourPadding, gangWastePercent, posterRush, foamcoreDouble, foamcoreContour, foamcoreGloss, foamcoreRush, foamcoreCustomCut, pvcType, pvcContour, pvcRush, pvcCustomCut, vehicleMagnetMode, vehicleMagnetPreset, vehicleMagnetContour, vehicleMagnetRush, businessCardQty, businessCardSides, businessCardRush, handheldPaperSize, handheldPaperSides, handheldPaperRush, carbonlessFormType, carbonlessSize, carbonlessQty, carbonlessPrintType, carbonlessPrintSides, carbonlessNumbering, carbonlessWraparound, carbonlessBookedSets, carbonlessRush, doorHangerSize, doorHangerQty, doorHangerType, doorHangerInk, doorHangerBackPrinting, doorHangerPerforation, doorHangerShrinkWrap]);
 
   return calc;
 }
