@@ -206,6 +206,7 @@ export default function PricingSummary({
     return {
       line1: `${productMap[product]?.label || products[activeProduct]} • ${num(width)}" x ${num(height)}" • Qty ${num(qty, 1)}`,
       line2: selectedDetails.options.length ? `Options: ${selectedDetails.options.join(", ")}` : "Options: None",
+      line3: `Price Each ${money(summaryCalc.each || 0)} • Total ${money(summaryCalc.retail || 0)}`,
     };
   })();
 
@@ -338,7 +339,7 @@ export default function PricingSummary({
 
         {!isDtf && !isScreenPrint && <ProductVisual product={activeProduct || product} comingSoon={!activeProduct} />}
         {!isDtf && (["vinyl", "reflective", "footprints"].includes(activeProduct)) && <VinylLayoutPreview calc={calc} />}
-        {!isDtf && (activeProduct === "foamcore" || activeProduct === "pvc") && <SheetLayoutPreview calc={calc} />}
+        {!isDtf && (activeProduct === "foamcore" || activeProduct === "pvc" || product === "coroSigns") && <SheetLayoutPreview calc={calc} title={product === "coroSigns" ? "Custom Cut Coro Sheet Layout" : "Sheet Layout Preview"} />}
         {isDtf ? (
           <div style={{ marginTop: 16, padding: 16, borderRadius: 16, background: "rgba(255,255,255,0.08)", color: "#e5e7eb", fontSize: 14, lineHeight: 1.35 }}>
             <h3 style={{ marginTop: 0 }}>{isAdminView ? "Selected Details" : "DTF Customer Quote"}</h3>

@@ -24,6 +24,7 @@ export default function FullSheetLayoutPreview({ calc, sheetW = 48, sheetH = 96,
   const usedSlots = Math.min(Math.max(finalSheetUsedSlots, 0), totalSlots);
   const backSheetCount = Math.min(Math.max(roundedSheets - 1, 0), 3);
   const hiddenSheets = Math.max(roundedSheets - 1 - backSheetCount, 0);
+  const unusedSlots = Math.max(totalSlots - usedSlots, 0);
   const stackOffsetX = 8;
   const stackOffsetY = 8;
   const stackContainerW = boardW * fitScale + backSheetCount * stackOffsetX;
@@ -98,8 +99,12 @@ export default function FullSheetLayoutPreview({ calc, sheetW = 48, sheetH = 96,
       <p style={{ margin: "6px 0", fontSize: 13 }}>Pieces per sheet: {calc.piecesPerSheet}</p>
       <p style={{ margin: "6px 0", fontSize: 13 }}>Sheets used: {calc.sheetsUsed?.toFixed(2)}</p>
       <p style={{ margin: "6px 0", fontSize: 13 }}>Sheets rounded: {calc.sheetsRounded}</p>
+      <p style={{ margin: "6px 0", fontSize: 13 }}>Final sheet usage: {usedSlots} used • {unusedSlots} open slots</p>
       <p style={{ margin: "6px 0", fontSize: 13 }}>
         Piece orientation: {calc.previewPieceW}" × {calc.previewPieceH}"{calc.sheetRotated ? " (rotated)" : ""}
+      </p>
+      <p style={{ margin: "6px 0", fontSize: 12, fontStyle: "italic", color: "#cbd5e1" }}>
+        Auto-rotation may be used to optimize sheet usage and reduce waste.
       </p>
       <p style={{ margin: "6px 0", fontSize: 12, color: "#cbd5e1" }}>
         {roundedSheets > 1

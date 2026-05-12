@@ -6,6 +6,7 @@ import ScreenPrinting from "./products/ScreenPrinting";
 
 export default function ProductOptions(props) {
   const {
+    product,
     activeProduct,
     grid,
     vinylType,
@@ -209,6 +210,11 @@ export default function ProductOptions(props) {
 
       {activeProduct === "coro" && (
         <Box title="Coro Options">
+          {product === "coroSigns" && (
+            <p style={{ marginTop: 0, fontStyle: "italic", opacity: 0.9 }}>
+              Pricing is based on full-sheet production. Sizes may be automatically rotated to achieve the most efficient sheet layout and reduce material waste.
+            </p>
+          )}
           <label>Flute Direction</label>
           <select style={input} value={coroFlute} onChange={(e) => setCoroFlute(e.target.value)}>
             <option value="vertical">Vertical Flutes / Stakes</option>
@@ -378,6 +384,9 @@ export default function ProductOptions(props) {
 
       {activeProduct === "foamcore" && (
         <Box title="Foamcore Options">
+          <p style={{ marginTop: 0, fontStyle: "italic", opacity: 0.9 }}>
+            Pricing is based on full-sheet production. Sizes may be automatically rotated to achieve the most efficient sheet layout and reduce material waste.
+          </p>
           <Check label="Double-Sided" value={foamcoreDouble} setValue={setFoamcoreDouble} />
           <Check label="Contour Cut +15%" value={foamcoreContour} setValue={setFoamcoreContour} />
           <Check label="Gloss Finish (+$4 each)" value={foamcoreGloss} setValue={setFoamcoreGloss} />
@@ -393,6 +402,9 @@ export default function ProductOptions(props) {
 
       {activeProduct === "pvc" && (
         <Box title="PVC Options">
+          <p style={{ marginTop: 0, fontStyle: "italic", opacity: 0.9 }}>
+            Pricing is based on full-sheet production. Sizes may be automatically rotated to achieve the most efficient sheet layout and reduce material waste.
+          </p>
           <label>PVC Type</label>
           <select style={input} value={pvcType} onChange={(e) => setPvcType(e.target.value)}>
             {Object.entries(pvcOptions).map(([key, p]) => (

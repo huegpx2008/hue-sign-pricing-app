@@ -32,6 +32,12 @@ export default function Page() {
 
   const handleProductSelect = (nextProduct) => {
     setProduct(nextProduct);
+    if (nextProduct === "coro") {
+      setWidth(24); setHeight(18); setCoroDouble(false); setCoroFlute("vertical");
+    }
+    if (nextProduct === "coroSigns") {
+      setWidth(24); setHeight(18); setCoroFlute("best");
+    }
     if (typeof window === "undefined" || window.innerWidth > 800) return;
     window.requestAnimationFrame(() => {
       const toQuoteDetails = ["dtfTransfers", "screenPrinting"].includes(nextProduct);
@@ -419,6 +425,8 @@ export default function Page() {
         ? `Handheld 16pt Paper (${handheldPaperSize.label})`
         : activeProduct === "carbonless"
         ? `Carbonless Forms (${carbonlessFormType})`
+        : product === "coroSigns"
+        ? (coroDouble ? "4mm Double-Sided Custom Cut Coroplast" : "4mm Single-Sided Custom Cut Coroplast")
         : coroDouble
         ? "4mm Double-Sided Coroplast"
         : activeProduct === "coro"
@@ -432,6 +440,7 @@ export default function Page() {
       activeProduct === "acm" ? `ACM Type: ${acmOptions[acmType].name}` : null,
       activeProduct === "acrylic" ? "Acrylic Type: Standard" : null,
       activeProduct === "coro" ? (coroDouble ? "Coro: Double-Sided" : "Coro: Single-Sided") : null,
+      product === "coroSigns" ? "Full-Sheet Production Layout" : null,
       (["vinyl", "reflective", "footprints"].includes(activeProduct)) && vinylContour ? "Contour Cut" : null,
       (["vinyl", "reflective", "footprints"].includes(activeProduct)) && vinylRush ? "Rush Order" : null,
       (["vinyl", "reflective", "footprints"].includes(activeProduct)) && gangVinyl ? "Gang Vinyl Layout" : null,
@@ -700,6 +709,7 @@ export default function Page() {
           />
 
                     <ProductOptions
+            product={product}
             activeProduct={activeProduct}
             onDtfSummaryChange={setDtfSummary}
             margin={margin}
@@ -869,8 +879,8 @@ export default function Page() {
           {activeProduct !== "dtfTransfers" && activeProduct !== "screenPrinting" && activeProduct !== "carbonless" && (
             <div className="formGrid" style={grid}>
               {activeProduct !== "businessCards" && <Field label="Quantity" value={qty} setValue={setQty} />}
-              {(activeProduct !== "vehicleMagnets" || vehicleMagnetMode === "custom") && !["businessCards", "handheld16ptPaper", "doorHangers"].includes(activeProduct) && <Field label="Width Inches" value={width} setValue={setWidth} />}
-              {(activeProduct !== "vehicleMagnets" || vehicleMagnetMode === "custom") && !["businessCards", "handheld16ptPaper", "doorHangers"].includes(activeProduct) && <Field label="Height Inches" value={height} setValue={setHeight} />}
+              {(activeProduct !== "vehicleMagnets" || vehicleMagnetMode === "custom") && !["businessCards", "handheld16ptPaper", "doorHangers"].includes(activeProduct) && product !== "coro" && <Field label="Width Inches" value={width} setValue={setWidth} />}
+              {(activeProduct !== "vehicleMagnets" || vehicleMagnetMode === "custom") && !["businessCards", "handheld16ptPaper", "doorHangers"].includes(activeProduct) && product !== "coro" && <Field label="Height Inches" value={height} setValue={setHeight} />}
               {isAdminView && <Field label="Margin %" value={margin} setValue={setMargin} />}
               {showInternalFields && <Field label="Delivery / Install" value={delivery} setValue={setDelivery} />}
               {isAdminView && <Field label="Price Multiplier" value={multiplier} setValue={setMultiplier} />}
