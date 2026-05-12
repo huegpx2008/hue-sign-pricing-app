@@ -194,7 +194,7 @@ export default function ProductOptions(props) {
             </>
           )}
 
-          <Check label="Contour Cut (+10%)" value={vinylContour} setValue={setVinylContour} />
+          <Check label="Contour Cut +15%" value={vinylContour} setValue={setVinylContour} />
           <Check label="Rush Order (2x)" value={vinylRush} setValue={setVinylRush} />
           <Check label="Gang Vinyl Layout" value={gangVinyl} setValue={setGangVinyl} />
 
@@ -221,7 +221,7 @@ export default function ProductOptions(props) {
           <Check label="Heavy Duty Stakes" value={heavyStakes} setValue={setHeavyStakes} />
           <Check label="Grommets" value={grommets} setValue={setGrommets} />
           <Check label="Gloss Finish" value={gloss} setValue={setGloss} />
-          <Check label="Contour Cut (+10%)" value={coroContour} setValue={setCoroContour} />
+          <Check label="Contour Cut +15%" value={coroContour} setValue={setCoroContour} />
           <Check label="Rush Order (2x)" value={coroRush} setValue={setCoroRush} />
         </Box>
       )}
@@ -250,14 +250,14 @@ export default function ProductOptions(props) {
             ))}
           </select>
           <Field label="Shop $ Per Sq Ft" value={acmSqFtPrice} setValue={setAcmSqFtPrice} />
-          <Check label="Contour Cut (+10%)" value={acmContour} setValue={setAcmContour} />
+          <Check label="Contour Cut +15%" value={acmContour} setValue={setAcmContour} />
           <Check label="Rounded Corners (+$5)" value={roundedCorners} setValue={setRoundedCorners} />
         </Box>
       )}
 
       {activeProduct === "acrylic" && (
         <Box title="Acrylic Options">
-          <Check label="Contour Cut (+10%)" value={acrylicContour} setValue={setAcrylicContour} />
+          <Check label="Contour Cut +15%" value={acrylicContour} setValue={setAcrylicContour} />
           <Check label="Rounded Corners (+$5)" value={acrylicRoundedCorners} setValue={setAcrylicRoundedCorners} />
           <Check label="Enable Stand-Offs" value={acrylicStandOffs} setValue={setAcrylicStandOffs} />
           {acrylicStandOffs && (
@@ -379,7 +379,7 @@ export default function ProductOptions(props) {
       {activeProduct === "foamcore" && (
         <Box title="Foamcore Options">
           <Check label="Double-Sided" value={foamcoreDouble} setValue={setFoamcoreDouble} />
-          <Check label="Contour Cut (+10%)" value={foamcoreContour} setValue={setFoamcoreContour} />
+          <Check label="Contour Cut +15%" value={foamcoreContour} setValue={setFoamcoreContour} />
           <Check label="Gloss Finish (+$4 each)" value={foamcoreGloss} setValue={setFoamcoreGloss} />
           <Check label="Rush Order (2x)" value={foamcoreRush} setValue={setFoamcoreRush} />
           <Check label="Custom Cut (No additional cost)" value={foamcoreCustomCut} setValue={setFoamcoreCustomCut} />
@@ -399,7 +399,7 @@ export default function ProductOptions(props) {
               <option key={key} value={key}>{p.name}</option>
             ))}
           </select>
-          <Check label="Contour Cut (+10%)" value={pvcContour} setValue={setPvcContour} />
+          <Check label="Contour Cut +15%" value={pvcContour} setValue={setPvcContour} />
           <Check label="Rush Order (2x)" value={pvcRush} setValue={setPvcRush} />
           <Check label="Custom Cut (No additional cost)" value={pvcCustomCut} setValue={setPvcCustomCut} />
         </Box>
@@ -423,7 +423,7 @@ export default function ProductOptions(props) {
               </select>
             </>
           )}
-          {vehicleMagnetMode === "custom" && <Check label="Contour Cut (+10%)" value={vehicleMagnetContour} setValue={setVehicleMagnetContour} />}
+          {vehicleMagnetMode === "custom" && <Check label="Contour Cut +15%" value={vehicleMagnetContour} setValue={setVehicleMagnetContour} />}
           <Check label="Rounded Corners (No additional cost)" value={vehicleMagnetRoundedCorners} setValue={setVehicleMagnetRoundedCorners} />
           <Check label="Rush Order (2x)" value={vehicleMagnetRush} setValue={setVehicleMagnetRush} />
           <label>Optional Notes</label>

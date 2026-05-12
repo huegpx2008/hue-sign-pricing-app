@@ -109,6 +109,7 @@ export default function usePricingCalculator({
   doorHangerShrinkWrap,
 }) {
   const calc = useMemo(() => {
+    const contourUpchargeMultiplier = 1.15;
     const q = Math.max(num(qty, 1), 1);
     const w = num(width);
     const h = num(height);
@@ -139,16 +140,13 @@ export default function usePricingCalculator({
       const marginCostBase = materialCost;
       let shopPrice = isFootprints ? 0 : vinylSqFt.totalBillable * rateRetail;
       let costMarginPrice = marginCostBase / (1 - m);
-      if (vinylContour) {
-        shopPrice *= 1.1;
-        costMarginPrice *= 1.1;
-      }
       if (vinylRush) {
         shopPrice *= 2;
         costMarginPrice *= 2;
       }
       costMarginPrice += shipping;
-      const basePrice = isFootprints ? costMarginPrice : Math.max(shopPrice, costMarginPrice);
+      const subtotalBeforeContour = isFootprints ? costMarginPrice : Math.max(shopPrice, costMarginPrice);
+      const basePrice = vinylContour ? subtotalBeforeContour * contourUpchargeMultiplier : subtotalBeforeContour;
       const retail = (basePrice + fees) * mult;
       return { label: isReflective ? "Reflective Vinyl" : isFootprints ? "Footprints Vinyl" : "Printed Vinyl", retail, each: retail / q, cost: directCost, profit: retail - directCost, margin: retail ? ((retail - directCost) / retail) * 100 : 0, totalSqFt: vinylSqFt.totalBillable, actualTotalSqFt: vinylSqFt.actualEach * q, actualSqFtEach: vinylSqFt.actualEach, effectiveSqFtEach: vinylSqFt.effectiveEach, billableSqFtEach: vinylSqFt.billableEach, billingMode: vinylSqFt.mode, layoutWidth: vinylSqFt.layoutWidth, layoutHeight: vinylSqFt.layoutHeight, rawBillableSqFt: vinylSqFt.rawBillable, piecesAcross: vinylSqFt.piecesAcross, rows: vinylSqFt.rows, pieceW: vinylSqFt.pieceW, pieceH: vinylSqFt.pieceH, rotated: vinylSqFt.rotated, normalSqFt: vinylSqFt.normalSqFt, rotatedSqFt: vinylSqFt.rotatedSqFt, materialCost, shipping, shopPrice, costMarginPrice, basePrice, materialName, rollWidth: 52 };
     }
@@ -331,16 +329,13 @@ export default function usePricingCalculator({
       const marginCostBase = materialCost;
       let costMarginPrice = marginCostBase / (1 - m);
       let shopPrice = totalSqFt * num(acmSqFtPrice, 18);
-      if (acmContour) {
-        costMarginPrice *= 1.1;
-        shopPrice *= 1.1;
-      }
       if (roundedCorners) {
         costMarginPrice += 5;
         shopPrice += 5;
       }
       costMarginPrice += shipping;
-      const basePrice = Math.max(costMarginPrice, shopPrice);
+      const subtotalBeforeContour = Math.max(costMarginPrice, shopPrice);
+      const basePrice = acmContour ? subtotalBeforeContour * contourUpchargeMultiplier : subtotalBeforeContour;
       const retail = (basePrice + fees) * mult;
       return { label: "ACM / Maxmetal", retail, each: retail / q, cost: directCost, profit: retail - directCost, margin: retail ? ((retail - directCost) / retail) * 100 : 0, totalSqFt, materialCost, shipping, sheetsUsed, sheetsRounded, piecesPerSheet: layout.piecesPerSheet, sheetLayout: `${layout.across} across x ${layout.down} down${layout.rotated ? " (rotated)" : ""}`, costMarginPrice, shopPrice, basePrice };
     }
@@ -357,11 +352,12 @@ export default function usePricingCalculator({
       const standOffRetailCharge = standOffQty * standOff.retailEach;
       const directCost = materialCost + standOffDirectCost + shipping;
       let costMarginPrice = materialCost / (1 - m);
-      if (acrylicContour) costMarginPrice *= 1.1;
       if (acrylicRoundedCorners) costMarginPrice += 5;
       costMarginPrice += shipping;
-      const retail = (costMarginPrice + standOffRetailCharge + fees) * mult;
-      return { label: "Acrylic", retail, each: retail / q, cost: directCost, profit: retail - directCost, margin: retail ? ((retail - directCost) / retail) * 100 : 0, totalSqFt, materialCost, shipping, sheetsUsed: layout.sheetsUsed, sheetsRounded, piecesPerSheet: layout.piecesPerSheet, sheetLayout: `${layout.across} across x ${layout.down} down${layout.rotated ? " (rotated)" : ""}`, standOffQty, standOffColor: standOff.name, standOffDirectCost, standOffRetailCharge, costMarginPrice, basePrice: costMarginPrice + standOffRetailCharge };
+      const subtotalBeforeContour = costMarginPrice + standOffRetailCharge;
+      const basePrice = acrylicContour ? subtotalBeforeContour * contourUpchargeMultiplier : subtotalBeforeContour;
+      const retail = (basePrice + fees) * mult;
+      return { label: "Acrylic", retail, each: retail / q, cost: directCost, profit: retail - directCost, margin: retail ? ((retail - directCost) / retail) * 100 : 0, totalSqFt, materialCost, shipping, sheetsUsed: layout.sheetsUsed, sheetsRounded, piecesPerSheet: layout.piecesPerSheet, sheetLayout: `${layout.across} across x ${layout.down} down${layout.rotated ? " (rotated)" : ""}`, standOffQty, standOffColor: standOff.name, standOffDirectCost, standOffRetailCharge, costMarginPrice, basePrice };
     }
 
     if (product === "foamcore") {
@@ -375,11 +371,11 @@ export default function usePricingCalculator({
       const marginCostBase = materialCost;
       const costPerPiece = materialCost / q;
       let costMarginPrice = marginCostBase / (1 - m);
-      if (foamcoreContour) costMarginPrice *= 1.1;
       if (foamcoreGloss) costMarginPrice += q * 4;
       if (foamcoreRush) costMarginPrice *= 2;
       costMarginPrice += shipping;
-      const basePrice = costMarginPrice;
+      const subtotalBeforeContour = costMarginPrice;
+      const basePrice = foamcoreContour ? subtotalBeforeContour * contourUpchargeMultiplier : subtotalBeforeContour;
       const retail = (basePrice + fees) * mult;
       return { label: "Foamcore", quantity: q, retail, each: retail / q, cost: directCost, profit: retail - directCost, margin: retail ? ((retail - directCost) / retail) * 100 : 0, totalSqFt, materialCost, shipping, sheetsUsed, sheetsRounded, piecesPerSheet: layout.piecesPerSheet, sheetLayout: `${layout.across} across x ${layout.down} down${layout.rotated ? " (rotated)" : ""}`, sheetAcross: layout.across, sheetDown: layout.down, sheetRotated: layout.rotated, previewPieceW: layout.rotated ? h : w, previewPieceH: layout.rotated ? w : h, sheetPrice, costPerPiece, costMarginPrice, basePrice };
     }
@@ -394,10 +390,10 @@ export default function usePricingCalculator({
       const directCost = materialCost + shipping;
       const costPerPiece = materialCost / q;
       let costMarginPrice = materialCost / (1 - m);
-      if (pvcContour) costMarginPrice *= 1.1;
       if (pvcRush) costMarginPrice *= 2;
       costMarginPrice += shipping;
-      const basePrice = costMarginPrice;
+      const subtotalBeforeContour = costMarginPrice;
+      const basePrice = pvcContour ? subtotalBeforeContour * contourUpchargeMultiplier : subtotalBeforeContour;
       const retail = (basePrice + fees) * mult;
       return { label: "PVC", quantity: q, retail, each: retail / q, cost: directCost, profit: retail - directCost, margin: retail ? ((retail - directCost) / retail) * 100 : 0, totalSqFt, materialCost, shipping, sheetsUsed, sheetsRounded, piecesPerSheet: layout.piecesPerSheet, sheetLayout: `${layout.across} across x ${layout.down} down${layout.rotated ? " (rotated)" : ""}`, sheetAcross: layout.across, sheetDown: layout.down, sheetRotated: layout.rotated, previewPieceW: layout.rotated ? h : w, previewPieceH: layout.rotated ? w : h, sheetPrice, costPerPiece, pvcType: pvcOptions[pvcType].name, costMarginPrice, basePrice };
     }
@@ -405,7 +401,6 @@ export default function usePricingCalculator({
     if (product === "vehicleMagnets") {
       const standardBaseCosts = { "18x12": 11.95, "24x12": 14.95, "24x18": 20.95, "42x12": 29.95, "72x24": 89.7 };
       let pieceCost = vehicleMagnetMode === "custom" ? sqInEach * 0.07 : (standardBaseCosts[vehicleMagnetPreset] || 11.95);
-      if (vehicleMagnetMode === "custom" && vehicleMagnetContour) pieceCost *= 1.1;
       const materialCost = pieceCost * q;
       let shipping = 10;
       const totalSqIn = sqInEach * q;
@@ -418,8 +413,10 @@ export default function usePricingCalculator({
       let costMarginPrice = materialCost / (1 - m);
       if (vehicleMagnetRush) costMarginPrice *= 2;
       costMarginPrice += shipping;
-      const retail = (costMarginPrice + fees) * mult;
-      return { label: vehicleMagnetMode === "custom" ? "Custom Cut Vehicle Magnets" : "Standard Vehicle Magnets", retail, each: retail / q, cost: directCost, profit: retail - directCost, margin: retail ? ((retail - directCost) / retail) * 100 : 0, totalSqFt, materialCost, shipping, totalSqIn, sqInEach, costMarginPrice, basePrice: costMarginPrice };
+      const subtotalBeforeContour = costMarginPrice;
+      const basePrice = vehicleMagnetMode === "custom" && vehicleMagnetContour ? subtotalBeforeContour * contourUpchargeMultiplier : subtotalBeforeContour;
+      const retail = (basePrice + fees) * mult;
+      return { label: vehicleMagnetMode === "custom" ? "Custom Cut Vehicle Magnets" : "Standard Vehicle Magnets", retail, each: retail / q, cost: directCost, profit: retail - directCost, margin: retail ? ((retail - directCost) / retail) * 100 : 0, totalSqFt, materialCost, shipping, totalSqIn, sqInEach, costMarginPrice, basePrice };
     }
 
     const type = coroDouble ? "double" : "single";
@@ -429,7 +426,6 @@ export default function usePricingCalculator({
     if (heavyStakes) tierPrice += q * 2.25;
     if (grommets) tierPrice += q * 0.25 + 15;
     if (gloss) tierPrice += q * 4;
-    if (coroContour) tierPrice *= 1.1;
     if (coroRush) tierPrice *= 2;
     const allowRotate = coroFlute === "best";
     const layout = sheetLayoutCount(w, h, q, allowRotate);
@@ -442,7 +438,8 @@ export default function usePricingCalculator({
     const directCost = materialCost + shipping + stakeCost;
     const marginCostBase = materialCost;
     const costMarginPrice = marginCostBase / (1 - m) + shipping;
-    const basePrice = Math.max(tierPrice, costMarginPrice);
+    const subtotalBeforeContour = Math.max(tierPrice, costMarginPrice);
+    const basePrice = coroContour ? subtotalBeforeContour * contourUpchargeMultiplier : subtotalBeforeContour;
     const retail = (basePrice + fees) * mult + stakeRetail;
 
     return { label: "Coroplast", retail, each: retail / q, cost: directCost, profit: retail - directCost, margin: retail ? ((retail - directCost) / retail) * 100 : 0, totalSqFt, materialCost, shipping, stakeRetail, stakeCost, sheetsUsed, sheetsRounded, piecesPerSheet: layout.piecesPerSheet, sheetLayout: `${layout.across} across x ${layout.down} down${layout.rotated ? " (rotated)" : ""}`, tierPrice, costMarginPrice, basePrice };
