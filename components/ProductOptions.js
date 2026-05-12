@@ -6,6 +6,7 @@ import ScreenPrinting from "./products/ScreenPrinting";
 
 export default function ProductOptions(props) {
   const {
+    product,
     activeProduct,
     grid,
     vinylType,
@@ -194,7 +195,7 @@ export default function ProductOptions(props) {
             </>
           )}
 
-          <Check label="Contour Cut (+10%)" value={vinylContour} setValue={setVinylContour} />
+          <Check label="Contour Cut +15%" value={vinylContour} setValue={setVinylContour} />
           <Check label="Rush Order (2x)" value={vinylRush} setValue={setVinylRush} />
           <Check label="Gang Vinyl Layout" value={gangVinyl} setValue={setGangVinyl} />
 
@@ -209,6 +210,11 @@ export default function ProductOptions(props) {
 
       {activeProduct === "coro" && (
         <Box title="Coro Options">
+          {product === "coroSigns" && (
+            <p style={{ marginTop: 0, fontStyle: "italic", opacity: 0.9 }}>
+              Pricing is based on full-sheet production. Sizes may be automatically rotated to achieve the most efficient sheet layout and reduce material waste.
+            </p>
+          )}
           <label>Flute Direction</label>
           <select style={input} value={coroFlute} onChange={(e) => setCoroFlute(e.target.value)}>
             <option value="vertical">Vertical Flutes / Stakes</option>
@@ -221,7 +227,7 @@ export default function ProductOptions(props) {
           <Check label="Heavy Duty Stakes" value={heavyStakes} setValue={setHeavyStakes} />
           <Check label="Grommets" value={grommets} setValue={setGrommets} />
           <Check label="Gloss Finish" value={gloss} setValue={setGloss} />
-          <Check label="Contour Cut (+10%)" value={coroContour} setValue={setCoroContour} />
+          <Check label="Contour Cut +15%" value={coroContour} setValue={setCoroContour} />
           <Check label="Rush Order (2x)" value={coroRush} setValue={setCoroRush} />
         </Box>
       )}
@@ -250,14 +256,14 @@ export default function ProductOptions(props) {
             ))}
           </select>
           <Field label="Shop $ Per Sq Ft" value={acmSqFtPrice} setValue={setAcmSqFtPrice} />
-          <Check label="Contour Cut (+10%)" value={acmContour} setValue={setAcmContour} />
+          <Check label="Contour Cut +15%" value={acmContour} setValue={setAcmContour} />
           <Check label="Rounded Corners (+$5)" value={roundedCorners} setValue={setRoundedCorners} />
         </Box>
       )}
 
       {activeProduct === "acrylic" && (
         <Box title="Acrylic Options">
-          <Check label="Contour Cut (+10%)" value={acrylicContour} setValue={setAcrylicContour} />
+          <Check label="Contour Cut +15%" value={acrylicContour} setValue={setAcrylicContour} />
           <Check label="Rounded Corners (+$5)" value={acrylicRoundedCorners} setValue={setAcrylicRoundedCorners} />
           <Check label="Enable Stand-Offs" value={acrylicStandOffs} setValue={setAcrylicStandOffs} />
           {acrylicStandOffs && (
@@ -378,8 +384,11 @@ export default function ProductOptions(props) {
 
       {activeProduct === "foamcore" && (
         <Box title="Foamcore Options">
+          <p style={{ marginTop: 0, fontStyle: "italic", opacity: 0.9 }}>
+            Pricing is based on full-sheet production. Sizes may be automatically rotated to achieve the most efficient sheet layout and reduce material waste.
+          </p>
           <Check label="Double-Sided" value={foamcoreDouble} setValue={setFoamcoreDouble} />
-          <Check label="Contour Cut (+10%)" value={foamcoreContour} setValue={setFoamcoreContour} />
+          <Check label="Contour Cut +15%" value={foamcoreContour} setValue={setFoamcoreContour} />
           <Check label="Gloss Finish (+$4 each)" value={foamcoreGloss} setValue={setFoamcoreGloss} />
           <Check label="Rush Order (2x)" value={foamcoreRush} setValue={setFoamcoreRush} />
           <Check label="Custom Cut (No additional cost)" value={foamcoreCustomCut} setValue={setFoamcoreCustomCut} />
@@ -393,13 +402,16 @@ export default function ProductOptions(props) {
 
       {activeProduct === "pvc" && (
         <Box title="PVC Options">
+          <p style={{ marginTop: 0, fontStyle: "italic", opacity: 0.9 }}>
+            Pricing is based on full-sheet production. Sizes may be automatically rotated to achieve the most efficient sheet layout and reduce material waste.
+          </p>
           <label>PVC Type</label>
           <select style={input} value={pvcType} onChange={(e) => setPvcType(e.target.value)}>
             {Object.entries(pvcOptions).map(([key, p]) => (
               <option key={key} value={key}>{p.name}</option>
             ))}
           </select>
-          <Check label="Contour Cut (+10%)" value={pvcContour} setValue={setPvcContour} />
+          <Check label="Contour Cut +15%" value={pvcContour} setValue={setPvcContour} />
           <Check label="Rush Order (2x)" value={pvcRush} setValue={setPvcRush} />
           <Check label="Custom Cut (No additional cost)" value={pvcCustomCut} setValue={setPvcCustomCut} />
         </Box>
@@ -423,7 +435,7 @@ export default function ProductOptions(props) {
               </select>
             </>
           )}
-          {vehicleMagnetMode === "custom" && <Check label="Contour Cut (+10%)" value={vehicleMagnetContour} setValue={setVehicleMagnetContour} />}
+          {vehicleMagnetMode === "custom" && <Check label="Contour Cut +15%" value={vehicleMagnetContour} setValue={setVehicleMagnetContour} />}
           <Check label="Rounded Corners (No additional cost)" value={vehicleMagnetRoundedCorners} setValue={setVehicleMagnetRoundedCorners} />
           <Check label="Rush Order (2x)" value={vehicleMagnetRush} setValue={setVehicleMagnetRush} />
           <label>Optional Notes</label>

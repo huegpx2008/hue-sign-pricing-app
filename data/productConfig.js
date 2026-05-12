@@ -19,7 +19,7 @@ export const acrylicStandOffOptions = {
 export const productCategories = [
   { name: "Signs & Banners", items: [
     { id: "coro", label: "Coroplast Yard Signs", calculator: "coro" },
-    { id: "coroSigns", label: "Coro Signs", calculator: "coro" },
+    { id: "coroSigns", label: "Custom Cut Coro Signs", calculator: "coro" },
     { id: "banner", label: "Vinyl Banners", calculator: "banner" },
     { id: "meshBanner", label: "Mesh Banners", calculator: "meshBanner" },
     { id: "acm", label: "ACM / Maxmetal", calculator: "acm" },
