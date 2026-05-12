@@ -61,11 +61,11 @@ export default function ProductVisual({ product, comingSoon }) {
     );
   }
 
-  if (product === "acm") {
+  if (product === "acm" || product === "aluminum") {
     return (
       <div style={visualBox}>
         <div style={acmVisual}>ACM</div>
-        <p style={visualLabel}>ACM / Maxmetal Selected</p>
+        <p style={visualLabel}>{product === "aluminum" ? "Aluminum Selected" : "ACM / Maxmetal Selected"}</p>
       </div>
     );
   }
@@ -255,4 +255,3 @@ const reflectiveVisual = {
   fontWeight: "bold",
   border: "4px dashed #94a3b8",
 };
-

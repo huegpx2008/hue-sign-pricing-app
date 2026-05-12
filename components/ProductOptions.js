@@ -1,5 +1,5 @@
 import { Box, Check, Field, input } from "./FormControls";
-import { acrylicStandOffOptions, acmOptions, bannerOptions, pvcOptions, vinylOptions } from "../data/productConfig";
+import { acrylicStandOffOptions, acmOptions, aluminumOptions, bannerOptions, pvcOptions, vinylOptions } from "../data/productConfig";
 import { money } from "../utils/pricingHelpers";
 import DTFTransfers from "./products/DTFTransfers";
 import ScreenPrinting from "./products/ScreenPrinting";
@@ -51,8 +51,8 @@ export default function ProductOptions(props) {
     setBannerRush,
     acmType,
     setAcmType,
-    acmSqFtPrice,
-    setAcmSqFtPrice,
+    aluminumType,
+    setAluminumType,
     acmContour,
     setAcmContour,
     roundedCorners,
@@ -257,17 +257,16 @@ export default function ProductOptions(props) {
         </Box>
       )}
 
-      {activeProduct === "acm" && (
-        <Box title="ACM Options">
-          <label>ACM Type</label>
-          <select style={input} value={acmType} onChange={(e) => setAcmType(e.target.value)}>
-            {Object.entries(acmOptions).map(([key, a]) => (
+      {(activeProduct === "acm" || activeProduct === "aluminum") && (
+        <Box title={activeProduct === "aluminum" ? "Aluminum Options" : "ACM Options"}>
+          <label>{activeProduct === "aluminum" ? "Aluminum Type" : "ACM Type"}</label>
+          <select style={input} value={activeProduct === "aluminum" ? aluminumType : acmType} onChange={(e) => (activeProduct === "aluminum" ? setAluminumType : setAcmType)(e.target.value)}>
+            {Object.entries(activeProduct === "aluminum" ? aluminumOptions : acmOptions).map(([key, a]) => (
               <option key={key} value={key}>{a.name}</option>
             ))}
           </select>
-          <Field label="Shop $ Per Sq Ft" value={acmSqFtPrice} setValue={setAcmSqFtPrice} />
           <Check label="Contour Cut +15%" value={acmContour} setValue={setAcmContour} />
-          <Check label="Rounded Corners (+$5)" value={roundedCorners} setValue={setRoundedCorners} />
+          <Check label="Rounded Corners" value={roundedCorners} setValue={setRoundedCorners} />
         </Box>
       )}
 

@@ -8,7 +8,7 @@ import { Box, Check, Field, input } from "../components/FormControls";
 import { money, num } from "../utils/pricingHelpers";
 import usePricingCalculator from "../hooks/usePricingCalculator";
 import { getCategoryTheme } from "../utils/categoryTheme";
-import { products, acrylicStandOffOptions, productCategories, bannerOptions, acmOptions, vinylOptions, pvcOptions } from "../data/productConfig";
+import { products, acrylicStandOffOptions, productCategories, bannerOptions, acmOptions, aluminumOptions, vinylOptions, pvcOptions } from "../data/productConfig";
 
 const productMap = Object.fromEntries(productCategories.flatMap((c) => c.items.map((i) => [i.id, i])));
 const allProducts = productCategories.flatMap((c) => c.items.map((i) => ({ ...i, category: c.name })));
@@ -81,7 +81,7 @@ export default function Page() {
   const [meshRush, setMeshRush] = useState(false);
 
   const [acmType, setAcmType] = useState("3-single");
-  const [acmSqFtPrice, setAcmSqFtPrice] = useState(18);
+  const [aluminumType, setAluminumType] = useState("040-single");
   const [acmContour, setAcmContour] = useState(false);
   const [roundedCorners, setRoundedCorners] = useState(false);
   const [acrylicContour, setAcrylicContour] = useState(false);
@@ -221,7 +221,7 @@ export default function Page() {
     setCoroDouble(false); setCoroFlute("vertical"); setStakes(false); setHeavyStakes(false); setGrommets(false); setGloss(false); setCoroContour(false); setCoroRush(false);
     setBannerType("13-single"); setPolePocket(false); setRope(false); setWindSlits(false); setBannerRush(false);
     setMeshPolePocket(false); setMeshGrommets(false); setMeshWelding(false); setMeshRope(false); setMeshWebbing(false); setMeshRush(false);
-    setAcmType("3-single"); setAcmSqFtPrice(18); setAcmContour(false); setRoundedCorners(false);
+    setAcmType("3-single"); setAluminumType("040-single"); setAcmContour(false); setRoundedCorners(false);
     setAcrylicContour(false); setAcrylicRoundedCorners(false); setAcrylicStandOffs(false); setAcrylicStandOffQty(4); setAcrylicStandOffColor("silver");
     setVinylType("gf-standard"); setVinylLaminate("Gloss Laminate"); setVinylContour(false); setVinylRush(false); setGangVinyl(false); setContourPadding(0.5); setGangWastePercent(15);
     setPosterRush(false);
@@ -270,6 +270,11 @@ export default function Page() {
       { label: "36x96", w: 96, h: 36 }, { label: "48x96", w: 96, h: 48 },
     ],
     acm: [
+      { label: "18x24", w: 24, h: 18 }, { label: "24x36", w: 24, h: 36 }, { label: "24x48", w: 24, h: 48 },
+      { label: "32x48", w: 32, h: 48 }, { label: "36x48", w: 36, h: 48 }, { label: "48x48", w: 48, h: 48 },
+      { label: "24x96", w: 24, h: 96 }, { label: "48x96", w: 48, h: 96 },
+    ],
+    aluminum: [
       { label: "18x24", w: 24, h: 18 }, { label: "24x36", w: 24, h: 36 }, { label: "24x48", w: 24, h: 48 },
       { label: "32x48", w: 32, h: 48 }, { label: "36x48", w: 36, h: 48 }, { label: "48x48", w: 48, h: 48 },
       { label: "24x96", w: 24, h: 96 }, { label: "48x96", w: 48, h: 96 },
@@ -349,7 +354,7 @@ export default function Page() {
     meshWebbing,
     meshRush,
     acmType,
-    acmSqFtPrice,
+    aluminumType,
     acmContour,
     roundedCorners,
     acrylicContour,
@@ -432,6 +437,8 @@ export default function Page() {
         ? "Mesh Banner Material"
         : activeProduct === "acm"
         ? acmOptions[acmType].name
+        : activeProduct === "aluminum"
+        ? aluminumOptions[aluminumType].name
         : activeProduct === "poster"
         ? "Poster Paper"
         : activeProduct === "acrylic"
@@ -463,6 +470,7 @@ export default function Page() {
       activeProduct === "reflective" ? "Material: Oralite 5600 Reflective Film" : null,
       activeProduct === "banner" ? `Banner Type: ${bannerOptions[bannerType].name}` : null,
       activeProduct === "acm" ? `ACM Type: ${acmOptions[acmType].name}` : null,
+      activeProduct === "aluminum" ? `Aluminum Type: ${aluminumOptions[aluminumType].name}` : null,
       activeProduct === "acrylic" ? "Acrylic Type: Standard" : null,
       activeProduct === "coro" ? (coroDouble ? "Coro: Double-Sided" : "Coro: Single-Sided") : null,
       product === "coroSigns" ? "Full-Sheet Production Layout" : null,
@@ -492,8 +500,8 @@ export default function Page() {
       activeProduct === "meshBanner" && meshRope ? "Rope" : null,
       activeProduct === "meshBanner" && meshWebbing ? "Webbing" : null,
       activeProduct === "meshBanner" && meshRush ? "Rush Order" : null,
-      activeProduct === "acm" && acmContour ? "Contour Cut" : null,
-      activeProduct === "acm" && roundedCorners ? "Rounded Corners" : null,
+      (activeProduct === "acm" || activeProduct === "aluminum") && acmContour ? "Contour Cut" : null,
+      (activeProduct === "acm" || activeProduct === "aluminum") && roundedCorners ? "Rounded Corners" : null,
       activeProduct === "acrylic" && acrylicContour ? "Contour Cut" : null,
       activeProduct === "acrylic" && acrylicRoundedCorners ? "Rounded Corners" : null,
       activeProduct === "acrylic" && acrylicStandOffs
@@ -792,8 +800,8 @@ export default function Page() {
             setBannerRush={setBannerRush}
             acmType={acmType}
             setAcmType={setAcmType}
-            acmSqFtPrice={acmSqFtPrice}
-            setAcmSqFtPrice={setAcmSqFtPrice}
+            aluminumType={aluminumType}
+            setAluminumType={setAluminumType}
             acmContour={acmContour}
             setAcmContour={setAcmContour}
             roundedCorners={roundedCorners}

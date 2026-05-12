@@ -76,6 +76,23 @@ export function shippingBySize(w, h, sheets) {
   return 199;
 }
 
+export function acmShippingBySize(w, h, sheets) {
+  const max = Math.max(w, h);
+  const min = Math.min(w, h);
+  const per3 = (rate) => Math.ceil(sheets / 3) * rate;
+  if (max <= 36 && min <= 24) return sheets >= 10 ? 199 : per3(10);
+  if (max <= 48 && min <= 32) return sheets >= 10 ? 199 : per3(15);
+  if (max <= 48 && min <= 36) return sheets >= 10 ? 199 : per3(35);
+  if (max <= 48 && min <= 48) {
+    if (sheets >= 10) return 199;
+    if (sheets >= 6) return 75;
+    return 50;
+  }
+  if ((max <= 72 && min <= 39) || (max <= 96 && min <= 24)) return sheets >= 10 ? 199 : 75;
+  if (max <= 96 && min <= 48) return 199;
+  return 199;
+}
+
 export function sheetLayoutCount(w, h, qty, allowRotate = true) {
   const sheetW = 48;
   const sheetH = 96;
