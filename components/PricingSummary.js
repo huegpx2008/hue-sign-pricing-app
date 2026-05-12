@@ -400,6 +400,14 @@ export default function PricingSummary({
             {isAdminView && isEmbroidery && <p><strong>Embroidery Retail / item:</strong> {money(dtfSummary.embroideryRetailEach || 0)}</p>}
             {isAdminView && isEmbroidery && <p><strong>Embroidery Retail Subtotal:</strong> {money(dtfSummary.embroideryRetailSubtotal || dtfSummary.embroiderySubtotal || 0)}</p>}
             {isAdminView && isEmbroidery && <p><strong>Handling Allowance:</strong> {money(dtfSummary.handlingDirect || 0)} direct</p>}
+            {isAdminView && isEmbroidery && <p><strong>Normal Calculated Retail:</strong> {money(dtfSummary.calculatedRetail || dtfSummary.retail || 0)}</p>}
+            {isAdminView && isEmbroidery && dtfSummary.targetRetailPrice && <p><strong>Target Retail Price:</strong> {money(dtfSummary.targetRetailPrice)}</p>}
+            {isAdminView && isEmbroidery && dtfSummary.targetRetailPrice && <p><strong>Difference from Calculated:</strong> {money(dtfSummary.targetRetailDelta || 0)}</p>}
+            {isAdminView && isEmbroidery && dtfSummary.targetRetailPrice && <p><strong>Total Direct Cost:</strong> {money(dtfSummary.cost || 0)}</p>}
+            {isAdminView && isEmbroidery && dtfSummary.targetRetailPrice && <p><strong>Profit at Target:</strong> {money((dtfSummary.targetRetailPrice || 0) - (dtfSummary.cost || 0))}</p>}
+            {isAdminView && isEmbroidery && dtfSummary.targetRetailPrice && <p><strong>Margin at Target:</strong> {(((((dtfSummary.targetRetailPrice || 0) - (dtfSummary.cost || 0)) / (dtfSummary.targetRetailPrice || 1)) * 100) || 0).toFixed(1)}%</p>}
+            {isAdminView && isEmbroidery && dtfSummary.targetRetailPrice && <p><strong>Target Price Per Item:</strong> {money((dtfSummary.totalGarments || 0) > 0 ? (dtfSummary.targetRetailPrice / dtfSummary.totalGarments) : 0)}</p>}
+            {isAdminView && isEmbroidery && dtfSummary.targetRetailPrice && ((dtfSummary.targetRetailPrice - (dtfSummary.cost || 0)) <= 0 ? <p style={{ color: "#ef4444", fontWeight: 700 }}>Warning: Target price is at or below direct cost (loss).</p> : ((((dtfSummary.targetRetailPrice - (dtfSummary.cost || 0)) / dtfSummary.targetRetailPrice) * 100) < 45 ? <p style={{ color: "#f59e0b", fontWeight: 700 }}>Warning: Target price creates a low margin.</p> : null))}
             <p><strong>Final Retail:</strong> {money(dtfSummary.retail)}</p>
             {((dtfSummary.lineItems || []).length <= 1) && <p><strong>Average price per item:</strong> {money(dtfSummary.averagePricePerShirt || dtfSummary.each)}</p>}
             {isAdminView && <p><strong>Profit:</strong> {money(dtfSummary.profit)}</p>}
