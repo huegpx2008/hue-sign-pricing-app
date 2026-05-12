@@ -210,6 +210,7 @@ export default function Page() {
   }, [activeProduct, vehicleMagnetMode, vehicleMagnetPreset]);
 
   function resetAll() {
+    const isMobile = typeof window !== "undefined" && window.innerWidth <= 800;
     setProduct(""); setWidth(24); setHeight(18); setQty(1); setMargin(60); setMultiplier(1);
     setUseDesignFee(false); setUseSetupFee(false); setDesignFee(""); setSetupFee(""); setDelivery("");
     setCoroDouble(false); setCoroFlute("vertical"); setStakes(false); setHeavyStakes(false); setGrommets(false); setGloss(false); setCoroContour(false); setCoroRush(false);
@@ -224,6 +225,12 @@ export default function Page() {
     setVehicleMagnetMode("standard"); setVehicleMagnetPreset("18x12"); setVehicleMagnetContour(false); setVehicleMagnetRoundedCorners(false); setVehicleMagnetRush(false); setVehicleMagnetNotes("");
     setBusinessCardQty(250); setBusinessCardSides("single"); setBusinessCardCoating("Gloss Laminate"); setBusinessCardOrientation("Landscape"); setBusinessCardRush(false);
     setHandheldPaperSizeKey("3.5x2.5"); setHandheldPaperSides("single"); setHandheldPaperCoating("Gloss Laminate"); setHandheldPaperOrientation("Landscape"); setHandheldPaperRush(false);
+    setDtfSummary(null);
+    if (isMobile) {
+      window.requestAnimationFrame(() => {
+        document.getElementById("quote-details-anchor")?.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+    }
   }
 
   function preset(prod, w, h, double = false) {
@@ -641,6 +648,11 @@ export default function Page() {
           .layout {
             display: flex;
             flex-direction: column;
+            padding-bottom: 120px;
+          }
+
+          .card {
+            padding-bottom: 140px;
           }
 
           .themeToggle{display:flex;gap:6px;align-items:center;margin:8px 0 14px;flex-wrap:wrap;max-width:100%;}
