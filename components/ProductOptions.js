@@ -99,6 +99,16 @@ export default function ProductOptions(props) {
     setPvcRush,
     pvcCustomCut,
     setPvcCustomCut,
+    polystyreneDouble,
+    setPolystyreneDouble,
+    polystyreneContour,
+    setPolystyreneContour,
+    polystyreneGloss,
+    setPolystyreneGloss,
+    polystyreneRush,
+    setPolystyreneRush,
+    polystyreneCustomCut,
+    setPolystyreneCustomCut,
     vehicleMagnetMode,
     setVehicleMagnetMode,
     vehicleMagnetPreset,
@@ -414,6 +424,18 @@ export default function ProductOptions(props) {
           <Check label="Contour Cut +15%" value={pvcContour} setValue={setPvcContour} />
           <Check label="Rush Order (2x)" value={pvcRush} setValue={setPvcRush} />
           <Check label="Custom Cut (No additional cost)" value={pvcCustomCut} setValue={setPvcCustomCut} />
+        </Box>
+      )}
+      {activeProduct === "polystyrene" && (
+        <Box title="Polystyrene .03 Options">
+          <p style={{ marginTop: 0, fontStyle: "italic", opacity: 0.9 }}>
+            Pricing is based on full-sheet production. Sizes may be automatically rotated to achieve the most efficient sheet layout and reduce material waste.
+          </p>
+          <Check label="Double-Sided" value={polystyreneDouble} setValue={setPolystyreneDouble} />
+          <Check label="Contour Cut +15%" value={polystyreneContour} setValue={setPolystyreneContour} />
+          <Check label="Gloss Finish (+$4 each)" value={polystyreneGloss} setValue={setPolystyreneGloss} />
+          <Check label="Rush Order (2x)" value={polystyreneRush} setValue={setPolystyreneRush} />
+          <Check label="Custom Cut (No additional cost)" value={polystyreneCustomCut} setValue={setPolystyreneCustomCut} />
         </Box>
       )}
       {activeProduct === "vehicleMagnets" && (

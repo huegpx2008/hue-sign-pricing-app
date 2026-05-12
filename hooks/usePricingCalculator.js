@@ -3,6 +3,7 @@ import {
   num,
   getFoamcoreSheetPrice,
   getPvcSheetPrice,
+  getPolystyreneSheetPrice,
   getTierPrice,
   getCoroSheetCost,
   shippingBySize,
@@ -20,6 +21,7 @@ import {
   foamcoreSheetPricing,
   pvcSheetPricing,
   pvcOptions,
+  polystyreneSheetPricing,
 } from "../data/productConfig";
 
 export default function usePricingCalculator({
@@ -81,6 +83,11 @@ export default function usePricingCalculator({
   pvcContour,
   pvcRush,
   pvcCustomCut,
+  polystyreneDouble,
+  polystyreneContour,
+  polystyreneGloss,
+  polystyreneRush,
+  polystyreneCustomCut,
   vehicleMagnetMode,
   vehicleMagnetPreset,
   vehicleMagnetContour,
@@ -407,6 +414,30 @@ export default function usePricingCalculator({
       const retail = (basePrice + fees) * mult;
       const costMarginPrice = sheetRetailPrice + shipping;
       return { label: "PVC", quantity: q, retail, each: retail / q, cost: directCost, profit: retail - directCost, margin: retail ? ((retail - directCost) / retail) * 100 : 0, totalSqFt, materialCost, shipping, sheetsUsed, sheetsRounded, piecesPerSheet: layout.piecesPerSheet, sheetLayout: `${layout.across} across x ${layout.down} down${layout.rotated ? " (rotated)" : ""}`, sheetAcross: layout.across, sheetDown: layout.down, sheetRotated: layout.rotated, previewPieceW: layout.rotated ? h : w, previewPieceH: layout.rotated ? w : h, sheetPrice, handlingFeeEach, handlingFeeTotal, costPerPiece, pvcType: pvcOptions[pvcType].name, costMarginPrice, basePrice };
+    }
+
+
+    if (product === "polystyrene") {
+      const layout = sheetLayoutCount(w, h, q, true);
+      const sheetsUsed = Math.max(layout.sheetsUsed, 1);
+      const sheetsRounded = Math.max(layout.sheetsRounded, 1);
+      const sheetPrice = getPolystyreneSheetPrice(sheetsRounded, polystyreneDouble, polystyreneSheetPricing);
+      const materialCost = sheetsRounded * sheetPrice;
+      const shipping = shippingBySize(w, h, sheetsRounded);
+      const glossDirectCost = polystyreneGloss ? q * 4 : 0;
+      const directCost = materialCost + glossDirectCost + shipping;
+      const costPerPiece = materialCost / q;
+      const sheetRetailPrice = materialCost / (1 - m);
+      const handlingFeeEach = handlingFeeByQty(q, { low: 2.5, mid: 2.0, high: 1.5 });
+      const handlingFeeTotal = q * handlingFeeEach;
+      const glossRetail = polystyreneGloss ? (q * 4) / (1 - m) : 0;
+      let subtotalBeforeContour = sheetRetailPrice + handlingFeeTotal + glossRetail;
+      if (polystyreneContour) subtotalBeforeContour *= contourUpchargeMultiplier;
+      if (polystyreneRush) subtotalBeforeContour *= 2;
+      const basePrice = subtotalBeforeContour + shipping;
+      const retail = (basePrice + fees) * mult;
+      const costMarginPrice = sheetRetailPrice + shipping;
+      return { label: "Polystyrene .03", quantity: q, retail, each: retail / q, cost: directCost, profit: retail - directCost, margin: retail ? ((retail - directCost) / retail) * 100 : 0, totalSqFt, materialCost, shipping, sheetsUsed, sheetsRounded, piecesPerSheet: layout.piecesPerSheet, sheetLayout: `${layout.across} across x ${layout.down} down${layout.rotated ? " (rotated)" : ""}`, sheetAcross: layout.across, sheetDown: layout.down, sheetRotated: layout.rotated, previewPieceW: layout.rotated ? h : w, previewPieceH: layout.rotated ? w : h, sheetPrice, handlingFeeEach, handlingFeeTotal, costPerPiece, glossDirectCost, glossRetail, costMarginPrice, basePrice };
     }
 
     if (product === "vehicleMagnets") {

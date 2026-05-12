@@ -8,6 +8,7 @@ export const products = {
   reflective: "Reflective Vinyl",
   poster: "Poster Paper",
   foamcore: "Foamcore",
+  polystyrene: "Polystyrene .03",
 };
 
 export const acrylicOption = { name: "Acrylic", costPerSqIn: 0.1, minCost: 14.4 };
@@ -25,7 +26,7 @@ export const productCategories = [
     { id: "acm", label: "ACM / Maxmetal", calculator: "acm" },
     { id: "poster", label: "Poster Paper", calculator: "poster" },
     { id: "acrylic", label: "Acrylic", calculator: "acrylic" }, { id: "foamcore", label: "Foamcore", calculator: "foamcore" },
-    { id: "pvc", label: "PVC", calculator: "pvc" }, { id: "polystyrene", label: "Polystyrene" },
+    { id: "pvc", label: "PVC", calculator: "pvc" }, { id: "polystyrene", label: "Polystyrene .03", calculator: "polystyrene" },
     { id: "aluminum", label: "Aluminum" }, { id: "backlit", label: "Backlit" },
     { id: "vehicleMagnets", label: "Vehicle Magnets", calculator: "vehicleMagnets" },
   ] },
@@ -131,6 +132,19 @@ export const pvcSheetPricing = {
   ],
 };
 
+
+export const polystyreneSheetPricing = {
+  single: [
+    { max: 9, price: 55 },
+    { max: 50, price: 45 },
+    { max: Infinity, price: 40 },
+  ],
+  double: [
+    { max: 9, price: 65 },
+    { max: 50, price: 55 },
+    { max: Infinity, price: 50 },
+  ],
+};
 export const pvcOptions = {
   "3-single": { name: "3mm Single-Sided" },
   "3-double": { name: "3mm Double-Sided" },
