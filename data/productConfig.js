@@ -41,7 +41,7 @@ export const productCategories = [
   { name: "Screen Printing", items: [
     { id: "screenPrinting", label: "Screen Printing", calculator: "screenPrinting" },
     { id: "dtfTransfers", label: "DTF Transfers", calculator: "dtfTransfers" },
-    { id: "embroidery", label: "Embroidery" },
+    { id: "embroidery", label: "Embroidery", calculator: "embroidery" },
   ] },
   { name: "Paper Printing", items: [
     { id: "businessCards", label: "Business Cards", calculator: "businessCards" },
