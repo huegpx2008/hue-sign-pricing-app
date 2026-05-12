@@ -106,6 +106,9 @@ export default function FullSheetLayoutPreview({ calc, sheetW = 48, sheetH = 96,
       <p style={{ margin: "6px 0", fontSize: 12, fontStyle: "italic", color: "#cbd5e1" }}>
         Auto-rotation may be used to optimize sheet usage and reduce waste.
       </p>
+      <p style={{ margin: "6px 0", fontSize: 12, fontStyle: "italic", color: "#cbd5e1" }}>
+        Pricing includes full-sheet production setup plus finishing labor per piece.
+      </p>
       <p style={{ margin: "6px 0", fontSize: 12, color: "#cbd5e1" }}>
         {roundedSheets > 1
           ? `Showing final sheet layout: ${usedSlots} of ${totalSlots} slots used (Sheet ${roundedSheets} of ${roundedSheets})`
