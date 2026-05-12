@@ -401,8 +401,10 @@ export default function PricingSummary({
       </aside>
 
       <div className="mobilePrice" role="button" tabIndex={0} onClick={scrollToQuoteSummary} onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && scrollToQuoteSummary()} style={{ cursor: "pointer", borderColor: activeTheme?.summaryBorder, boxShadow: `0 10px 20px ${activeTheme?.accentGlow || "rgba(0,0,0,.35)"}`, background: `linear-gradient(160deg, rgba(11,23,56,.92), rgba(15,23,42,.95)), ${activeTheme?.mobileTint || "rgba(56,189,248,.1)"}` }}>
-        <div className="mobilePriceTop"><strong>Suggested Retail {money(summaryCalc.retail).replace("$", "$ ")}</strong></div>
-        {isDtf ? (
+        <div className="mobilePriceTop"><strong>{hasProductSelected ? `Suggested Retail ${money(summaryCalc.retail).replace("$", "$ ")}` : "Select item to add to quote"}</strong></div>
+        {!hasProductSelected ? (
+          <div className="mobileOptions">Total: {money(0)}</div>
+        ) : isDtf ? (
           <>
             <div className="mobileMeta">
               DTF Transfers • {dtfData.totalGarmentQty || 0} garments
