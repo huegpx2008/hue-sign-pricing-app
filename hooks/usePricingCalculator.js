@@ -7,6 +7,7 @@ import {
   getTierPrice,
   getCoroSheetCost,
   shippingBySize,
+  acmShippingBySize,
   sheetLayoutCount,
   getVinylBillableSqFt,
 } from "../utils/pricingHelpers";
@@ -15,6 +16,7 @@ import {
   acrylicStandOffOptions,
   bannerOptions,
   acmOptions,
+  aluminumOptions,
   vinylOptions,
   coroPricing,
   coroSheetCost,
@@ -58,7 +60,7 @@ export default function usePricingCalculator({
   meshWebbing,
   meshRush,
   acmType,
-  acmSqFtPrice,
+  aluminumType,
   acmContour,
   roundedCorners,
   acrylicContour,
@@ -338,18 +340,69 @@ export default function usePricingCalculator({
       const materialCost = costEach * q;
       const shipping = shippingBySize(w, h, sheetsRounded);
       const directCost = materialCost + shipping;
-      const marginCostBase = materialCost;
-      let costMarginPrice = marginCostBase / (1 - m);
-      let shopPrice = totalSqFt * num(acmSqFtPrice, 18);
-      if (roundedCorners) {
-        costMarginPrice += 5;
-        shopPrice += 5;
-      }
+      let costMarginPrice = materialCost / (1 - m);
+      if (roundedCorners) costMarginPrice += 5;
       costMarginPrice += shipping;
+      let shopPrice = totalSqFt * 18;
+      if (roundedCorners) shopPrice += 5;
       const subtotalBeforeContour = Math.max(costMarginPrice, shopPrice);
       const basePrice = acmContour ? subtotalBeforeContour * contourUpchargeMultiplier : subtotalBeforeContour;
       const retail = (basePrice + fees) * mult;
-      return { label: "ACM / Maxmetal", retail, each: retail / q, cost: directCost, profit: retail - directCost, margin: retail ? ((retail - directCost) / retail) * 100 : 0, totalSqFt, materialCost, shipping, sheetsUsed, sheetsRounded, piecesPerSheet: layout.piecesPerSheet, sheetLayout: `${layout.across} across x ${layout.down} down${layout.rotated ? " (rotated)" : ""}`, costMarginPrice, shopPrice, basePrice };
+      return { label: "ACM / Maxmetal", retail, each: retail / q, cost: directCost, profit: retail - directCost, margin: retail ? ((retail - directCost) / retail) * 100 : 0, totalSqFt, materialCost, shipping, sheetsUsed, sheetsRounded, piecesPerSheet: layout.piecesPerSheet, sheetLayout: `${layout.across} across x ${layout.down} down${layout.rotated ? " (rotated)" : ""}` };
+    }
+
+    if (product === "aluminum") {
+      const a = aluminumOptions[aluminumType];
+      const costEach = Math.max(sqInEach * a.costPerSqIn, a.minCost);
+      const layout = sheetLayoutCount(w, h, q, true);
+      const sheetsUsed = layout.sheetsUsed;
+      const sheetsRounded = layout.sheetsRounded;
+      const materialCost = costEach * q;
+      const shipping = acmShippingBySize(w, h, sheetsRounded);
+      const directCost = materialCost + shipping;
+      const sqInRetailEach = costEach / (1 - m);
+      let baseRetail = sqInRetailEach * q;
+      if (acmContour) baseRetail *= contourUpchargeMultiplier;
+      const roundedCornersRetailFee = roundedCorners ? 8 : 0;
+      const roundedCornersOptimizedRetailFee = roundedCorners ? 20 : 0;
+      const sqInDirectWithOptions = materialCost + (roundedCorners ? 5 : 0);
+      const sheetTier = a.sheetPricing.find((tier) => sheetsRounded <= tier.max)?.price || a.sheetPricing[a.sheetPricing.length - 1].price;
+      const fullSheetDirectMaterial = sheetsRounded * sheetTier;
+      const fullSheetDirectWithOptions = fullSheetDirectMaterial + (roundedCorners ? 15 : 0);
+      const optimizationSavings = sqInDirectWithOptions - fullSheetDirectWithOptions;
+      const shouldRecommendFullSheet = optimizationSavings > 0;
+      const roundedCornersRetailApplied = shouldRecommendFullSheet ? roundedCornersOptimizedRetailFee : roundedCornersRetailFee;
+      const retail = (baseRetail + roundedCornersRetailApplied + shipping + fees) * mult;
+      return {
+        label: "Aluminum",
+        retail,
+        each: retail / q,
+        cost: directCost,
+        profit: retail - directCost,
+        margin: retail ? ((retail - directCost) / retail) * 100 : 0,
+        totalSqFt,
+        materialCost,
+        shipping,
+        sheetsUsed,
+        sheetsRounded,
+        piecesPerSheet: layout.piecesPerSheet,
+        sheetLayout: `${layout.across} across x ${layout.down} down${layout.rotated ? " (rotated)" : ""}`,
+        sheetAcross: layout.across,
+        sheetDown: layout.down,
+        sheetRotated: layout.rotated,
+        previewPieceW: layout.rotated ? h : w,
+        previewPieceH: layout.rotated ? w : h,
+        roundedCornersRetailFee: roundedCornersRetailApplied,
+        roundedCornersDirectSqInFee: roundedCorners ? 5 : 0,
+        roundedCornersDirectSheetFee: roundedCorners ? 15 : 0,
+        sqInDirectCost: sqInDirectWithOptions,
+        fullSheetDirectCost: fullSheetDirectWithOptions,
+        fullSheetDirectMaterial,
+        fullSheetPriceEach: sheetTier,
+        shouldRecommendFullSheet,
+        optimizationSavings,
+        recommendedMethod: shouldRecommendFullSheet ? "Full Sheet" : "Square Inch",
+      };
     }
 
     if (product === "acrylic") {
@@ -526,7 +579,7 @@ export default function usePricingCalculator({
       costMarginPrice,
       basePrice,
     };
-  }, [product, width, height, qty, margin, multiplier, useDesignFee, useSetupFee, designFee, setupFee, delivery, activeProduct, productMap, coroDouble, coroFlute, stakes, heavyStakes, grommets, gloss, coroContour, coroRush, bannerType, polePocket, rope, windSlits, bannerRush, meshPolePocket, meshGrommets, meshWelding, meshRope, meshWebbing, meshRush, acmType, acmSqFtPrice, acmContour, roundedCorners, acrylicContour, acrylicRoundedCorners, acrylicStandOffs, acrylicStandOffQty, acrylicStandOffColor, vinylType, vinylLaminate, vinylContour, vinylRush, gangVinyl, contourPadding, gangWastePercent, posterRush, foamcoreDouble, foamcoreContour, foamcoreGloss, foamcoreRush, foamcoreCustomCut, pvcType, pvcContour, pvcRush, pvcCustomCut, vehicleMagnetMode, vehicleMagnetPreset, vehicleMagnetContour, vehicleMagnetRush, businessCardQty, businessCardSides, businessCardRush, handheldPaperSize, handheldPaperSides, handheldPaperRush, carbonlessFormType, carbonlessSize, carbonlessQty, carbonlessPrintType, carbonlessPrintSides, carbonlessNumbering, carbonlessWraparound, carbonlessBookedSets, carbonlessRush, doorHangerSize, doorHangerQty, doorHangerType, doorHangerInk, doorHangerBackPrinting, doorHangerPerforation, doorHangerShrinkWrap]);
+  }, [product, width, height, qty, margin, multiplier, useDesignFee, useSetupFee, designFee, setupFee, delivery, activeProduct, productMap, coroDouble, coroFlute, stakes, heavyStakes, grommets, gloss, coroContour, coroRush, bannerType, polePocket, rope, windSlits, bannerRush, meshPolePocket, meshGrommets, meshWelding, meshRope, meshWebbing, meshRush, acmType, acmContour, roundedCorners, acrylicContour, acrylicRoundedCorners, acrylicStandOffs, acrylicStandOffQty, acrylicStandOffColor, vinylType, vinylLaminate, vinylContour, vinylRush, gangVinyl, contourPadding, gangWastePercent, posterRush, foamcoreDouble, foamcoreContour, foamcoreGloss, foamcoreRush, foamcoreCustomCut, pvcType, pvcContour, pvcRush, pvcCustomCut, vehicleMagnetMode, vehicleMagnetPreset, vehicleMagnetContour, vehicleMagnetRush, businessCardQty, businessCardSides, businessCardRush, handheldPaperSize, handheldPaperSides, handheldPaperRush, carbonlessFormType, carbonlessSize, carbonlessQty, carbonlessPrintType, carbonlessPrintSides, carbonlessNumbering, carbonlessWraparound, carbonlessBookedSets, carbonlessRush, doorHangerSize, doorHangerQty, doorHangerType, doorHangerInk, doorHangerBackPrinting, doorHangerPerforation, doorHangerShrinkWrap]);
 
   return calc;
 }

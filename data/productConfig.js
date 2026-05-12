@@ -3,6 +3,7 @@ export const products = {
   banner: "Vinyl Banners",
   meshBanner: "Mesh Banners",
   acm: "ACM / Maxmetal",
+  aluminum: "Aluminum",
   acrylic: "Acrylic",
   vinyl: "Printed Vinyl",
   reflective: "Reflective Vinyl",
@@ -27,7 +28,7 @@ export const productCategories = [
     { id: "poster", label: "Poster Paper", calculator: "poster" },
     { id: "acrylic", label: "Acrylic", calculator: "acrylic" }, { id: "foamcore", label: "Foamcore", calculator: "foamcore" },
     { id: "pvc", label: "PVC", calculator: "pvc" }, { id: "polystyrene", label: "Polystyrene .03", calculator: "polystyrene" },
-    { id: "aluminum", label: "Aluminum" }, { id: "backlit", label: "Backlit" },
+    { id: "aluminum", label: "Aluminum", calculator: "aluminum" }, { id: "backlit", label: "Backlit" },
     { id: "vehicleMagnets", label: "Vehicle Magnets", calculator: "vehicleMagnets" },
   ] },
   { name: "Vinyl / Decals", items: [
@@ -64,6 +65,12 @@ export const acmOptions = {
   "3-double": { name: "3mm Double-Sided", costPerSqIn: 0.06, minCost: 8.64 },
   "6-single": { name: "6mm Single-Sided", costPerSqIn: 0.08, minCost: 11.52 },
   "6-double": { name: "6mm Double-Sided", costPerSqIn: 0.09, minCost: 12.96 },
+};
+export const aluminumOptions = {
+  "040-single": { name: ".040 Single-Sided", costPerSqIn: 0.06, minCost: 8.64, sheetPricing: [{ max: 9, price: 175 }, { max: 17, price: 165 }, { max: Infinity, price: 155 }] },
+  "040-double": { name: ".040 Double-Sided", costPerSqIn: 0.07, minCost: 10.08, sheetPricing: [{ max: 9, price: 200 }, { max: 17, price: 190 }, { max: Infinity, price: 180 }] },
+  "080-single": { name: ".080 Single-Sided", costPerSqIn: 0.10, minCost: 14.40, sheetPricing: [{ max: 9, price: 300 }, { max: 17, price: 290 }, { max: Infinity, price: 280 }] },
+  "080-double": { name: ".080 Double-Sided", costPerSqIn: 0.11, minCost: 15.84, sheetPricing: [{ max: 9, price: 325 }, { max: 17, price: 315 }, { max: Infinity, price: 305 }] },
 };
 export const vinylOptions = {
   "gf-standard": { name: "GF 203OAPAE Standard Vinyl", cost: 2.49, retail: 8.75 },
