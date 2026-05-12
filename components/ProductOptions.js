@@ -409,7 +409,7 @@ export default function ProductOptions(props) {
       {activeProduct === "screenPrinting" && <ScreenPrinting margin={margin} multiplier={multiplier} onSummaryChange={onDtfSummaryChange} />}
 
       {activeProduct === "dtfTransfers" && <DTFTransfers onSummaryChange={onDtfSummaryChange} isAdminView={isAdminView} />}
-      {activeProduct === "embroidery" && <Embroidery onSummaryChange={onDtfSummaryChange} />}
+      {activeProduct === "embroidery" && <Embroidery onSummaryChange={onDtfSummaryChange} isAdminView={isAdminView} />}
 
       {activeProduct === "pvc" && (
         <Box title="PVC Options">

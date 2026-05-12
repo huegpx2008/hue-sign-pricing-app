@@ -396,8 +396,9 @@ export default function PricingSummary({
             {isAdminView && isEmbroidery && <p><strong>Garment Direct Cost:</strong> {money(dtfSummary.apparelDirectCost || 0)}</p>}
             {isAdminView && isEmbroidery && <p><strong>Garment Retail Subtotal:</strong> {money(dtfSummary.apparelRetailSubtotal || 0)}</p>}
             {isAdminView && isEmbroidery && <p><strong>Embroidery Direct / item:</strong> {money(dtfSummary.embroideryEachDirect || 0)}</p>}
+            {isAdminView && isEmbroidery && <p style={{ fontWeight: 800, padding: "8px 10px", borderLeft: "4px solid #f59e0b", background: "rgba(245,158,11,0.15)", borderRadius: 6 }}><strong>OUTSOURCED EMBROIDERY COST (Embroidery Direct Total):</strong> {money(dtfSummary.embroideryDirectTotal || 0)}</p>}
             {isAdminView && isEmbroidery && <p><strong>Embroidery Retail / item:</strong> {money(dtfSummary.embroideryRetailEach || 0)}</p>}
-            {isAdminView && isEmbroidery && <p><strong>Embroidery Subtotal:</strong> {money(dtfSummary.embroiderySubtotal || 0)}</p>}
+            {isAdminView && isEmbroidery && <p><strong>Embroidery Retail Subtotal:</strong> {money(dtfSummary.embroideryRetailSubtotal || dtfSummary.embroiderySubtotal || 0)}</p>}
             {isAdminView && isEmbroidery && <p><strong>Handling Allowance:</strong> {money(dtfSummary.handlingDirect || 0)} direct</p>}
             <p><strong>Final Retail:</strong> {money(dtfSummary.retail)}</p>
             {((dtfSummary.lineItems || []).length <= 1) && <p><strong>Average price per item:</strong> {money(dtfSummary.averagePricePerShirt || dtfSummary.each)}</p>}
