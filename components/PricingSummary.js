@@ -281,9 +281,9 @@ export default function PricingSummary({
 
         {isAdminView && <button className="modeBtn" style={{ marginBottom: 10 }} onClick={() => setShowBreakdown((v) => !v)}>{showBreakdown ? "Hide" : "Show"} Detailed Breakdown</button>}
 
-        {!isDtf && showBreakdown && calc.actualTotalSqFt !== undefined && <p>Actual Sq Ft: {calc.actualTotalSqFt.toFixed(2)}</p>}
-        {!isDtf && showBreakdown && calc.effectiveSqFtEach !== undefined && <p>Effective Sq Ft Each: {showBreakdown && calc.effectiveSqFtEach.toFixed(2)}</p>}
-        {!isDtf && showBreakdown && calc.billableSqFtEach !== undefined && <p>Billable Sq Ft Each: {showBreakdown && calc.billableSqFtEach.toFixed(2)}</p>}
+        {!isDtf && !isEmbroidery && showBreakdown && calc.actualTotalSqFt !== undefined && <p>Actual Sq Ft: {calc.actualTotalSqFt.toFixed(2)}</p>}
+        {!isDtf && !isEmbroidery && showBreakdown && calc.effectiveSqFtEach !== undefined && <p>Effective Sq Ft Each: {showBreakdown && calc.effectiveSqFtEach.toFixed(2)}</p>}
+        {!isDtf && !isEmbroidery && showBreakdown && calc.billableSqFtEach !== undefined && <p>Billable Sq Ft Each: {showBreakdown && calc.billableSqFtEach.toFixed(2)}</p>}
         {!isDtf && showBreakdown && calc.layoutWidth !== undefined && calc.layoutHeight !== undefined && (
           <p>Layout Size: {showBreakdown && calc.layoutWidth}" x {calc.layoutHeight}"</p>
         )}
@@ -296,12 +296,12 @@ export default function PricingSummary({
         {showBreakdown && calc.costMarginPrice !== undefined && <p>Cost + Margin Price: {money(calc.costMarginPrice)}</p>}
         {showBreakdown && activeProduct === "carbonless" && calc.retailMultiplier !== undefined && <p>Retail Multiplier: {calc.retailMultiplier.toFixed(2)}x</p>}
         {showBreakdown && calc.shopPrice !== undefined && <p>Shop Sq Ft Price: {money(calc.shopPrice)}</p>}
-        {showBreakdown && calc.sheetsUsed !== undefined && <p>Sheets Used: {showBreakdown && calc.sheetsUsed.toFixed(2)}</p>}
-        {showBreakdown && calc.sheetsRounded !== undefined && <p>Sheets Rounded: {showBreakdown && calc.sheetsRounded}</p>}
-        {showBreakdown && calc.piecesPerSheet !== undefined && <p>Pieces Per Sheet: {showBreakdown && calc.piecesPerSheet}</p>}
-        {showBreakdown && calc.sheetLayout !== undefined && <p>Sheet Layout: {showBreakdown && calc.sheetLayout}</p>}
+        {!isEmbroidery && showBreakdown && calc.sheetsUsed !== undefined && <p>Sheets Used: {showBreakdown && calc.sheetsUsed.toFixed(2)}</p>}
+        {!isEmbroidery && showBreakdown && calc.sheetsRounded !== undefined && <p>Sheets Rounded: {showBreakdown && calc.sheetsRounded}</p>}
+        {!isEmbroidery && showBreakdown && calc.piecesPerSheet !== undefined && <p>Pieces Per Sheet: {showBreakdown && calc.piecesPerSheet}</p>}
+        {!isEmbroidery && showBreakdown && calc.sheetLayout !== undefined && <p>Sheet Layout: {showBreakdown && calc.sheetLayout}</p>}
         {showBreakdown && calc.costPerPiece !== undefined && <p>Cost Per Piece: {money(calc.costPerPiece)}</p>}
-        {isAdminView && <p>Material Cost: {money(summaryCalc.materialCost)}</p>}
+        {isAdminView && !isEmbroidery && <p>Material Cost: {money(summaryCalc.materialCost)}</p>}
         {calc.standOffQty !== undefined && calc.standOffQty > 0 && (
           <>
             <p>Stand-Off Qty: {calc.standOffQty} ({calc.standOffColor})</p>
@@ -367,35 +367,40 @@ export default function PricingSummary({
           </div>
         ) : (isScreenPrint || isEmbroidery) ? (
           <div style={{ marginTop: 16, padding: 16, borderRadius: 16, background: "rgba(255,255,255,0.08)", color: "#e5e7eb", fontSize: 14, lineHeight: 1.35 }}>
-            <h3 style={{ marginTop: 0 }}>Screen Printing Details</h3>
-            <p><strong>Product:</strong> Screen Printing</p>
+            <h3 style={{ marginTop: 0 }}>{isEmbroidery ? "Embroidery Details" : "Screen Printing Details"}</h3>
+            <p><strong>Product:</strong> {isEmbroidery ? "Embroidery" : "Screen Printing"}</p>
             {(dtfSummary.lineItems || []).map((li, idx) => (
               <div key={`${li.id}-${idx}`} style={{ marginBottom: 10, paddingBottom: 8, borderBottom: "1px solid rgba(148,163,184,0.35)" }}>
                 <p><strong>Line {idx + 1}:</strong> {li.style} — {li.title || ""}</p>
                 <p><strong>Color:</strong> {li.color || "Not selected"}</p>
                 <p><strong>Sizes:</strong> {Object.entries(li.sizeQty || {}).filter(([,v]) => Number(v) > 0).map(([k,v]) => `${k}:${v}`).join(", ") || "None"}</p>
                 <p><strong>Total Qty:</strong> {li.totalQty}</p>
-                {isAdminView && <p><strong>CASE_PRICE (avg):</strong> {money(li.casePrice || 0)}</p>}
-                {isAdminView && <p><strong>Product Markup %:</strong> {li.productMarkupPercent || dtfSummary.productMarkupPercent}%</p>}
+                {isAdminView && !isEmbroidery && <p><strong>CASE_PRICE (avg):</strong> {money(li.casePrice || 0)}</p>}
                 {isAdminView && <p><strong>Final Retail Subtotal:</strong> {money(li.finalRetailSubtotal || 0)}</p>}
-                {isAdminView && <p><strong>Print Charge Per Shirt:</strong> {money(li.printChargePerShirt || 0)}</p>}
                 {(li.sizePriceBreakdown || []).length ? (
-                  <p><strong>Price breakdown:</strong> {(isAdminView ? formatSizePriceBreakdown(li.sizePriceBreakdown).join(" • ") : getScreenCustomerPriceTiers(li).map((tier) => `${tier.label} Price Each: ${money(tier.priceEach)}`).join(" • "))}</p>
+                  <p><strong>Price breakdown:</strong> {(li.sizePriceBreakdown || []).map((tier) => `${tier.label || tier.size}: ${tier.qty} @ ${money(tier.priceEach || tier.garmentPriceEach || 0)}`).join(" • ")}</p>
                 ) : (
                   <p><strong>Final Retail Per Shirt:</strong> {money(li.retailPerShirt || 0)}</p>
                 )}
               </div>
             ))}
             <p><strong>Total Garments:</strong> {dtfSummary.totalGarments}</p>
-            {(dtfSummary.printLines || []).map((pl, idx) => (
+            {!isEmbroidery && (dtfSummary.printLines || []).map((pl, idx) => (
               <p key={`${pl.id}-${idx}`}><strong>{pl.name}:</strong> {pl.colors} colors{isAdminView ? ` • ${pl.pricingType} • ${money(pl.pricePerPrint)}/print • ${money(pl.subtotal)}` : ""}</p>
             ))}
-            {Number(dtfSummary.setupFee || 0) > 0 && <p><strong>Artwork/Setup Fee:</strong> {money(dtfSummary.setupFee)}</p>}
-            {isAdminView && <p><strong>Apparel Direct Cost:</strong> {money(dtfSummary.apparelDirectCost)}</p>}
-            {isAdminView && <p><strong>Apparel Retail Subtotal:</strong> {money(dtfSummary.apparelRetailSubtotal)}</p>}
-            {isAdminView && <p><strong>Print Charge Subtotal:</strong> {money(dtfSummary.printChargeSubtotal)}</p>}
+            {isEmbroidery && <p><strong>Stitch Count:</strong> {dtfSummary.stitchCount}</p>}
+            {isEmbroidery && <p><strong>Stitch Tier Used:</strong> {dtfSummary.stitchTierUsed}</p>}
+            {isEmbroidery && <p><strong>Placement:</strong> {(dtfSummary.placements || []).join(", ")}</p>}
+            {isEmbroidery && <p><strong>Thread Colors:</strong> {dtfSummary.threadColors}</p>}
+            {isEmbroidery && Number(dtfSummary.digitizingFees || 0) > 0 && <p><strong>Digitizing Fee(s):</strong> {money(dtfSummary.digitizingFees)}</p>}
+            {isAdminView && isEmbroidery && <p><strong>Garment Direct Cost:</strong> {money(dtfSummary.apparelDirectCost || 0)}</p>}
+            {isAdminView && isEmbroidery && <p><strong>Garment Retail Subtotal:</strong> {money(dtfSummary.apparelRetailSubtotal || 0)}</p>}
+            {isAdminView && isEmbroidery && <p><strong>Embroidery Direct / item:</strong> {money(dtfSummary.embroideryEachDirect || 0)}</p>}
+            {isAdminView && isEmbroidery && <p><strong>Embroidery Retail / item:</strong> {money(dtfSummary.embroideryRetailEach || 0)}</p>}
+            {isAdminView && isEmbroidery && <p><strong>Embroidery Subtotal:</strong> {money(dtfSummary.embroiderySubtotal || 0)}</p>}
+            {isAdminView && isEmbroidery && <p><strong>Handling Allowance:</strong> {money(dtfSummary.handlingDirect || 0)} direct</p>}
             <p><strong>Final Retail:</strong> {money(dtfSummary.retail)}</p>
-            {((dtfSummary.lineItems || []).length <= 1) && <p><strong>Average price per shirt:</strong> {money(dtfSummary.averagePricePerShirt || dtfSummary.each)}</p>}
+            {((dtfSummary.lineItems || []).length <= 1) && <p><strong>Average price per item:</strong> {money(dtfSummary.averagePricePerShirt || dtfSummary.each)}</p>}
             {isAdminView && <p><strong>Profit:</strong> {money(dtfSummary.profit)}</p>}
           </div>
         ) : <SelectedDetails details={selectedDetails} />}
@@ -419,8 +424,8 @@ export default function PricingSummary({
           </>
         ) : (isScreenPrint || isEmbroidery) ? (
           <>
-            <div className="mobileMeta">Screen Printing • {dtfSummary.totalGarments || 0} garments • {(dtfSummary.lineItems || []).filter((li) => li.totalQty > 0).length} style(s)</div>
-            <div className="mobileOptions">{(dtfSummary.printLines || []).length ? (dtfSummary.printLines || []).map((pl) => `${pl.name} ${pl.colors}-color`).join(" • ") : "No print locations selected"} • Total: {money(dtfSummary.retail)}</div>
+            <div className="mobileMeta">{isEmbroidery ? `Embroidery • ${dtfSummary.totalGarments || 0} garments • ${(dtfSummary.lineItems || []).filter((li) => li.totalQty > 0).length} style(s)` : `Screen Printing • ${dtfSummary.totalGarments || 0} garments • ${(dtfSummary.lineItems || []).filter((li) => li.totalQty > 0).length} style(s)`}</div>
+            <div className="mobileOptions">{isEmbroidery ? `Stitches ${dtfSummary.stitchCount || 0} • ${(dtfSummary.placements || []).join(", ") || "No placement selected"} • Total: ${money(dtfSummary.retail)}` : `${(dtfSummary.printLines || []).length ? (dtfSummary.printLines || []).map((pl) => `${pl.name} ${pl.colors}-color`).join(" • ") : "No print locations selected"} • Total: ${money(dtfSummary.retail)}`}</div>
           </>
         ) : (
           <>

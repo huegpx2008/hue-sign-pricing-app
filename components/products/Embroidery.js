@@ -23,19 +23,19 @@ export default function Embroidery({ onSummaryChange }) {
 
   const summary=useMemo(()=>{const li=lineItems.map((l)=>{const g=styles.get(l.styleKey); const t=Object.values(l.sizeQty).reduce((s,q)=>s+n(q),0); const matchedRows=(g?.rows||[]).filter((r)=>r.color===l.color);
     const garmentCost=SIZES.reduce((s,sz)=>{const q=n(l.sizeQty[sz]);const row=matchedRows.find((r)=>String(r.size).trim().toUpperCase()===sz);return s+(row?.casePrice||0)*q;},0);
-    const sizePriceBreakdown=SIZES.map((sz)=>{const qty=n(l.sizeQty[sz]);if(qty<=0)return null;const row=matchedRows.find((r)=>String(r.size).trim().toUpperCase()===sz);const blank=row?.casePrice||0;return {size:sz,qty,blankCasePrice:blank,garmentPriceEach:blank*1.15};}).filter(Boolean);
+    const sizePriceBreakdown=SIZES.map((sz)=>{const qty=n(l.sizeQty[sz]);if(qty<=0)return null;const row=matchedRows.find((r)=>String(r.size).trim().toUpperCase()===sz);const blank=row?.casePrice||0;return {size:sz,qty,blankCasePrice:blank};}).filter(Boolean);
     return {...l,style:g?.style||"",title:g?.title||"",totalQty:t,garmentCost,sizePriceBreakdown,isCap:/(cap|hat|beanie)/i.test(`${g?.title||""} ${placements.join(" ")}`)};});
   const totalGarments=li.reduce((s,x)=>s+x.totalQty,0); const idx=Math.max(tierIndex(totalGarments||1),0);
   const rounded=Math.min(Math.max(Math.ceil(stitchCount/1000)*1000,5000),15000); const base=(STITCH_MATRIX[rounded]||STITCH_MATRIX[15000])[idx];
   const extra1k=stitchCount>15000?Math.ceil((stitchCount-15000)/1000):0; const stitchEach=stitchCount>15000?STITCH_MATRIX[15000][idx]+extra1k*PLUS_PER_1K[idx]:base;
   const threadExtraEach=Math.max(threadColors-2,0)*3; const namesEach=addNames?(largeNames?8:6):0; const numbersEach=addNumbers?(largeNumbers?STITCH_MATRIX[5000][0]:6):0; const puffEach=puff3mm?1.5:0;
   const embroideryEachDirect=stitchEach+threadExtraEach+namesEach+numbersEach+puffEach; const embroideryRetailEach=embroideryEachDirect/0.4;
-  const apparelCost=li.reduce((s,x)=>s+x.garmentCost,0); const apparelRetail=apparelCost*1.15; const embroiderySubtotal=embroideryRetailEach*totalGarments;
+  const apparelCost=li.reduce((s,x)=>s+x.garmentCost,0); const apparelRetail=apparelCost/0.4; const embroiderySubtotal=embroideryRetailEach*totalGarments;
   const handlingDirect=2; const handlingRetail=handlingDirect/0.4; const hasCaps=li.some((x)=>x.isCap&&x.totalQty>0); const hasFlats=li.some((x)=>!x.isCap&&x.totalQty>0);
   const digitizingFees=digitizingStatus.includes("Needs")?((hasCaps&&hasFlats)?110:55):0;
   const retail=apparelRetail+embroiderySubtotal+handlingRetail+digitizingFees; const cost=apparelCost+(embroideryEachDirect*totalGarments)+handlingDirect+digitizingFees;
-  const lineItemsWithAlloc=li.map((x)=>{const per=x.totalQty?((x.garmentCost*1.15)/x.totalQty)+embroideryRetailEach:0;return {...x,retailPerShirt:per,finalRetailSubtotal:per*x.totalQty,printChargePerShirt:embroideryRetailEach};});
-  return {label:"Embroidery",retail,each:totalGarments?retail/totalGarments:0,cost,profit:retail-cost,margin:retail?((retail-cost)/retail)*100:0,totalGarments,lineItems:lineItemsWithAlloc,stitchCount,threadColors,placements,digitizingFees,digitizingStatus,embroideryEachDirect,embroideryRetailEach,handlingDirect,minimumWarning:totalGarments>0&&totalGarments<5,adminNotes:[stitchCount>15000?"Calculated using 15,000+ stitch formula":"",largeNumbers?"Large numbers use piece-price embroidery logic":""].filter(Boolean)};
+  const lineItemsWithAlloc=li.map((x)=>{const per=x.totalQty?((x.garmentCost/0.4)/x.totalQty)+embroideryRetailEach:0;const tiers=(x.sizePriceBreakdown||[]).map((t)=>({label:["S","M","L","XL"].includes(t.size)?"S-XL":t.size,qty:t.qty,priceEach:(t.blankCasePrice/0.4)+embroideryRetailEach}));return {...x,retailPerShirt:per,finalRetailSubtotal:per*x.totalQty,embroideryRetailEach,sizePriceBreakdown:tiers};});
+  return {label:"Embroidery",retail,each:totalGarments?retail/totalGarments:0,cost,profit:retail-cost,margin:retail?((retail-cost)/retail)*100:0,totalGarments,lineItems:lineItemsWithAlloc,stitchCount,threadColors,placements,digitizingFees,digitizingStatus,embroideryEachDirect,embroideryRetailEach,embroiderySubtotal,apparelDirectCost:apparelCost,apparelRetailSubtotal:apparelRetail,threadExtraEach,namesEach,numbersEach,puffEach,handlingDirect,stitchTierUsed:rounded,qtyTierIndex:idx,minimumWarning:totalGarments>0&&totalGarments<5,adminNotes:[stitchCount>15000?"Calculated using 15,000+ stitch formula":"",largeNumbers?"Large numbers use piece-price embroidery logic":""].filter(Boolean)};
   },[lineItems,styles,stitchCount,threadColors,addNames,largeNames,addNumbers,largeNumbers,puff3mm,digitizingStatus,placements]);
   useEffect(()=>onSummaryChange?.(summary),[summary,onSummaryChange]);
 
