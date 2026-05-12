@@ -3,6 +3,7 @@ import { acrylicStandOffOptions, acmOptions, aluminumOptions, bannerOptions, pvc
 import { money } from "../utils/pricingHelpers";
 import DTFTransfers from "./products/DTFTransfers";
 import ScreenPrinting from "./products/ScreenPrinting";
+import Embroidery from "./products/Embroidery";
 
 export default function ProductOptions(props) {
   const {
@@ -408,6 +409,7 @@ export default function ProductOptions(props) {
       {activeProduct === "screenPrinting" && <ScreenPrinting margin={margin} multiplier={multiplier} onSummaryChange={onDtfSummaryChange} />}
 
       {activeProduct === "dtfTransfers" && <DTFTransfers onSummaryChange={onDtfSummaryChange} isAdminView={isAdminView} />}
+      {activeProduct === "embroidery" && <Embroidery onSummaryChange={onDtfSummaryChange} />}
 
       {activeProduct === "pvc" && (
         <Box title="PVC Options">

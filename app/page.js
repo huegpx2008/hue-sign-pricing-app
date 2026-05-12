@@ -40,7 +40,7 @@ export default function Page() {
     }
     if (typeof window === "undefined" || window.innerWidth > 800) return;
     window.requestAnimationFrame(() => {
-      const toQuoteDetails = ["dtfTransfers", "screenPrinting"].includes(nextProduct);
+      const toQuoteDetails = ["dtfTransfers", "screenPrinting", "embroidery"].includes(nextProduct);
       const anchorId = toQuoteDetails ? "quote-details-anchor" : "quick-presets-anchor";
       document.getElementById(anchorId)?.scrollIntoView({ behavior: "smooth", block: "start" });
     });
@@ -929,7 +929,7 @@ export default function Page() {
           />
 
 
-          {activeProduct !== "dtfTransfers" && activeProduct !== "screenPrinting" && activeProduct !== "carbonless" && (
+          {activeProduct !== "dtfTransfers" && activeProduct !== "screenPrinting" && activeProduct !== "embroidery" && activeProduct !== "carbonless" && (
             <div className="formGrid" style={grid}>
               {activeProduct !== "businessCards" && <Field label="Quantity" value={qty} setValue={setQty} />}
               {(activeProduct !== "vehicleMagnets" || vehicleMagnetMode === "custom") && !["businessCards", "handheld16ptPaper", "doorHangers"].includes(activeProduct) && product !== "coro" && <Field label="Width Inches" value={width} setValue={setWidth} />}
@@ -942,7 +942,7 @@ export default function Page() {
 
           {activeProduct !== "carbonless" && <button className="resetBtn" onClick={resetAll}>Reset to Defaults</button>}
 
-          {isAdminView && activeProduct !== "screenPrinting" && <Box title="Optional Fees">
+          {isAdminView && activeProduct !== "screenPrinting" && activeProduct !== "embroidery" && <Box title="Optional Fees">
             <Check label="Add Design Fee" value={useDesignFee} setValue={setUseDesignFee} />
             {useDesignFee && <Field label="Design Fee" value={designFee} setValue={setDesignFee} />}
             <Check label="Add Setup Fee" value={useSetupFee} setValue={setUseSetupFee} />

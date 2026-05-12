@@ -63,8 +63,9 @@ export default function PricingSummary({
   const hasProductSelected = Boolean(product);
   const isDtf = activeProduct === "dtfTransfers" && dtfSummary;
   const isScreenPrint = activeProduct === "screenPrinting" && dtfSummary;
+  const isEmbroidery = activeProduct === "embroidery" && dtfSummary;
   const dtfData = dtfSummary || {};
-  const summaryCalc = (isDtf || isScreenPrint) ? dtfSummary : calc;
+  const summaryCalc = (isDtf || isScreenPrint || isEmbroidery) ? dtfSummary : calc;
   const getCurrentItemCustomerDetailLines = () => {
     if (isDtf) {
       return [
@@ -114,9 +115,9 @@ export default function PricingSummary({
   };
   const buildCurrentQuoteItem = () => ({
     id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
-    product: isDtf ? (dtfSummary?.dtfMode === "dtfOnly" ? "DTF Transfers Only" : "DTF Transfers") : isScreenPrint ? "Screen Printing" : calc.label,
-    quantity: isDtf ? dtfSummary?.totalGarmentQty || 0 : isScreenPrint ? dtfSummary?.totalGarments || 0 : selectedDetails?.qty || num(qty, 1),
-    each: isScreenPrint ? dtfSummary?.averagePricePerShirt || dtfSummary?.each || 0 : summaryCalc.each || 0,
+    product: isDtf ? (dtfSummary?.dtfMode === "dtfOnly" ? "DTF Transfers Only" : "DTF Transfers") : isScreenPrint ? "Screen Printing" : isEmbroidery ? "Embroidery" : calc.label,
+    quantity: isDtf ? dtfSummary?.totalGarmentQty || 0 : (isScreenPrint || isEmbroidery) ? dtfSummary?.totalGarments || 0 : selectedDetails?.qty || num(qty, 1),
+    each: (isScreenPrint || isEmbroidery) ? dtfSummary?.averagePricePerShirt || dtfSummary?.each || 0 : summaryCalc.each || 0,
     total: summaryCalc.retail || 0,
     safeDetails: getCurrentItemCustomerDetailLines(),
     adminDetails: [
@@ -256,7 +257,7 @@ export default function PricingSummary({
         </div>
         <h2>{isAdminView ? "Suggested Retail" : "Selected Item Preview"}</h2>
         <div style={{ fontSize: 42, fontWeight: "bold" }}>{money(hasProductSelected ? summaryCalc.retail : 0)}</div>
-        {hasProductSelected && !isScreenPrint && !isDtf && !(isScreenPrint && (dtfData.lineItems || []).length > 1) && <p>Each: <strong>{money(summaryCalc.each || 0)}</strong></p>}
+        {hasProductSelected && !isScreenPrint && !isEmbroidery && !isDtf && !(isScreenPrint && (dtfData.lineItems || []).length > 1) && <p>Each: <strong>{money(summaryCalc.each || 0)}</strong></p>}
         {hasProductSelected && isDtf && (dtfData.dtfMode !== "dtfOnly") && (
           <div>
             {(dtfData.sizePriceBreakdown || []).filter((tier) => Number(tier.qty || 0) > 0).map((tier) => (
@@ -275,8 +276,8 @@ export default function PricingSummary({
         ))}
         {isAdminView && <p>Profit: <strong>{money(summaryCalc.profit)}</strong></p>}
         <hr style={{ borderColor: activeTheme?.divider }} />
-        <p>Product: {hasProductSelected ? (isDtf ? "DTF Transfers" : isScreenPrint ? "Screen Printing" : calc.label) : "Select a product"}</p>
-        {!isDtf && !isScreenPrint && isAdminView && <p>Total Sq Ft: {calc.totalSqFt?.toFixed(2)}</p>}
+        <p>Product: {hasProductSelected ? (isDtf ? "DTF Transfers" : isScreenPrint ? "Screen Printing" : isEmbroidery ? "Embroidery" : calc.label) : "Select a product"}</p>
+        {!isDtf && !isScreenPrint && !isEmbroidery && isAdminView && <p>Total Sq Ft: {calc.totalSqFt?.toFixed(2)}</p>}
 
         {isAdminView && <button className="modeBtn" style={{ marginBottom: 10 }} onClick={() => setShowBreakdown((v) => !v)}>{showBreakdown ? "Hide" : "Show"} Detailed Breakdown</button>}
 
@@ -337,7 +338,7 @@ export default function PricingSummary({
           </>
         )}
 
-        {!isDtf && !isScreenPrint && <ProductVisual product={activeProduct || product} comingSoon={!activeProduct} />}
+        {!isDtf && !isScreenPrint && !isEmbroidery && <ProductVisual product={activeProduct || product} comingSoon={!activeProduct} />}
         {!isDtf && (["vinyl", "reflective", "footprints"].includes(activeProduct)) && <VinylLayoutPreview calc={calc} />}
         {!isDtf && (activeProduct === "foamcore" || activeProduct === "pvc" || activeProduct === "polystyrene" || product === "coroSigns") && <SheetLayoutPreview calc={calc} title={product === "coroSigns" ? "Custom Cut Coro Sheet Layout" : "Sheet Layout Preview"} />}
         {isDtf ? (
@@ -364,7 +365,7 @@ export default function PricingSummary({
             {isAdminView && <p><strong>Transfer Count:</strong> {dtfData.transferCount || 0}</p>}
             {isAdminView && <p><strong>Size Upcharges:</strong> {money(dtfData.sizeUpchargeTotal || 0)}</p>}
           </div>
-        ) : isScreenPrint ? (
+        ) : (isScreenPrint || isEmbroidery) ? (
           <div style={{ marginTop: 16, padding: 16, borderRadius: 16, background: "rgba(255,255,255,0.08)", color: "#e5e7eb", fontSize: 14, lineHeight: 1.35 }}>
             <h3 style={{ marginTop: 0 }}>Screen Printing Details</h3>
             <p><strong>Product:</strong> Screen Printing</p>
@@ -416,7 +417,7 @@ export default function PricingSummary({
               {` • Total: ${money(dtfData.retail || 0)}`}
             </div>
           </>
-        ) : isScreenPrint ? (
+        ) : (isScreenPrint || isEmbroidery) ? (
           <>
             <div className="mobileMeta">Screen Printing • {dtfSummary.totalGarments || 0} garments • {(dtfSummary.lineItems || []).filter((li) => li.totalQty > 0).length} style(s)</div>
             <div className="mobileOptions">{(dtfSummary.printLines || []).length ? (dtfSummary.printLines || []).map((pl) => `${pl.name} ${pl.colors}-color`).join(" • ") : "No print locations selected"} • Total: {money(dtfSummary.retail)}</div>
