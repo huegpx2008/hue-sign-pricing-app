@@ -85,6 +85,14 @@ export default function ProductVisual({ product, comingSoon }) {
       </div>
     );
   }
+  if (product === "polystyrene") {
+    return (
+      <div style={visualBox}>
+        <div style={pvcVisual}>POLYSTYRENE .03</div>
+        <p style={visualLabel}>Polystyrene .03 Selected</p>
+      </div>
+    );
+  }
 
   if (product === "dtfTransfers") {
     return (
@@ -247,3 +255,4 @@ const reflectiveVisual = {
   fontWeight: "bold",
   border: "4px dashed #94a3b8",
 };
+

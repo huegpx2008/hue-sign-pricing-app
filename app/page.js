@@ -108,6 +108,11 @@ export default function Page() {
   const [pvcContour, setPvcContour] = useState(false);
   const [pvcRush, setPvcRush] = useState(false);
   const [pvcCustomCut, setPvcCustomCut] = useState(false);
+  const [polystyreneDouble, setPolystyreneDouble] = useState(false);
+  const [polystyreneContour, setPolystyreneContour] = useState(false);
+  const [polystyreneGloss, setPolystyreneGloss] = useState(false);
+  const [polystyreneRush, setPolystyreneRush] = useState(false);
+  const [polystyreneCustomCut, setPolystyreneCustomCut] = useState(false);
   const [vehicleMagnetMode, setVehicleMagnetMode] = useState("standard");
   const [vehicleMagnetPreset, setVehicleMagnetPreset] = useState("18x12");
   const [vehicleMagnetContour, setVehicleMagnetContour] = useState(false);
@@ -222,6 +227,7 @@ export default function Page() {
     setPosterRush(false);
     setFoamcoreDouble(false); setFoamcoreContour(false); setFoamcoreGloss(false); setFoamcoreRush(false); setFoamcoreCustomCut(false);
     setPvcType("3-single"); setPvcContour(false); setPvcRush(false); setPvcCustomCut(false);
+    setPolystyreneDouble(false); setPolystyreneContour(false); setPolystyreneGloss(false); setPolystyreneRush(false); setPolystyreneCustomCut(false);
     setVehicleMagnetMode("standard"); setVehicleMagnetPreset("18x12"); setVehicleMagnetContour(false); setVehicleMagnetRoundedCorners(false); setVehicleMagnetRush(false); setVehicleMagnetNotes("");
     setBusinessCardQty(250); setBusinessCardSides("single"); setBusinessCardCoating("Gloss Laminate"); setBusinessCardOrientation("Landscape"); setBusinessCardRush(false);
     setHandheldPaperSizeKey("3.5x2.5"); setHandheldPaperSides("single"); setHandheldPaperCoating("Gloss Laminate"); setHandheldPaperOrientation("Landscape"); setHandheldPaperRush(false);
@@ -302,6 +308,11 @@ export default function Page() {
       { label: "24x48", w: 24, h: 48 }, { label: "32x48", w: 32, h: 48 }, { label: "36x48", w: 36, h: 48 },
       { label: "48x48", w: 48, h: 48 },
     ],
+    polystyrene: [
+      { label: "12x18", w: 12, h: 18 }, { label: "18x24", w: 18, h: 24 }, { label: "24x36", w: 24, h: 36 },
+      { label: "24x48", w: 24, h: 48 }, { label: "32x48", w: 32, h: 48 }, { label: "36x48", w: 36, h: 48 },
+      { label: "48x48", w: 48, h: 48 },
+    ],
   };
 
   const calc = usePricingCalculator({
@@ -363,6 +374,11 @@ export default function Page() {
     pvcContour,
     pvcRush,
     pvcCustomCut,
+    polystyreneDouble,
+    polystyreneContour,
+    polystyreneGloss,
+    polystyreneRush,
+    polystyreneCustomCut,
     vehicleMagnetMode,
     vehicleMagnetPreset,
     vehicleMagnetContour,
@@ -424,6 +440,8 @@ export default function Page() {
         ? foamcoreDouble ? "Foamcore Double-Sided" : "Foamcore Single-Sided"
         : activeProduct === "pvc"
         ? pvcOptions[pvcType].name
+        : activeProduct === "polystyrene"
+        ? polystyreneDouble ? "Polystyrene .03 Double-Sided" : "Polystyrene .03 Single-Sided"
         : activeProduct === "vehicleMagnets"
         ? vehicleMagnetMode === "custom" ? "Custom Cut Vehicle Magnet" : "Standard Vehicle Magnet"
         : activeProduct === "businessCards"
@@ -491,6 +509,11 @@ export default function Page() {
       activeProduct === "pvc" && pvcContour ? "Contour Cut" : null,
       activeProduct === "pvc" && pvcRush ? "Rush Order" : null,
       activeProduct === "pvc" && pvcCustomCut ? "Custom Cut" : null,
+      activeProduct === "polystyrene" ? (polystyreneDouble ? "Polystyrene .03: Double-Sided" : "Polystyrene .03: Single-Sided") : null,
+      activeProduct === "polystyrene" && polystyreneContour ? "Contour Cut" : null,
+      activeProduct === "polystyrene" && polystyreneGloss ? "Gloss Finish" : null,
+      activeProduct === "polystyrene" && polystyreneRush ? "Rush Order" : null,
+      activeProduct === "polystyrene" && polystyreneCustomCut ? "Custom Cut" : null,
       activeProduct === "vehicleMagnets" ? `Magnet Type: ${vehicleMagnetMode === "custom" ? "Custom Cut" : "Standard"}` : null,
       activeProduct === "vehicleMagnets" && vehicleMagnetMode !== "custom" ? `Size: ${vehicleMagnetPreset}` : null,
       activeProduct === "vehicleMagnets" && vehicleMagnetMode === "custom" ? `Custom Size: ${num(width)}" x ${num(height)}"` : null,
@@ -817,6 +840,16 @@ export default function Page() {
             setPvcRush={setPvcRush}
             pvcCustomCut={pvcCustomCut}
             setPvcCustomCut={setPvcCustomCut}
+            polystyreneDouble={polystyreneDouble}
+            setPolystyreneDouble={setPolystyreneDouble}
+            polystyreneContour={polystyreneContour}
+            setPolystyreneContour={setPolystyreneContour}
+            polystyreneGloss={polystyreneGloss}
+            setPolystyreneGloss={setPolystyreneGloss}
+            polystyreneRush={polystyreneRush}
+            setPolystyreneRush={setPolystyreneRush}
+            polystyreneCustomCut={polystyreneCustomCut}
+            setPolystyreneCustomCut={setPolystyreneCustomCut}
             vehicleMagnetMode={vehicleMagnetMode}
             setVehicleMagnetMode={setVehicleMagnetMode}
             vehicleMagnetPreset={vehicleMagnetPreset}

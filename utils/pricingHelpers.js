@@ -20,6 +20,11 @@ export function getPvcSheetPrice(sheetCount, pvcType, pvcSheetPricing) {
   return tiers.find((tier) => sheetCount <= tier.max)?.price || tiers[tiers.length - 1].price;
 }
 
+
+export function getPolystyreneSheetPrice(sheetCount, doubleSided, polystyreneSheetPricing) {
+  const tiers = doubleSided ? polystyreneSheetPricing.double : polystyreneSheetPricing.single;
+  return tiers.find((tier) => sheetCount <= tier.max)?.price || tiers[tiers.length - 1].price;
+}
 export function getTierPrice(qty, type, coroPricing) {
   let price = coroPricing[type][0].price;
   for (let t of coroPricing[type]) {
