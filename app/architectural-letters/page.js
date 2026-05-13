@@ -83,8 +83,16 @@ export default function ArchitecturalLettersPage() {
         <Link href="/" style={{ display: "inline-block", marginBottom: 16, color: "#1d4ed8", textDecoration: "none", fontWeight: 700 }}>← Back to main pricing app</Link>
         <section style={{ background: "rgba(255,255,255,.95)", borderRadius: 16, borderTop: "1px solid rgba(30,64,175,.18)", boxShadow: "0 10px 30px rgba(15,23,42,.09)", padding: 20 }}>
           <h1 style={{ marginTop: 0, marginBottom: 6 }}>Architectural Letters</h1>
-          <p style={{ marginTop: 0, color: "#475569" }}>Phase 1: Product flow, data model, and pricing architecture placeholders.</p>
+          <p style={{ marginTop: 0, color: "#475569" }}>Phase 3: Admin pricing lookup testing from parsed spreadsheet data.</p>
 
+
+          {!isAdminView ? (
+            <div style={{ marginTop: 16, border: "1px dashed #94a3b8", borderRadius: 10, padding: 16, background: "#fff" }}>
+              <strong>Coming Soon</strong>
+              <div>Architectural Letters customer quoting remains locked while pricing validation is in progress.</div>
+            </div>
+          ) : (
+          <>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 8, marginTop: 16, marginBottom: 18 }}>
             {architecturalLetterSteps.map((step, idx) => (
               <button key={step.id} onClick={() => setStepIndex(idx)} style={{ padding: "10px 8px", borderRadius: 8, border: idx === stepIndex ? "2px solid #1d4ed8" : "1px solid #cbd5e1", background: idx === stepIndex ? "#dbeafe" : "#fff", fontWeight: 700 }}>
@@ -99,7 +107,9 @@ export default function ArchitecturalLettersPage() {
             <button onClick={() => setStepIndex((s) => Math.max(0, s - 1))} disabled={stepIndex === 0}>Back</button>
             <button onClick={() => setStepIndex((s) => Math.min(architecturalLetterSteps.length - 1, s + 1))} disabled={stepIndex === architecturalLetterSteps.length - 1}>Next</button>
           </div>
-        </section>
+
+          </>
+          )}        </section>
       </div>
     </main>
   );
@@ -154,10 +164,51 @@ function AdminDebugPanel({ form, mode }) {
     load();
   }, [form, mode]);
 
+  const sourcePrice = debug?.bestMatch?.numericPrice ?? 0;
+  const subtotal = sourcePrice * (Number(form.quantity) || 1);
+  const freight = subtotal * 0.1;
+  const retail = subtotal * 1.35;
+  const profit = retail - subtotal - freight;
+
   return (
-    <details style={{ marginTop: 14, background: "#fff", borderRadius: 8, border: "1px solid #cbd5e1", padding: 10 }}>
-      <summary style={{ fontWeight: 700, cursor: "pointer" }}>Admin Pricing Debug (Spreadsheet Source)</summary>
-      <pre style={{ fontSize: 12, maxHeight: 360, overflow: "auto" }}>{JSON.stringify(debug, null, 2)}</pre>
-    </details>
+    <div style={{ marginTop: 14, display: "grid", gap: 12 }}>
+      <div style={{ background: "#fff", borderRadius: 8, border: "1px solid #cbd5e1", padding: 12 }}>
+        <h4 style={{ marginTop: 0, marginBottom: 8 }}>Admin Pricing Match Results</h4>
+        {debug?.bestMatch ? (
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 8 }}>
+            <MatchCell label="Matched product/category" value={debug.bestMatch.matchedProductCategory} />
+            <MatchCell label="Matched material" value={debug.bestMatch.matchedMaterial} />
+            <MatchCell label="Matched thickness/depth" value={debug.bestMatch.matchedThicknessDepth} />
+            <MatchCell label="Matched size/height" value={debug.bestMatch.matchedSizeHeight} />
+            <MatchCell label="Matched price" value={debug.bestMatch.matchedPrice} />
+            <MatchCell label="Source sheet/tab name" value={debug.bestMatch.sourceSheetName} />
+            <MatchCell label="Source row" value={String(debug.bestMatch.sourceRow)} />
+          </div>
+        ) : (
+          <div>No pricing match found</div>
+        )}
+      </div>
+
+      <div style={{ background: "#fff", borderRadius: 8, border: "1px solid #cbd5e1", padding: 12 }}>
+        <h4 style={{ marginTop: 0, marginBottom: 8 }}>Admin Test Quote</h4>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 8 }}>
+          <MatchCell label="Source price from spreadsheet" value={sourcePrice ? `$${sourcePrice.toFixed(2)}` : "—"} />
+          <MatchCell label="Quantity" value={String(form.quantity)} />
+          <MatchCell label="Estimated subtotal" value={`$${subtotal.toFixed(2)}`} />
+          <MatchCell label="Freight placeholder" value={`$${freight.toFixed(2)}`} />
+          <MatchCell label="Retail placeholder" value={`$${retail.toFixed(2)}`} />
+          <MatchCell label="Profit placeholder" value={`$${profit.toFixed(2)}`} />
+        </div>
+      </div>
+
+      <details style={{ background: "#fff", borderRadius: 8, border: "1px solid #cbd5e1", padding: 10 }}>
+        <summary style={{ fontWeight: 700, cursor: "pointer" }}>Admin Pricing Debug (Spreadsheet Source)</summary>
+        <pre style={{ fontSize: 12, maxHeight: 360, overflow: "auto" }}>{JSON.stringify(debug, null, 2)}</pre>
+      </details>
+    </div>
   );
+}
+
+function MatchCell({ label, value }) {
+  return <div style={{ border: "1px solid #e2e8f0", borderRadius: 8, padding: 8 }}><div style={{ fontSize: 12, color: "#64748b" }}>{label}</div><div style={{ fontWeight: 700 }}>{value || "—"}</div></div>;
 }
