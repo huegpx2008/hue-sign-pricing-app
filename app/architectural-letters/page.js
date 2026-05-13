@@ -212,13 +212,14 @@ function LiveLetterMockup({ form, metrics }) {
   const lines = metrics.lines;
   const align = form.previewAlignment === "right" ? "right" : form.previewAlignment === "center" ? "center" : "left";
   const [background, setBackground] = useState("light-wall");
+  const [previewMode, setPreviewMode] = useState("clean");
   const isFabricated = /fabricated/i.test(form.productType);
   const isFlatCut = /flat cut/i.test(form.productType);
   const finishLabel = `${form.finish} ${form.material}`.toLowerCase();
   const depthScale = { '1/8"': 1, '1/4"': 2, '3/8"': 3, '1/2"': 5, '3/4"': 7, '1"': 9, '1.5"': 11, '2"': 14, Custom: 16 };
   const returnDepthScale = { '1/2"': 5, '1"': 8, '1.5"': 11, '2"': 14, Custom: 16 };
   const baseDepth = Math.max(depthScale[form.thickness] || 2, returnDepthScale[form.returnDepth] || 2);
-  const depth = isFabricated ? baseDepth + 3 : isFlatCut ? Math.max(2, baseDepth - 2) : baseDepth;
+  const depth = isFabricated ? Math.min(6, Math.max(3, Math.round(baseDepth / 2))) : isFlatCut ? Math.min(3, Math.max(1, Math.round(baseDepth / 3))) : Math.min(5, Math.max(2, Math.round(baseDepth / 2.5)));
   const glow = form.lighting === "Halo-Lit"
     ? "0 2px 4px rgba(15,23,42,.35), 0 0 14px rgba(96,165,250,.7), 0 0 24px rgba(186,230,253,.6)"
     : form.lighting === "Face-Lit"
@@ -239,16 +240,19 @@ function LiveLetterMockup({ form, metrics }) {
             : /acrylic|lit/i.test(finishLabel + form.productType)
               ? "linear-gradient(180deg,#f8fbff 0%,#cfe7ff 38%,#6b9fd8 70%,#dbeafe 100%)"
               : "linear-gradient(100deg,#d4d4d8 0%,#71717a 45%,#e4e4e7 100%)";
-  const sideColor = isFabricated ? "rgba(30,41,59,.58)" : "rgba(51,65,85,.34)";
-  const standoffShadow = form.mounting === "Stud Mount" ? "0 10px 18px rgba(15,23,42,.24)" : form.mounting === "Pad Mount" ? "0 8px 12px rgba(15,23,42,.18)" : form.mounting === "Double-Face Tape" ? "0 3px 6px rgba(15,23,42,.14)" : "0 6px 10px rgba(15,23,42,.2)";
+  const sideColor = isFabricated ? "rgba(51,65,85,.45)" : "rgba(71,85,105,.3)";
+  const standoffShadow = form.mounting === "Stud Mount" ? "0 2px 5px rgba(15,23,42,.18)" : form.mounting === "Pad Mount" ? "0 2px 4px rgba(15,23,42,.16)" : form.mounting === "Double-Face Tape" ? "0 1px 2px rgba(15,23,42,.1)" : "0 2px 4px rgba(15,23,42,.14)";
   const backgroundStyleMap = {
-    "light-wall": "linear-gradient(180deg,#f8fafc,#e2e8f0)",
-    "dark-wall": "linear-gradient(180deg,#334155,#0f172a)",
-    brick: "repeating-linear-gradient(0deg,#8b5e4b 0 22px,#774b39 22px 24px), repeating-linear-gradient(90deg,#a87358 0 60px,#8b5e4b 60px 62px)",
-    wood: "repeating-linear-gradient(90deg,#7c5a3a 0 26px,#8b6543 26px 52px,#6f4e34 52px 78px)",
+    "light-wall": "linear-gradient(180deg,#f8fafc,#edf2f7)",
+    "dark-wall": "linear-gradient(180deg,#334155,#1e293b)",
+    brick: "repeating-linear-gradient(0deg,#9b735f 0 24px,#8d654f 24px 25px), repeating-linear-gradient(90deg,#ac826a 0 64px,#97715a 64px 65px)",
+    wood: "repeating-linear-gradient(90deg,#8a6b4f 0 30px,#7a5d43 30px 60px,#6e523b 60px 90px)",
   };
 
-  const renderReturnShadow = (layerDepth) => Array.from({ length: layerDepth }, (_, idx) => `${idx + 1}px ${idx + 1}px 0 ${sideColor}`).join(",");
+  const renderReturnShadow = (layerDepth) => Array.from({ length: layerDepth }, (_, idx) => `${Math.min(4, idx + 1)}px ${Math.min(4, idx + 1)}px 0 ${sideColor}`).join(",");
+  const grainOverlay = finishLabel.includes("brushed") || finishLabel.includes("stainless")
+    ? "repeating-linear-gradient(100deg, rgba(255,255,255,.14) 0 2px, rgba(148,163,184,.08) 2px 4px)"
+    : "none";
 
   return (
     <div style={{ background: "#fff", borderRadius: 10, border: "1px solid #cbd5e1", padding: 12 }}>
@@ -272,25 +276,33 @@ function LiveLetterMockup({ form, metrics }) {
           <option value="wood">Wood / slat wall</option>
         </select>
       </label>
-      <div style={{ marginTop: 10, minHeight: 170, borderRadius: 8, border: "1px dashed #94a3b8", padding: 16, background: backgroundStyleMap[background], backgroundSize: "cover", textAlign: align, overflow: "hidden", position: "relative" }}>
-        {form.mounting === "Raceway" && <div style={{ position: "absolute", left: "8%", right: "8%", top: "36%", height: 16, borderRadius: 8, background: "linear-gradient(180deg,#94a3b8,#475569)", boxShadow: "0 3px 8px rgba(15,23,42,.35)" }} />}
+      <label style={{ display: "block", marginTop: 10 }}>
+        Preview Mode
+        <select style={fieldStyle} value={previewMode} onChange={(e) => setPreviewMode(e.target.value)}>
+          <option value="clean">Clean Mockup</option>
+          <option value="depth">Depth Emphasis</option>
+        </select>
+      </label>
+      <div style={{ marginTop: 10, minHeight: 190, borderRadius: 8, border: "1px dashed #94a3b8", padding: 16, background: backgroundStyleMap[background], backgroundSize: "cover", textAlign: align, overflow: "hidden", position: "relative", display: "flex", flexDirection: "column", justifyContent: "center", gap: 8 }}>
+        {form.mounting === "Raceway" && <div style={{ position: "absolute", left: "12%", right: "12%", top: "44%", height: 10, borderRadius: 6, background: "linear-gradient(180deg,#94a3b8,#64748b)", boxShadow: "0 1px 4px rgba(15,23,42,.2)" }} />}
         {lines.map((line, idx) => (
           <div
             key={`${idx}-${line}`}
             style={{
-              fontSize: "clamp(26px, 5vw, 40px)",
-              lineHeight: 1.15,
+              fontSize: "clamp(30px, 5.2vw, 42px)",
+              lineHeight: 1.2,
               fontWeight: 800,
               letterSpacing: ".06em",
               color: "transparent",
-              background: fill,
+              background: grainOverlay === "none" ? fill : `${grainOverlay}, ${fill}`,
               WebkitBackgroundClip: "text",
-              textShadow: `${renderReturnShadow(depth)}, ${standoffShadow}, ${glow}`,
+              textShadow: `${renderReturnShadow(previewMode === "depth" ? Math.min(6, depth + 1) : depth)}, ${standoffShadow}, ${glow}`,
               transform: form.productType === "Flat Cut Acrylic" ? "skewX(-1deg)" : "none",
-              minHeight: 44,
+              minHeight: 48,
               position: "relative",
               zIndex: 2,
-              filter: finishLabel.includes("brushed") ? "contrast(1.05) saturate(0.9)" : finishLabel.includes("acrylic") ? "brightness(1.08)" : "none",
+              filter: finishLabel.includes("brushed") ? "brightness(1.05) contrast(1.05)" : finishLabel.includes("acrylic") ? "brightness(1.1)" : "none",
+              textAlign: align,
             }}
           >
             {line || "‎"}
