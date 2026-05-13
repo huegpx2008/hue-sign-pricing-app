@@ -66,9 +66,13 @@ export default function ArchitecturalLettersPage() {
           <div style={{ display: "grid", gap: 12 }}>
             <Select label="Shipping Method" value={form.shippingMethod} options={architecturalLetterCatalog.shippingMethods} onChange={(value) => update("shippingMethod", value)} />
             <Select label="Freight Category" value={form.freightCategory} options={architecturalLetterCatalog.freightCategories} onChange={(value) => update("freightCategory", value)} />
+            <NumberField label="Sets" value={form.sets} onChange={(value) => update("sets", value)} />
+            <NumberField label="Freight ($)" value={form.freight} min={0} onChange={(value) => update("freight", value)} />
+            <NumberField label="Adjustment / Discount ($)" value={form.adjustment} min={-999999} onChange={(value) => update("adjustment", value)} />
+            <NumberField label="Markup Multiplier (optional test)" value={form.markupMultiplier} min={0} step={0.01} onChange={(value) => update("markupMultiplier", value)} />
             <label>
               Ship To ZIP
-              <input style={fieldStyle} value={form.shippingZip} onChange={(e) => update("shippingZip", e.target.value)} placeholder="Optional in Phase 1" />
+              <input style={fieldStyle} value={form.shippingZip} onChange={(e) => update("shippingZip", e.target.value)} placeholder="Optional in Phase 4" />
             </label>
           </div>
         );
@@ -83,7 +87,7 @@ export default function ArchitecturalLettersPage() {
         <Link href="/" style={{ display: "inline-block", marginBottom: 16, color: "#1d4ed8", textDecoration: "none", fontWeight: 700 }}>← Back to main pricing app</Link>
         <section style={{ background: "rgba(255,255,255,.95)", borderRadius: 16, borderTop: "1px solid rgba(30,64,175,.18)", boxShadow: "0 10px 30px rgba(15,23,42,.09)", padding: 20 }}>
           <h1 style={{ marginTop: 0, marginBottom: 6 }}>Architectural Letters</h1>
-          <p style={{ marginTop: 0, color: "#475569" }}>Phase 3: Admin pricing lookup testing from parsed spreadsheet data.</p>
+          <p style={{ marginTop: 0, color: "#475569" }}>Phase 4: Admin quote calculation using parsed spreadsheet pricing matches.</p>
 
 
           {!isAdminView ? (
@@ -119,15 +123,15 @@ function Select({ label, value, options, onChange }) {
   return <label>{label}<select style={fieldStyle} value={value} onChange={(e) => onChange(e.target.value)}>{options.map((option) => <option key={option} value={option}>{option}</option>)}</select></label>;
 }
 
-function NumberField({ label, value, onChange }) {
-  return <label>{label}<input type="number" min={1} style={fieldStyle} value={value} onChange={(e) => onChange(Number(e.target.value) || 1)} /></label>;
+function NumberField({ label, value, onChange, min = 1, step = 1 }) {
+  return <label>{label}<input type="number" min={min} step={step} style={fieldStyle} value={value} onChange={(e) => onChange(Number(e.target.value) || 0)} /></label>;
 }
 
 function QuoteSummary({ form, pricingModel, isAdminView, mode }) {
   return (
     <div>
       <h3 style={{ marginTop: 0 }}>Quote Summary</h3>
-      <p style={{ marginTop: 0, color: "#64748b" }}>Final pricing logic will be connected in Phase 2 from spreadsheet, wholesale, and freight tables.</p>
+      <p style={{ marginTop: 0, color: "#64748b" }}>Spreadsheet matched price is currently treated as retail/base unit price for admin-only testing.</p>
       <pre style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 8, padding: 12, overflowX: "auto" }}>{JSON.stringify(form, null, 2)}</pre>
       {isAdminView ? (
         <>
@@ -164,45 +168,65 @@ function AdminDebugPanel({ form, mode }) {
     load();
   }, [form, mode]);
 
-  const sourcePrice = debug?.bestMatch?.numericPrice ?? 0;
-  const subtotal = sourcePrice * (Number(form.quantity) || 1);
-  const freight = subtotal * 0.1;
-  const retail = subtotal * 1.35;
-  const profit = retail - subtotal - freight;
+  const quantity = Number(form.quantity) || 0;
+  const characterCount = Number(form.characterCount) || 0;
+  const sets = Number(form.sets) || 0;
+  const freight = Number(form.freight) || 0;
+  const adjustment = Number(form.adjustment) || 0;
+  const markupMultiplier = Number(form.markupMultiplier) || 1;
+  const sourcePrice = debug?.bestMatch?.numericPrice ?? null;
+  const effectiveSets = sets > 0 ? sets : 1;
+  const billableCharacters = quantity * characterCount * effectiveSets;
+  const subtotal = sourcePrice != null ? sourcePrice * billableCharacters : 0;
+  const adjustedSubtotal = subtotal + adjustment;
+  const estimatedRetail = adjustedSubtotal * markupMultiplier + freight;
+
+  const requiredFields = ["productType", "material", "finish", "thickness", "mounting", "lighting", "letterHeight"];
+  const missingSelections = requiredFields.filter((key) => !form[key]);
+  const warnings = [];
+  if (!debug?.bestMatch) warnings.push("No pricing match found.");
+  if (missingSelections.length) warnings.push(`Missing required selections: ${missingSelections.join(", ")}.`);
+  if (debug?.bestMatch && sourcePrice == null) warnings.push("Pricing value unavailable for the matched catalog row.");
+  if (debug?.bestMatch?.matchConfidence === "uncertain") warnings.push("Catalog/spreadsheet match uncertain. Validate this selection manually.");
 
   return (
     <div style={{ marginTop: 14, display: "grid", gap: 12 }}>
-      <div style={{ background: "#fff", borderRadius: 8, border: "1px solid #cbd5e1", padding: 12 }}>
-        <h4 style={{ marginTop: 0, marginBottom: 8 }}>Admin Pricing Match Results</h4>
-        {debug?.bestMatch ? (
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 8 }}>
-            <MatchCell label="Matched product/category" value={debug.bestMatch.matchedProductCategory} />
-            <MatchCell label="Matched material" value={debug.bestMatch.matchedMaterial} />
-            <MatchCell label="Matched thickness/depth" value={debug.bestMatch.matchedThicknessDepth} />
-            <MatchCell label="Matched size/height" value={debug.bestMatch.matchedSizeHeight} />
-            <MatchCell label="Matched price" value={debug.bestMatch.matchedPrice} />
-            <MatchCell label="Source sheet/tab name" value={debug.bestMatch.sourceSheetName} />
-            <MatchCell label="Source row" value={String(debug.bestMatch.sourceRow)} />
-          </div>
-        ) : (
-          <div>No pricing match found</div>
-        )}
-      </div>
+      {warnings.length > 0 && (
+        <div style={{ background: "#fff7ed", borderRadius: 8, border: "1px solid #fdba74", padding: 12 }}>
+          <h4 style={{ marginTop: 0, marginBottom: 8 }}>Warnings</h4>
+          <ul style={{ margin: 0, paddingLeft: 18 }}>{warnings.map((warning) => <li key={warning}>{warning}</li>)}</ul>
+        </div>
+      )}
 
       <div style={{ background: "#fff", borderRadius: 8, border: "1px solid #cbd5e1", padding: 12 }}>
-        <h4 style={{ marginTop: 0, marginBottom: 8 }}>Admin Test Quote</h4>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 8 }}>
-          <MatchCell label="Source price from spreadsheet" value={sourcePrice ? `$${sourcePrice.toFixed(2)}` : "—"} />
-          <MatchCell label="Quantity" value={String(form.quantity)} />
-          <MatchCell label="Estimated subtotal" value={`$${subtotal.toFixed(2)}`} />
-          <MatchCell label="Freight placeholder" value={`$${freight.toFixed(2)}`} />
-          <MatchCell label="Retail placeholder" value={`$${retail.toFixed(2)}`} />
-          <MatchCell label="Profit placeholder" value={`$${profit.toFixed(2)}`} />
+        <h4 style={{ marginTop: 0, marginBottom: 8 }}>Admin Quote Summary</h4>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 8 }}>
+          <MatchCell label="Product type" value={form.productType} />
+          <MatchCell label="Material" value={form.material} />
+          <MatchCell label="Finish" value={form.finish} />
+          <MatchCell label="Thickness/depth" value={`${form.thickness} / ${form.returnDepth}`} />
+          <MatchCell label="Letter height" value={`${form.letterHeight} in`} />
+          <MatchCell label="Mounting" value={form.mounting} />
+          <MatchCell label="Lighting" value={form.lighting} />
+          <MatchCell label="Quantity" value={String(quantity)} />
+          <MatchCell label="Character count" value={String(characterCount)} />
+          <MatchCell label="Sets" value={String(effectiveSets)} />
+          <MatchCell label="Spreadsheet matched unit price" value={sourcePrice != null ? `$${sourcePrice.toFixed(2)}` : "—"} />
+          <MatchCell label="Subtotal" value={`$${subtotal.toFixed(2)}`} />
+          <MatchCell label="Freight" value={`$${freight.toFixed(2)}`} />
+          <MatchCell label="Adjustments" value={`$${adjustment.toFixed(2)}`} />
+          <MatchCell label="Markup/multiplier" value={markupMultiplier.toFixed(2)} />
+          <MatchCell label="Final estimated retail" value={`$${estimatedRetail.toFixed(2)}`} />
         </div>
       </div>
 
       <details style={{ background: "#fff", borderRadius: 8, border: "1px solid #cbd5e1", padding: 10 }}>
         <summary style={{ fontWeight: 700, cursor: "pointer" }}>Admin Pricing Debug (Spreadsheet Source)</summary>
+        <div style={{ marginTop: 10, display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 8 }}>
+          <MatchCell label="source sheet/tab" value={debug?.bestMatch?.sourceSheetName} />
+          <MatchCell label="source row" value={debug?.bestMatch?.sourceRow ? String(debug.bestMatch.sourceRow) : "—"} />
+          <MatchCell label="matched fields" value={debug?.bestMatch?.matchedFieldsSummary || "—"} />
+        </div>
         <pre style={{ fontSize: 12, maxHeight: 360, overflow: "auto" }}>{JSON.stringify(debug, null, 2)}</pre>
       </details>
     </div>

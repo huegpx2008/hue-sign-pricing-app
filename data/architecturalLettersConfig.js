@@ -41,6 +41,10 @@ export const architecturalLetterDefaults = {
   shippingMethod: "Pickup",
   freightCategory: "Parcel",
   shippingZip: "",
+  sets: 1,
+  freight: 0,
+  adjustment: 0,
+  markupMultiplier: 1,
   notes: "",
 };
 
