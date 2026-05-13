@@ -1,4 +1,5 @@
 import { Box, input } from "./FormControls";
+import { useRouter } from "next/navigation";
 
 export default function ProductNavigation({
   product,
@@ -11,7 +12,25 @@ export default function ProductNavigation({
   presetGroups,
   presetClass,
   preset,
+  isAdminView,
 }) {
+  const router = useRouter();
+
+  const handleNavSelection = (itemId) => {
+    if (itemId !== "architecturalLetters") {
+      if (onProductSelect) onProductSelect(itemId);
+      else setProduct(itemId);
+      return;
+    }
+
+    if (isAdminView) {
+      router.push("/architectural-letters");
+      return;
+    }
+
+    window.alert("Architectural Letters pricing is coming soon. Please contact us for a custom quote.");
+  };
+
   return (
     <>
       <h2>Product Categories</h2>
@@ -22,7 +41,9 @@ export default function ProductNavigation({
               <button
                 key={item.id}
                 className={`presetBtn ${product === item.id ? "activePreset" : ""} ${item.calculator ? "" : "comingSoonBtn"}`}
-                onClick={() => (onProductSelect ? onProductSelect(item.id) : setProduct(item.id))}
+                onClick={() => handleNavSelection(item.id)}
+                aria-disabled={item.id === "architecturalLetters" && !isAdminView}
+                title={item.id === "architecturalLetters" && !isAdminView ? "Coming Soon" : undefined}
               >
                 {item.label} {!item.calculator ? "• Coming Soon" : ""}
               </button>
@@ -39,8 +60,7 @@ export default function ProductNavigation({
         onChange={(e) => {
           const nextProduct = e.target.value;
           setPresetProduct(nextProduct);
-          if (onProductSelect) onProductSelect(nextProduct);
-          else setProduct(nextProduct);
+          handleNavSelection(nextProduct);
         }}
       >
         <option value="">Select a product for presets</option>
@@ -64,7 +84,7 @@ export default function ProductNavigation({
       <h2 id="quote-details-anchor">Quote Details</h2>
 
       <label>Product</label>
-      <select style={input} value={product || ""} onChange={(e) => (onProductSelect ? onProductSelect(e.target.value) : setProduct(e.target.value))}>
+      <select style={input} value={product || ""} onChange={(e) => handleNavSelection(e.target.value)}>
         <option value="">Select a product</option>
         {productCategories.map((category) => (
           <optgroup key={category.name} label={category.name}>
