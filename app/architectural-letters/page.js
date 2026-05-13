@@ -7,6 +7,7 @@ import {
   architecturalLetterDefaults,
   architecturalLetterSteps,
   buildArchitecturalLetterPricingModel,
+  computeArchitecturalLetterMetrics,
 } from "../../data/architecturalLettersConfig";
 
 const fieldStyle = { width: "100%", padding: "10px 12px", borderRadius: 8, border: "1px solid #cbd5e1", background: "#fff" };
@@ -23,7 +24,8 @@ export default function ArchitecturalLettersPage() {
 
   const isAdminView = mode === "admin" || mode === "customer-in-store";
   const activeStep = architecturalLetterSteps[stepIndex];
-  const pricingModel = useMemo(() => buildArchitecturalLetterPricingModel(form), [form]);
+  const metrics = useMemo(() => computeArchitecturalLetterMetrics(form), [form]);
+  const pricingModel = useMemo(() => buildArchitecturalLetterPricingModel(form, metrics), [form, metrics]);
 
   const update = (key, value) => setForm((prev) => ({ ...prev, [key]: value }));
 
@@ -57,8 +59,19 @@ export default function ArchitecturalLettersPage() {
         return (
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
             <NumberField label="Quantity" value={form.quantity} onChange={(value) => update("quantity", value)} />
-            <NumberField label="Character Count" value={form.characterCount} onChange={(value) => update("characterCount", value)} />
-            <label>Letter Text<input style={fieldStyle} value={form.text} onChange={(e) => update("text", e.target.value)} /></label>
+            <label>Line 1<input style={fieldStyle} value={form.line1} onChange={(e) => update("line1", e.target.value)} /></label>
+            <label>Line 2<input style={fieldStyle} value={form.line2} onChange={(e) => update("line2", e.target.value)} /></label>
+            <label>Line 3<input style={fieldStyle} value={form.line3} onChange={(e) => update("line3", e.target.value)} /></label>
+            <Select label="Preview Alignment" value={form.previewAlignment} options={["left", "center", "right"]} onChange={(value) => update("previewAlignment", value)} />
+            <label style={{ display: "flex", alignItems: "center", gap: 8 }}><input type="checkbox" checked={form.excludeSpacesFromBilling} onChange={(e) => update("excludeSpacesFromBilling", e.target.checked)} />Exclude spaces from billable characters</label>
+            <NumberField label="Admin Billable Character Override" value={form.characterCountOverride} min={0} onChange={(value) => update("characterCountOverride", value)} />
+            <MatchCell label="Letters" value={String(metrics.letters)} />
+            <MatchCell label="Spaces" value={String(metrics.spaces)} />
+            <MatchCell label="Punctuation" value={String(metrics.punctuation)} />
+            <MatchCell label="Numbers" value={String(metrics.numbers)} />
+            <MatchCell label="Total Characters" value={String(metrics.totalCharacters)} />
+            <MatchCell label="Billable Characters" value={String(metrics.billableCharacters)} />
+            <LetterPreview lines={metrics.lines} alignment={form.previewAlignment} />
           </div>
         );
       case "freight":
@@ -67,7 +80,10 @@ export default function ArchitecturalLettersPage() {
             <Select label="Shipping Method" value={form.shippingMethod} options={architecturalLetterCatalog.shippingMethods} onChange={(value) => update("shippingMethod", value)} />
             <Select label="Freight Category" value={form.freightCategory} options={architecturalLetterCatalog.freightCategories} onChange={(value) => update("freightCategory", value)} />
             <NumberField label="Sets" value={form.sets} onChange={(value) => update("sets", value)} />
-            <NumberField label="Freight ($)" value={form.freight} min={0} onChange={(value) => update("freight", value)} />
+            <NumberField label="Estimated Freight ($)" value={form.freight} min={0} onChange={(value) => update("freight", value)} />
+            <NumberField label="Oversized Freight ($)" value={form.oversizedFreight} min={0} onChange={(value) => update("oversizedFreight", value)} />
+            <NumberField label="Crate Fee ($)" value={form.crateFee} min={0} onChange={(value) => update("crateFee", value)} />
+            <NumberField label="Pallet Fee ($)" value={form.palletFee} min={0} onChange={(value) => update("palletFee", value)} />
             <NumberField label="Adjustment / Discount ($)" value={form.adjustment} min={-999999} onChange={(value) => update("adjustment", value)} />
             <NumberField label="Markup Multiplier (optional test)" value={form.markupMultiplier} min={0} step={0.01} onChange={(value) => update("markupMultiplier", value)} />
             <label>
@@ -77,7 +93,7 @@ export default function ArchitecturalLettersPage() {
           </div>
         );
       default:
-        return <QuoteSummary form={form} pricingModel={pricingModel} isAdminView={isAdminView} mode={mode} />;
+        return <QuoteSummary form={form} metrics={metrics} pricingModel={pricingModel} isAdminView={isAdminView} mode={mode} />;
     }
   };
 
@@ -127,7 +143,7 @@ function NumberField({ label, value, onChange, min = 1, step = 1 }) {
   return <label>{label}<input type="number" min={min} step={step} style={fieldStyle} value={value} onChange={(e) => onChange(Number(e.target.value) || 0)} /></label>;
 }
 
-function QuoteSummary({ form, pricingModel, isAdminView, mode }) {
+function QuoteSummary({ form, metrics, pricingModel, isAdminView, mode }) {
   return (
     <div>
       <h3 style={{ marginTop: 0 }}>Quote Summary</h3>
@@ -140,7 +156,7 @@ function QuoteSummary({ form, pricingModel, isAdminView, mode }) {
             <div key={key} style={{ border: "1px dashed #94a3b8", borderRadius: 8, padding: 10, background: "#fff" }}><strong>{key}</strong><div>Pending</div></div>
           ))}
         </div>
-        <AdminDebugPanel form={form} mode={mode} />
+        <AdminDebugPanel form={form} metrics={metrics} mode={mode} />
         </>
       ) : (
         <div style={{ marginTop: 12, border: "1px dashed #94a3b8", borderRadius: 8, padding: 10, background: "#fff" }}>
@@ -153,7 +169,7 @@ function QuoteSummary({ form, pricingModel, isAdminView, mode }) {
 }
 
 
-function AdminDebugPanel({ form, mode }) {
+function AdminDebugPanel({ form, metrics, mode }) {
   const [debug, setDebug] = useState(null);
 
   useEffect(() => {
@@ -169,9 +185,9 @@ function AdminDebugPanel({ form, mode }) {
   }, [form, mode]);
 
   const quantity = Number(form.quantity) || 0;
-  const characterCount = Number(form.characterCount) || 0;
+  const characterCount = Number(metrics.billableCharacters) || 0;
   const sets = Number(form.sets) || 0;
-  const freight = Number(form.freight) || 0;
+  const freight = (Number(form.freight) || 0) + (Number(form.oversizedFreight) || 0) + (Number(form.crateFee) || 0) + (Number(form.palletFee) || 0);
   const adjustment = Number(form.adjustment) || 0;
   const markupMultiplier = Number(form.markupMultiplier) || 1;
   const sourcePrice = debug?.bestMatch?.numericPrice ?? null;
@@ -209,11 +225,14 @@ function AdminDebugPanel({ form, mode }) {
           <MatchCell label="Mounting" value={form.mounting} />
           <MatchCell label="Lighting" value={form.lighting} />
           <MatchCell label="Quantity" value={String(quantity)} />
-          <MatchCell label="Character count" value={String(characterCount)} />
+          <MatchCell label="Lines" value={metrics.lines.filter(Boolean).join(" | ") || "—"} />
+          <MatchCell label="Total chars / Billable chars" value={`${metrics.totalCharacters} / ${characterCount}`} />
           <MatchCell label="Sets" value={String(effectiveSets)} />
+          <MatchCell label="Lighting Type" value={form.lighting} />
+          <MatchCell label="Return Depth" value={form.returnDepth} />
           <MatchCell label="Spreadsheet matched unit price" value={sourcePrice != null ? `$${sourcePrice.toFixed(2)}` : "—"} />
           <MatchCell label="Subtotal" value={`$${subtotal.toFixed(2)}`} />
-          <MatchCell label="Freight" value={`$${freight.toFixed(2)}`} />
+          <MatchCell label="Estimated freight total" value={`$${freight.toFixed(2)}`} />
           <MatchCell label="Adjustments" value={`$${adjustment.toFixed(2)}`} />
           <MatchCell label="Markup/multiplier" value={markupMultiplier.toFixed(2)} />
           <MatchCell label="Final estimated retail" value={`$${estimatedRetail.toFixed(2)}`} />
@@ -229,6 +248,18 @@ function AdminDebugPanel({ form, mode }) {
         </div>
         <pre style={{ fontSize: 12, maxHeight: 360, overflow: "auto" }}>{JSON.stringify(debug, null, 2)}</pre>
       </details>
+    </div>
+  );
+}
+
+function LetterPreview({ lines, alignment }) {
+  const justify = alignment === "center" ? "center" : alignment === "right" ? "flex-end" : "flex-start";
+  return (
+    <div style={{ gridColumn: "1 / -1", border: "1px dashed #94a3b8", borderRadius: 8, background: "#fff", padding: 12 }}>
+      <strong>Letter Preview</strong>
+      <div style={{ marginTop: 8, display: "flex", flexDirection: "column", alignItems: justify, gap: 6, minHeight: 90 }}>
+        {lines.map((line, idx) => <div key={`${idx}-${line}`} style={{ letterSpacing: "0.08em", minHeight: 20 }}>{line || "‎"}</div>)}
+      </div>
     </div>
   );
 }
