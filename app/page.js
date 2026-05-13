@@ -749,6 +749,7 @@ export default function Page() {
             presetGroups={presetGroups}
             presetClass={presetClass}
             preset={preset}
+            isAdminView={isAdminView}
           />
 
                     <ProductOptions
