@@ -14,11 +14,11 @@ export const architecturalLetterSteps = [
 export const architecturalLetterCatalog = {
   productTypes: ["Flat Cut Metal", "Fabricated Non-Lit", "Flat Cut Acrylic", "Formed Plastic", "Cast Metal", "Face Lit", "Halo Lit", "Plaques"],
   materials: ["Aluminum", "Stainless Steel", "Brass", "Bronze", "Acrylic", "PVC"],
-  lighting: ["Non-Lit", "Face Lit", "Halo Lit", "Side Lit", "Face & Halo Lit"],
-  mounting: ["Stud Mount", "Pad Mount", "Flush Mount", "Raceway Mount", "Double Face Tape", "Template Mount"],
+  lighting: ["Non-Lit", "Face-Lit", "Halo-Lit", "Face + Halo-Lit"],
+  mounting: ["Stud Mount", "Raceway", "Pad Mount", "Flush Mount", "Double-Face Tape"],
   finishes: ["Raw", "Brushed", "Polished", "Painted", "Anodized", "Patina"],
   thickness: ['1/8"', '1/4"', '3/8"', '1/2"', '3/4"', '1"'],
-  returnDepth: ['1/2"', '1"', '1.5"', '2"', '3"'],
+  returnDepth: ['1/2"', '1"', '1.5"', '2"', 'Custom'],
   shippingMethods: ["Pickup", "Local Delivery", "Parcel", "Guaranteed Ground Freight", "LTL Freight"],
   paintFinishOptions: ["Standard Paint", "Custom Paint Match", "Natural Metal", "Anodized"],
   freightCategories: ["Parcel", "Oversize", "LTL", "Crated"],
@@ -36,19 +36,41 @@ export const architecturalLetterDefaults = {
   letterWidth: 12,
   quantity: 1,
   characterCount: 1,
-  text: "",
+  line1: "",
+  line2: "",
+  line3: "",
+  excludeSpacesFromBilling: true,
+  characterCountOverride: "",
+  previewAlignment: "left",
   paintFinishOption: "Standard Paint",
   shippingMethod: "Pickup",
   freightCategory: "Parcel",
   shippingZip: "",
   sets: 1,
   freight: 0,
+  oversizedFreight: 0,
+  crateFee: 0,
+  palletFee: 0,
   adjustment: 0,
   markupMultiplier: 1,
   notes: "",
 };
 
-export const buildArchitecturalLetterPricingModel = (state) => ({
+export const computeArchitecturalLetterMetrics = (state) => {
+  const lines = [state.line1 || "", state.line2 || "", state.line3 || ""];
+  const joined = lines.join("");
+  const spaces = (joined.match(/\s/g) || []).length;
+  const letters = (joined.match(/[A-Za-z]/g) || []).length;
+  const numbers = (joined.match(/[0-9]/g) || []).length;
+  const punctuation = (joined.match(/[^A-Za-z0-9\s]/g) || []).length;
+  const totalCharacters = joined.length;
+  const autoBillable = state.excludeSpacesFromBilling ? totalCharacters - spaces : totalCharacters;
+  const override = Number(state.characterCountOverride);
+  const billableCharacters = Number.isFinite(override) && override > 0 ? override : Math.max(0, autoBillable);
+  return { lines, letters, spaces, numbers, punctuation, totalCharacters, autoBillable, billableCharacters };
+};
+
+export const buildArchitecturalLetterPricingModel = (state, metrics = computeArchitecturalLetterMetrics(state)) => ({
   productType: state.productType,
   material: state.material,
   finish: state.finish,
@@ -56,6 +78,15 @@ export const buildArchitecturalLetterPricingModel = (state) => ({
   returnDepth: state.returnDepth,
   letterHeight: state.letterHeight,
   lightingType: state.lighting,
+  letterLines: metrics.lines,
+  billableCharacters: metrics.billableCharacters,
+  characterBreakdown: {
+    total: metrics.totalCharacters,
+    letters: metrics.letters,
+    spaces: metrics.spaces,
+    punctuation: metrics.punctuation,
+    numbers: metrics.numbers,
+  },
   mountingType: state.mounting,
   paintFinishOption: state.paintFinishOption,
   freightCategory: state.freightCategory,
@@ -64,6 +95,18 @@ export const buildArchitecturalLetterPricingModel = (state) => ({
   retailPrice: null,
   suggestedRetail: null,
   freight: null,
+  freightPlaceholders: {
+    estimatedFreight: state.freight || 0,
+    oversizedFreight: state.oversizedFreight || 0,
+    crateFee: state.crateFee || 0,
+    palletFee: state.palletFee || 0,
+  },
+  mountingModifiers: { selected: state.mounting, hardware: "placeholder" },
+  lightingModifiers: { selected: state.lighting, upcharge: null },
+  returnDepthModifiers: { selected: state.returnDepth, upcharge: null },
+  extensibility: {
+    supports: ["logos/shapes", "cabinet signs", "plaques", "illuminated logos", "routed logos", "push-through acrylic", "install labor", "permit pricing"],
+  },
   marginPercent: null,
   profitDollars: null,
   source: {
