@@ -35,13 +35,18 @@ export default function ArchitecturalLettersPage() {
         return <Select label="Select Material" value={form.material} options={architecturalLetterCatalog.materials} onChange={(value) => update("material", value)} />;
       case "finish":
         return <Select label="Select Finish" value={form.finish} options={architecturalLetterCatalog.finishes} onChange={(value) => update("finish", value)} />;
-      case "depth":
-        return <Select label="Select Depth / Thickness" value={form.depth} options={architecturalLetterCatalog.depths} onChange={(value) => update("depth", value)} />;
+      case "thickness":
+        return (
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+            <Select label="Select Thickness" value={form.thickness} options={architecturalLetterCatalog.thickness} onChange={(value) => update("thickness", value)} />
+            <Select label="Select Return Depth" value={form.returnDepth} options={architecturalLetterCatalog.returnDepth} onChange={(value) => update("returnDepth", value)} />
+          </div>
+        );
       case "mounting":
         return <Select label="Select Mounting" value={form.mounting} options={architecturalLetterCatalog.mounting} onChange={(value) => update("mounting", value)} />;
       case "lighting":
         return <Select label="Select Lighting" value={form.lighting} options={architecturalLetterCatalog.lighting} onChange={(value) => update("lighting", value)} />;
-      case "letterSize":
+      case "letterHeight":
         return (
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
             <NumberField label="Letter Height (in)" value={form.letterHeight} onChange={(value) => update("letterHeight", value)} />
@@ -53,12 +58,14 @@ export default function ArchitecturalLettersPage() {
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
             <NumberField label="Quantity" value={form.quantity} onChange={(value) => update("quantity", value)} />
             <NumberField label="Character Count" value={form.characterCount} onChange={(value) => update("characterCount", value)} />
+            <label>Letter Text<input style={fieldStyle} value={form.text} onChange={(e) => update("text", e.target.value)} /></label>
           </div>
         );
-      case "shipping":
+      case "freight":
         return (
           <div style={{ display: "grid", gap: 12 }}>
             <Select label="Shipping Method" value={form.shippingMethod} options={architecturalLetterCatalog.shippingMethods} onChange={(value) => update("shippingMethod", value)} />
+            <Select label="Freight Category" value={form.freightCategory} options={architecturalLetterCatalog.freightCategories} onChange={(value) => update("freightCategory", value)} />
             <label>
               Ship To ZIP
               <input style={fieldStyle} value={form.shippingZip} onChange={(e) => update("shippingZip", e.target.value)} placeholder="Optional in Phase 1" />
@@ -66,7 +73,7 @@ export default function ArchitecturalLettersPage() {
           </div>
         );
       default:
-        return <QuoteSummary form={form} pricingModel={pricingModel} isAdminView={isAdminView} />;
+        return <QuoteSummary form={form} pricingModel={pricingModel} isAdminView={isAdminView} mode={mode} />;
     }
   };
 
@@ -106,18 +113,21 @@ function NumberField({ label, value, onChange }) {
   return <label>{label}<input type="number" min={1} style={fieldStyle} value={value} onChange={(e) => onChange(Number(e.target.value) || 1)} /></label>;
 }
 
-function QuoteSummary({ form, pricingModel, isAdminView }) {
+function QuoteSummary({ form, pricingModel, isAdminView, mode }) {
   return (
     <div>
       <h3 style={{ marginTop: 0 }}>Quote Summary</h3>
       <p style={{ marginTop: 0, color: "#64748b" }}>Final pricing logic will be connected in Phase 2 from spreadsheet, wholesale, and freight tables.</p>
       <pre style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 8, padding: 12, overflowX: "auto" }}>{JSON.stringify(form, null, 2)}</pre>
       {isAdminView ? (
+        <>
         <div style={{ marginTop: 12, display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(170px, 1fr))", gap: 10 }}>
           {Object.keys(pricingModel).filter((k) => k !== "source" && k !== "inputSnapshot").map((key) => (
             <div key={key} style={{ border: "1px dashed #94a3b8", borderRadius: 8, padding: 10, background: "#fff" }}><strong>{key}</strong><div>Pending</div></div>
           ))}
         </div>
+        <AdminDebugPanel form={form} mode={mode} />
+        </>
       ) : (
         <div style={{ marginTop: 12, border: "1px dashed #94a3b8", borderRadius: 8, padding: 10, background: "#fff" }}>
           <strong>Suggested Retail Pricing</strong>
@@ -125,5 +135,29 @@ function QuoteSummary({ form, pricingModel, isAdminView }) {
         </div>
       )}
     </div>
+  );
+}
+
+
+function AdminDebugPanel({ form, mode }) {
+  const [debug, setDebug] = useState(null);
+
+  useEffect(() => {
+    const load = async () => {
+      const response = await fetch("/api/admin/architectural-letters/pricing", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ mode, input: form }),
+      });
+      if (response.ok) setDebug(await response.json());
+    };
+    load();
+  }, [form, mode]);
+
+  return (
+    <details style={{ marginTop: 14, background: "#fff", borderRadius: 8, border: "1px solid #cbd5e1", padding: 10 }}>
+      <summary style={{ fontWeight: 700, cursor: "pointer" }}>Admin Pricing Debug (Spreadsheet Source)</summary>
+      <pre style={{ fontSize: 12, maxHeight: 360, overflow: "auto" }}>{JSON.stringify(debug, null, 2)}</pre>
+    </details>
   );
 }
