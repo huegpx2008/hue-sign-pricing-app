@@ -8,6 +8,7 @@ import {
   architecturalLetterSteps,
   buildArchitecturalLetterPricingModel,
   computeArchitecturalLetterMetrics,
+  architecturalLetterValidOptionsByProductType,
 } from "../../data/architecturalLettersConfig";
 
 const fieldStyle = { width: "100%", padding: "10px 12px", borderRadius: 8, border: "1px solid #cbd5e1", background: "#fff" };
@@ -70,32 +71,75 @@ export default function ArchitecturalLettersPage() {
   const activeStep = architecturalLetterSteps[stepIndex];
   const metrics = useMemo(() => computeArchitecturalLetterMetrics(form), [form]);
   const pricingModel = useMemo(() => buildArchitecturalLetterPricingModel(form, metrics), [form, metrics]);
+  const [selectionResetNotice, setSelectionResetNotice] = useState("");
+
+  const availableOptions = useMemo(() => {
+    const constrained = architecturalLetterValidOptionsByProductType[form.productType];
+    if (!constrained) return architecturalLetterCatalog;
+    return {
+      ...architecturalLetterCatalog,
+      materials: constrained.materials || architecturalLetterCatalog.materials,
+      finishes: constrained.finishes || architecturalLetterCatalog.finishes,
+      thickness: constrained.thickness || architecturalLetterCatalog.thickness,
+      returnDepth: constrained.returnDepth || architecturalLetterCatalog.returnDepth,
+      mounting: constrained.mounting || architecturalLetterCatalog.mounting,
+      lighting: constrained.lighting || architecturalLetterCatalog.lighting,
+      letterHeights: constrained.letterHeights || [],
+    };
+  }, [form.productType]);
 
   const update = (key, value) => setForm((prev) => ({ ...prev, [key]: value }));
+
+  useEffect(() => {
+    const fields = [
+      ["material", availableOptions.materials],
+      ["finish", availableOptions.finishes],
+      ["thickness", availableOptions.thickness],
+      ["returnDepth", availableOptions.returnDepth],
+      ["mounting", availableOptions.mounting],
+      ["lighting", availableOptions.lighting],
+    ];
+    let changed = false;
+    setForm((prev) => {
+      const next = { ...prev };
+      fields.forEach(([field, options]) => {
+        if (Array.isArray(options) && options.length && !options.includes(prev[field])) {
+          next[field] = options[0];
+          changed = true;
+        }
+      });
+      if (Array.isArray(availableOptions.letterHeights) && availableOptions.letterHeights.length && !availableOptions.letterHeights.includes(Number(prev.letterHeight))) {
+        next.letterHeight = availableOptions.letterHeights[0];
+        changed = true;
+      }
+      return changed ? next : prev;
+    });
+    if (changed) setSelectionResetNotice("Selection reset because it is not available for this product.");
+  }, [availableOptions]);
 
   const renderStep = () => {
     switch (activeStep.id) {
       case "productType":
         return <Select label="Select Product Type" value={form.productType} options={architecturalLetterCatalog.productTypes} onChange={(value) => update("productType", value)} />;
       case "material":
-        return <Select label="Select Material" value={form.material} options={architecturalLetterCatalog.materials} onChange={(value) => update("material", value)} />;
+        return <Select label="Select Material" value={form.material} options={availableOptions.materials} onChange={(value) => update("material", value)} />;
       case "finish":
-        return <Select label="Select Finish" value={form.finish} options={architecturalLetterCatalog.finishes} onChange={(value) => update("finish", value)} />;
+        return <Select label="Select Finish" value={form.finish} options={availableOptions.finishes} onChange={(value) => update("finish", value)} />;
       case "thickness":
         return (
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-            <Select label="Select Thickness" value={form.thickness} options={architecturalLetterCatalog.thickness} onChange={(value) => update("thickness", value)} />
-            <Select label="Select Return Depth" value={form.returnDepth} options={architecturalLetterCatalog.returnDepth} onChange={(value) => update("returnDepth", value)} />
+            <Select label="Select Thickness" value={form.thickness} options={availableOptions.thickness} onChange={(value) => update("thickness", value)} />
+            <Select label="Select Return Depth" value={form.returnDepth} options={availableOptions.returnDepth} onChange={(value) => update("returnDepth", value)} />
           </div>
         );
       case "mounting":
-        return <Select label="Select Mounting" value={form.mounting} options={architecturalLetterCatalog.mounting} onChange={(value) => update("mounting", value)} />;
+        return <Select label="Select Mounting" value={form.mounting} options={availableOptions.mounting} onChange={(value) => update("mounting", value)} />;
       case "lighting":
-        return <Select label="Select Lighting" value={form.lighting} options={architecturalLetterCatalog.lighting} onChange={(value) => update("lighting", value)} />;
+        return <Select label="Select Lighting" value={form.lighting} options={availableOptions.lighting} onChange={(value) => update("lighting", value)} />;
       case "letterHeight":
         return (
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-            <NumberField label="Letter Height (in)" value={form.letterHeight} onChange={(value) => update("letterHeight", value)} />
+            <Select label="Letter Height (in)" value={String(form.letterHeight)} options={(availableOptions.letterHeights?.length ? availableOptions.letterHeights : [form.letterHeight]).map((h) => String(h))} onChange={(value) => update("letterHeight", Number(value))} />
             <NumberField label="Letter Width (in)" value={form.letterWidth} onChange={(value) => update("letterWidth", value)} />
           </div>
         );
@@ -164,6 +208,8 @@ export default function ArchitecturalLettersPage() {
             </div>
           ) : (
           <>
+          <div style={{ marginBottom: 8, fontSize: 12, color: "#475569" }}>Only available Gemini options are shown.</div>
+          {selectionResetNotice ? <div style={{ marginBottom: 12, background: "#fff7ed", border: "1px solid #fdba74", padding: 8, borderRadius: 8 }}>{selectionResetNotice}</div> : null}
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 8, marginTop: 16, marginBottom: 18 }}>
             {architecturalLetterSteps.map((step, idx) => (
               <button key={step.id} onClick={() => setStepIndex(idx)} style={{ padding: "10px 8px", borderRadius: 8, border: idx === stepIndex ? "2px solid #1d4ed8" : "1px solid #cbd5e1", background: idx === stepIndex ? "#dbeafe" : "#fff", fontWeight: 700 }}>
@@ -398,6 +444,10 @@ function AdminDebugPanel({ form, metrics, mode }) {
   const missingSelections = requiredFields.filter((key) => !form[key]);
   const warnings = [];
   if (!debug?.bestMatch) warnings.push("No pricing match found.");
+  if (debug?.mismatchDetails?.length) {
+    const first = debug.mismatchDetails[0];
+    warnings.push(`Mismatch: ${first.label} "${first.selected}". Valid options: ${first.validOptions.join(", ")}.`);
+  }
   if (missingSelections.length) warnings.push(`Missing required selections: ${missingSelections.join(", ")}.`);
   if (debug?.bestMatch && matchedUnitPrice == null) warnings.push("Pricing value unavailable for the matched catalog row.");
   if (debug?.warning) warnings.push(debug.warning);
