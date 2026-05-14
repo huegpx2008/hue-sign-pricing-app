@@ -341,7 +341,10 @@ function QuoteSummary({ form, metrics, pricingModel, isAdminView, mode }) {
         <>
         <div style={{ marginTop: 12, display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(170px, 1fr))", gap: 10 }}>
           {Object.keys(pricingModel).filter((k) => k !== "source" && k !== "inputSnapshot").map((key) => (
-            <div key={key} style={{ border: "1px dashed #94a3b8", borderRadius: 8, padding: 10, background: "#fff" }}><strong>{key}</strong><div>Pending</div></div>
+            <div key={key} style={{ border: "1px dashed #94a3b8", borderRadius: 8, padding: 10, background: "#fff" }}>
+              <strong>{key}</strong>
+              <div style={{ marginTop: 4, fontSize: 12, color: "#334155" }}>{typeof pricingModel[key] === "object" ? JSON.stringify(pricingModel[key]) : String(pricingModel[key] ?? "—")}</div>
+            </div>
           ))}
         </div>
         <AdminDebugPanel form={form} metrics={metrics} mode={mode} />
@@ -383,7 +386,7 @@ function AdminDebugPanel({ form, metrics, mode }) {
   const billableCharacters = quantity * characterCount * effectiveSets;
   const subtotal = sourcePrice != null ? sourcePrice * billableCharacters : 0;
   const adjustedSubtotal = subtotal + adjustment;
-  const estimatedRetail = adjustedSubtotal * markupMultiplier + freight;
+  const estimatedRetail = adjustedSubtotal + freight;
 
   const requiredFields = ["productType", "material", "finish", "thickness", "mounting", "lighting", "letterHeight"];
   const missingSelections = requiredFields.filter((key) => !form[key]);
@@ -391,7 +394,7 @@ function AdminDebugPanel({ form, metrics, mode }) {
   if (!debug?.bestMatch) warnings.push("No pricing match found.");
   if (missingSelections.length) warnings.push(`Missing required selections: ${missingSelections.join(", ")}.`);
   if (debug?.bestMatch && sourcePrice == null) warnings.push("Pricing value unavailable for the matched catalog row.");
-  if (debug?.bestMatch?.matchConfidence === "uncertain") warnings.push("Catalog/spreadsheet match uncertain. Validate this selection manually.");
+  if (debug?.warning) warnings.push(debug.warning);
 
   return (
     <div style={{ marginTop: 14, display: "grid", gap: 12 }}>
@@ -422,7 +425,7 @@ function AdminDebugPanel({ form, metrics, mode }) {
           <MatchCell label="Subtotal" value={`$${subtotal.toFixed(2)}`} />
           <MatchCell label="Estimated freight total" value={`$${freight.toFixed(2)}`} />
           <MatchCell label="Adjustments" value={`$${adjustment.toFixed(2)}`} />
-          <MatchCell label="Markup/multiplier" value={markupMultiplier.toFixed(2)} />
+          <MatchCell label="Markup/multiplier (not applied)" value={markupMultiplier.toFixed(2)} />
           <MatchCell label="Final estimated retail" value={`$${estimatedRetail.toFixed(2)}`} />
         </div>
       </div>
@@ -432,7 +435,9 @@ function AdminDebugPanel({ form, metrics, mode }) {
         <div style={{ marginTop: 10, display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 8 }}>
           <MatchCell label="source sheet/tab" value={debug?.bestMatch?.sourceSheetName} />
           <MatchCell label="source row" value={debug?.bestMatch?.sourceRow ? String(debug.bestMatch.sourceRow) : "—"} />
-          <MatchCell label="matched fields" value={debug?.bestMatch?.matchedFieldsSummary || "—"} />
+          <MatchCell label="matched column" value={debug?.bestMatch?.matchedColumn || "—"} />
+          <MatchCell label="matched price" value={debug?.bestMatch?.matchedPrice || "—"} />
+          <MatchCell label="reason if no match" value={debug?.reasonNoMatch || "—"} />
         </div>
         <pre style={{ fontSize: 12, maxHeight: 360, overflow: "auto" }}>{JSON.stringify(debug, null, 2)}</pre>
       </details>
