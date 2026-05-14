@@ -225,6 +225,7 @@ export default function DTFTransfers({ onSummaryChange, isAdminView = false }) {
   const [dtfOnlyWidth, setDtfOnlyWidth] = useState(11);
   const [dtfOnlyHeight, setDtfOnlyHeight] = useState(10);
   const [dtfOnlyQty, setDtfOnlyQty] = useState(1);
+  const [byoaTransferQty, setByoaTransferQty] = useState(1);
   const [optimizeLayout, setOptimizeLayout] = useState(true);
   const [qtyXs, setQtyXs] = useState(0);
   const [qtyS, setQtyS] = useState(0);
@@ -247,18 +248,19 @@ export default function DTFTransfers({ onSummaryChange, isAdminView = false }) {
   const totalGarmentQty = useMemo(() => (
     dtfMode === "dtfOnly"
       ? Math.max(0, Math.floor(toNumber(dtfOnlyQty)))
-      : (toNumber(qtyXs) + toNumber(qtyS) + toNumber(qtyM) + toNumber(qtyL) + toNumber(qtyXl)
-      + toNumber(qty2xl) + toNumber(qty3xl) + toNumber(qty4xl) + toNumber(qty5xl))
-  ), [dtfMode, dtfOnlyQty, qtyXs, qtyS, qtyM, qtyL, qtyXl, qty2xl, qty3xl, qty4xl, qty5xl]);
+      : (bringYourOwnApparel ? Math.max(0, Math.floor(toNumber(byoaTransferQty))) : (toNumber(qtyXs) + toNumber(qtyS) + toNumber(qtyM) + toNumber(qtyL) + toNumber(qtyXl)
+      + toNumber(qty2xl) + toNumber(qty3xl) + toNumber(qty4xl) + toNumber(qty5xl)))
+  ), [dtfMode, bringYourOwnApparel, dtfOnlyQty, byoaTransferQty, qtyXs, qtyS, qtyM, qtyL, qtyXl, qty2xl, qty3xl, qty4xl, qty5xl]);
 
   const baseApparelCostUsed = useMemo(() => toNumber(apparelCost), [apparelCost]);
 
   const sizeUpchargeTotal = useMemo(() => (
+    bringYourOwnApparel ? 0 :
     toNumber(qty2xl) * SIZE_UPCHARGES.qty2xl
     + toNumber(qty3xl) * SIZE_UPCHARGES.qty3xl
     + toNumber(qty4xl) * SIZE_UPCHARGES.qty4xl
     + toNumber(qty5xl) * SIZE_UPCHARGES.qty5xl
-  ), [qty2xl, qty3xl, qty4xl, qty5xl]);
+  ), [bringYourOwnApparel, qty2xl, qty3xl, qty4xl, qty5xl]);
 
   const apparelDirectCost = useMemo(() => {
     if (dtfMode === "dtfOnly" || bringYourOwnApparel) return 0;
@@ -406,6 +408,7 @@ export default function DTFTransfers({ onSummaryChange, isAdminView = false }) {
       dtfOnlyWidth: toNumber(dtfOnlyWidth),
       dtfOnlyHeight: toNumber(dtfOnlyHeight),
       dtfOnlyQty: Math.max(0, Math.floor(toNumber(dtfOnlyQty))),
+      byoaTransferQty: Math.max(0, Math.floor(toNumber(byoaTransferQty))),
       dtfMaterialCost,
       dtfRetailSubtotal,
       sizeUpchargeTotal,
@@ -413,12 +416,12 @@ export default function DTFTransfers({ onSummaryChange, isAdminView = false }) {
       directCost,
       finalRetail,
       pricePerGarment,
-      sizePriceBreakdown: dtfSizePriceBreakdown,
-      productDisplay: selectedProduct ? `${selectedProduct.style} — ${selectedProduct.title} (${selectedProduct.color})` : "No SanMar item selected",
-      selectedStyle: selectedProduct?.style || "",
-      selectedTitle: selectedProduct?.title || "",
-      selectedColor: selectedProduct?.color || "",
-      sizeQuantities: {
+      sizePriceBreakdown: bringYourOwnApparel ? [] : dtfSizePriceBreakdown,
+      productDisplay: bringYourOwnApparel ? "Customer Provided Items" : (selectedProduct ? `${selectedProduct.style} — ${selectedProduct.title} (${selectedProduct.color})` : "No SanMar item selected"),
+      selectedStyle: bringYourOwnApparel ? "Customer Provided Items" : (selectedProduct?.style || ""),
+      selectedTitle: bringYourOwnApparel ? "Customer Provided Items" : (selectedProduct?.title || ""),
+      selectedColor: bringYourOwnApparel ? "Customer Provided Items" : (selectedProduct?.color || ""),
+      sizeQuantities: bringYourOwnApparel ? {} : {
         XS: toNumber(qtyXs),
         S: toNumber(qtyS),
         M: toNumber(qtyM),
@@ -440,7 +443,7 @@ export default function DTFTransfers({ onSummaryChange, isAdminView = false }) {
       rollLengthUsed: dtfLayout.rollLengthUsed,
       transferCount: totalTransferCount,
     });
-  }, [onSummaryChange, dtfMode, bringYourOwnApparel, dtfOnlyWidth, dtfOnlyHeight, dtfOnlyQty, byoaRetailFee, finalRetail, pricePerGarment, dtfSizePriceBreakdown, directCost, apparelDirectCost, dtfMaterialCost, DTF_SHIPPING_FLAT, apparelRetailSubtotal, dtfRetailSubtotal, sizeUpchargeTotal, sleeveRetailAddOnTotal, selectedProduct, baseApparelCostUsed, totalGarmentQty, frontSelected, resolvedFrontSize, backSelected, resolvedBackSize, leftSleeve, resolvedLeftSleeveSize, rightSleeve, resolvedRightSleeveSize, dtfLayout.rollLengthUsed, totalTransferCount, qtyXs, qtyS, qtyM, qtyL, qtyXl, qty2xl, qty3xl, qty4xl, qty5xl]);
+  }, [onSummaryChange, dtfMode, bringYourOwnApparel, dtfOnlyWidth, dtfOnlyHeight, dtfOnlyQty, byoaTransferQty, byoaRetailFee, finalRetail, pricePerGarment, dtfSizePriceBreakdown, directCost, apparelDirectCost, dtfMaterialCost, DTF_SHIPPING_FLAT, apparelRetailSubtotal, dtfRetailSubtotal, sizeUpchargeTotal, sleeveRetailAddOnTotal, selectedProduct, baseApparelCostUsed, totalGarmentQty, frontSelected, resolvedFrontSize, backSelected, resolvedBackSize, leftSleeve, resolvedLeftSleeveSize, rightSleeve, resolvedRightSleeveSize, dtfLayout.rollLengthUsed, totalTransferCount, qtyXs, qtyS, qtyM, qtyL, qtyXl, qty2xl, qty3xl, qty4xl, qty5xl]);
 
   const loadedRef = useRef(false);
 
@@ -591,6 +594,26 @@ export default function DTFTransfers({ onSummaryChange, isAdminView = false }) {
     setApparelCost(value);
   }
 
+  useEffect(() => {
+    if (!(dtfMode === "standard" && bringYourOwnApparel)) return;
+    setSelectedStyleKey("");
+    setSelectedProduct(null);
+    setProduct("Customer Provided Items");
+    setColor("Customer Provided Items");
+    setSanMarSearch("");
+    setQtyXs(0);
+    setQtyS(0);
+    setQtyM(0);
+    setQtyL(0);
+    setQtyXl(0);
+    setQty2xl(0);
+    setQty3xl(0);
+    setQty4xl(0);
+    setQty5xl(0);
+    setManualApparelCost(false);
+    setApparelCost("");
+  }, [bringYourOwnApparel, dtfMode]);
+
   async function handleCopyQuote() {
     const selectedLocations = [
       frontSelected ? `Front${resolvedFrontSize ? ` (${resolvedFrontSize.width}" x ${resolvedFrontSize.height}")` : ""}` : null,
@@ -601,12 +624,12 @@ export default function DTFTransfers({ onSummaryChange, isAdminView = false }) {
 
     const quoteLines = [
       "DTF Transfers Quote",
-      `SanMar Product: ${selectedProduct ? `${selectedProduct.style} — ${selectedProduct.title}` : "Not selected"}`,
-      `Color: ${selectedProduct?.color || color || "Not selected"}`,
-      `Garment Quantity: ${totalGarmentQty}`,
+      `SanMar Product: ${bringYourOwnApparel ? "Customer Provided Items" : (selectedProduct ? `${selectedProduct.style} — ${selectedProduct.title}` : "Not selected")}`,
+      `Color: ${bringYourOwnApparel ? "Customer Provided Items" : (selectedProduct?.color || color || "Not selected")}`,
+      `${bringYourOwnApparel ? "Transfer Quantity" : "Garment Quantity"}: ${totalGarmentQty}`,
       `Print Locations: ${selectedLocations.length ? selectedLocations.join(", ") : "None selected"}`,
       `Total Price: $${finalRetail.toFixed(2)}`,
-      `Price Per Garment: $${pricePerGarment.toFixed(2)}`,
+      `Price Per ${bringYourOwnApparel ? "Transfer" : "Garment"}: $${pricePerGarment.toFixed(2)}`,
     ].join("\n");
 
     try {
@@ -629,7 +652,7 @@ export default function DTFTransfers({ onSummaryChange, isAdminView = false }) {
           </select>
           {dtfMode === "standard" && <Check label="Bring Your Own Apparel" value={bringYourOwnApparel} setValue={setBringYourOwnApparel} />}
         </div>
-        <div style={{ marginBottom: 10 }}>
+        {!(dtfMode === "standard" && bringYourOwnApparel) && <div style={{ marginBottom: 10 }}>
           <label style={{ display: "block", marginBottom: 8 }}>Quick Styles</label>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
             {QUICK_STYLES.map((styleOption) => (
@@ -644,7 +667,7 @@ export default function DTFTransfers({ onSummaryChange, isAdminView = false }) {
               </button>
             ))}
           </div>
-        </div>
+        </div>}
 
         {dtfMode === "standard" && !bringYourOwnApparel && <><label>SanMar Style Search</label>
         <input
@@ -789,7 +812,13 @@ export default function DTFTransfers({ onSummaryChange, isAdminView = false }) {
         )}
       </Box>}
 
-      {dtfMode !== "dtfOnly" && <Box title="Apparel Quantities">
+      {dtfMode === "standard" && bringYourOwnApparel && <Box title="Transfer Quantity">
+        <div className="formGrid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 10 }}>
+          <Field label="Transfer Quantity" value={byoaTransferQty} setValue={setByoaTransferQty} />
+        </div>
+      </Box>}
+
+      {dtfMode !== "dtfOnly" && !bringYourOwnApparel && <Box title="Apparel Quantities">
         <div className="formGrid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(70px, 1fr))", gap: 10 }}>
           <Field label="XS" value={qtyXs} setValue={setQtyXs} />
           <Field label="S" value={qtyS} setValue={setQtyS} />
@@ -808,11 +837,11 @@ export default function DTFTransfers({ onSummaryChange, isAdminView = false }) {
         {!isAdminView ? (
           <div style={{ display: "grid", gap: 6 }}>
             <div><strong>Product:</strong> DTF Transfers</div>
-            <div><strong>Style #:</strong> {selectedProduct?.style || "Not selected"}</div>
-            <div><strong>Garment:</strong> {selectedProduct?.title || "Not selected"}</div>
-            <div><strong>Color:</strong> {selectedProduct?.color || "Not selected"}</div>
-            <div><strong>Total garment quantity:</strong> {totalGarmentQty}</div>
-            <div><strong>Size quantities:</strong> {Object.entries({
+            <div><strong>Style #:</strong> {bringYourOwnApparel ? "Customer Provided Items" : (selectedProduct?.style || "Not selected")}</div>
+            <div><strong>Garment:</strong> {bringYourOwnApparel ? "Customer Provided Items" : (selectedProduct?.title || "Not selected")}</div>
+            <div><strong>Color:</strong> {bringYourOwnApparel ? "Customer Provided Items" : (selectedProduct?.color || "Not selected")}</div>
+            <div><strong>{bringYourOwnApparel ? "Transfer quantity" : "Total garment quantity"}:</strong> {totalGarmentQty}</div>
+            {!bringYourOwnApparel && <div><strong>Size quantities:</strong> {Object.entries({
               XS: toNumber(qtyXs),
               S: toNumber(qtyS),
               M: toNumber(qtyM),
@@ -822,7 +851,7 @@ export default function DTFTransfers({ onSummaryChange, isAdminView = false }) {
               "3XL": toNumber(qty3xl),
               "4XL": toNumber(qty4xl),
               "5XL": toNumber(qty5xl),
-            }).filter(([, value]) => value > 0).map(([size, value]) => `${size}(${value})`).join(", ") || "None"}</div>
+            }).filter(([, value]) => value > 0).map(([size, value]) => `${size}(${value})`).join(", ") || "None"}</div>}
             <div><strong>Front print:</strong> {frontSelected ? `${frontPreset}${resolvedFrontSize ? ` (${resolvedFrontSize.width}" x ${resolvedFrontSize.height}")` : ""}` : "None"}</div>
             <div><strong>Back print:</strong> {backSelected ? `${backPreset}${resolvedBackSize ? ` (${resolvedBackSize.width}" x ${resolvedBackSize.height}")` : ""}` : "None"}</div>
             <div><strong>Left sleeve:</strong> {leftSleeve ? `Selected (${resolvedLeftSleeveSize.width}" x ${resolvedLeftSleeveSize.height}")` : "None"}</div>
@@ -834,14 +863,14 @@ export default function DTFTransfers({ onSummaryChange, isAdminView = false }) {
                   : "None"}
               </div>
             )}
-            {dtfMode === "dtfOnly" && <div><strong>Price per garment:</strong> ${pricePerGarment.toFixed(2)}</div>}
+            {(dtfMode === "dtfOnly" || bringYourOwnApparel) && <div><strong>Price per {bringYourOwnApparel ? "transfer" : "garment"}:</strong> ${pricePerGarment.toFixed(2)}</div>}
             <div><strong>Final total:</strong> ${finalRetail.toFixed(2)}</div>
           </div>
         ) : (
         <>
         <div style={{ display: "grid", gap: 6 }}>
           <div><strong>Base apparel cost used:</strong> ${baseApparelCostUsed.toFixed(2)} {manualApparelCost ? "(manual override)" : "(SanMar CASE_PRICE)"}</div>
-          <div><strong>Total garment quantity:</strong> {totalGarmentQty}</div>
+          <div><strong>{bringYourOwnApparel ? "Transfer quantity" : "Total garment quantity"}:</strong> {totalGarmentQty}</div>
           <div><strong>Apparel direct cost:</strong> ${apparelDirectCost.toFixed(2)}</div>
           <div><strong>Apparel retail subtotal:</strong> ${apparelRetailSubtotal.toFixed(2)}</div>
           <div><strong>DTF material cost:</strong> ${dtfMaterialCost.toFixed(2)}</div>
@@ -851,7 +880,7 @@ export default function DTFTransfers({ onSummaryChange, isAdminView = false }) {
           <div><strong>Shipping (pass-through):</strong> ${DTF_SHIPPING_FLAT.toFixed(2)}</div>
           <div><strong>Direct cost:</strong> ${directCost.toFixed(2)}</div>
           <div><strong>Final retail:</strong> ${finalRetail.toFixed(2)}</div>
-          <div><strong>Price per garment:</strong> ${pricePerGarment.toFixed(2)}</div>
+          <div><strong>Price per {bringYourOwnApparel ? "transfer" : "garment"}:</strong> ${pricePerGarment.toFixed(2)}</div>
           <div><strong>Front print:</strong> {frontPreset}{resolvedFrontSize ? ` (${resolvedFrontSize.width}\" x ${resolvedFrontSize.height}\")` : ""}</div>
           <div><strong>Back print:</strong> {backPreset}{resolvedBackSize ? ` (${resolvedBackSize.width}\" x ${resolvedBackSize.height}\")` : ""}</div>
           <div><strong>Left sleeve:</strong> {leftSleeve ? `Selected (${resolvedLeftSleeveSize.width}\" x ${resolvedLeftSleeveSize.height}\")` : "None"}</div>

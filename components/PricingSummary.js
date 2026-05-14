@@ -68,13 +68,14 @@ export default function PricingSummary({
   const summaryCalc = (isDtf || isScreenPrint || isEmbroidery) ? dtfSummary : calc;
   const getCurrentItemCustomerDetailLines = () => {
     if (isDtf) {
+      const isByoa = dtfSummary?.dtfMode === "standard" && dtfSummary?.bringYourOwnApparel;
       return [
         `Product: ${dtfSummary?.dtfMode === "dtfOnly" ? "DTF Transfers Only" : "DTF Transfers"}`,
         `Style #: ${dtfSummary?.selectedStyle || "Not selected"}`,
         `Garment: ${dtfSummary?.selectedTitle || "Not selected"}`,
         `Color: ${dtfSummary?.selectedColor || "Not selected"}`,
-        `Sizes: ${formatSizeBreakdown(dtfSummary?.sizeQuantities || {})}`,
-        `Total Qty: ${dtfSummary?.totalGarmentQty || 0}`,
+        ...(isByoa ? [] : [`Sizes: ${formatSizeBreakdown(dtfSummary?.sizeQuantities || {})}`]),
+        `${isByoa ? "Transfer Quantity" : "Total Qty"}: ${dtfSummary?.totalGarmentQty || 0}`,
         `Print Locations: ${((dtfSummary?.selectedPrintLocations || []).length ? dtfSummary.selectedPrintLocations.join(", ") : "None selected")}`,
         ...((dtfSummary?.sizePriceBreakdown || []).length
           ? ["Price Breakdown:", ...formatSizePriceBreakdown(dtfSummary?.sizePriceBreakdown || []).map((line) => `- ${line}`)]
@@ -292,14 +293,14 @@ export default function PricingSummary({
         {!isDtf && showBreakdown && calc.normalSqFt !== undefined && <p>Normal Layout Sq Ft: {showBreakdown && calc.normalSqFt.toFixed(2)}</p>}
         {!isDtf && calc.rotatedSqFt !== undefined && <p>Rotated Layout Sq Ft: {calc.rotatedSqFt.toFixed(2)}</p>}
 
-        {!isEmbroidery && showBreakdown && calc.tierPrice !== undefined && <p>Tier Price Total: {money(calc.tierPrice)}</p>}
-        {!isEmbroidery && showBreakdown && calc.costMarginPrice !== undefined && <p>Cost + Margin Price: {money(calc.costMarginPrice)}</p>}
+        {!isDtf && !isEmbroidery && showBreakdown && calc.tierPrice !== undefined && <p>Tier Price Total: {money(calc.tierPrice)}</p>}
+        {!isDtf && !isEmbroidery && showBreakdown && calc.costMarginPrice !== undefined && <p>Cost + Margin Price: {money(calc.costMarginPrice)}</p>}
         {showBreakdown && activeProduct === "carbonless" && calc.retailMultiplier !== undefined && <p>Retail Multiplier: {calc.retailMultiplier.toFixed(2)}x</p>}
         {showBreakdown && calc.shopPrice !== undefined && <p>Shop Sq Ft Price: {money(calc.shopPrice)}</p>}
-        {!isEmbroidery && showBreakdown && calc.sheetsUsed !== undefined && <p>Sheets Used: {showBreakdown && calc.sheetsUsed.toFixed(2)}</p>}
-        {!isEmbroidery && showBreakdown && calc.sheetsRounded !== undefined && <p>Sheets Rounded: {showBreakdown && calc.sheetsRounded}</p>}
-        {!isEmbroidery && showBreakdown && calc.piecesPerSheet !== undefined && <p>Pieces Per Sheet: {showBreakdown && calc.piecesPerSheet}</p>}
-        {!isEmbroidery && showBreakdown && calc.sheetLayout !== undefined && <p>Sheet Layout: {showBreakdown && calc.sheetLayout}</p>}
+        {!isDtf && !isEmbroidery && showBreakdown && calc.sheetsUsed !== undefined && <p>Sheets Used: {showBreakdown && calc.sheetsUsed.toFixed(2)}</p>}
+        {!isDtf && !isEmbroidery && showBreakdown && calc.sheetsRounded !== undefined && <p>Sheets Rounded: {showBreakdown && calc.sheetsRounded}</p>}
+        {!isDtf && !isEmbroidery && showBreakdown && calc.piecesPerSheet !== undefined && <p>Pieces Per Sheet: {showBreakdown && calc.piecesPerSheet}</p>}
+        {!isDtf && !isEmbroidery && showBreakdown && calc.sheetLayout !== undefined && <p>Sheet Layout: {showBreakdown && calc.sheetLayout}</p>}
         {showBreakdown && calc.costPerPiece !== undefined && <p>Cost Per Piece: {money(calc.costPerPiece)}</p>}
         {isAdminView && !isEmbroidery && <p>Material Cost: {money(summaryCalc.materialCost)}</p>}
         {calc.standOffQty !== undefined && calc.standOffQty > 0 && (
@@ -312,7 +313,7 @@ export default function PricingSummary({
         {isAdminView && <p>Shipping: {money(summaryCalc.shipping)}</p>}
         {isAdminView && <p>Direct Cost: {money(summaryCalc.cost)}</p>}
         {isAdminView && <p>Actual Margin: {Number(summaryCalc.margin || 0).toFixed(1)}%</p>}
-        {isAdminView && !isEmbroidery && <p>Multiplier: {num(multiplier, 1)}x</p>}
+        {isAdminView && !isDtf && !isEmbroidery && <p>Multiplier: {num(multiplier, 1)}x</p>}
         {isAdminView && isDtf && (
           <>
             {showBreakdown && (
@@ -349,8 +350,8 @@ export default function PricingSummary({
             {dtfData.dtfMode !== "dtfOnly" && <p><strong>Garment:</strong> {dtfData.selectedTitle || "Not selected"}</p>}
             {dtfData.dtfMode !== "dtfOnly" && <p><strong>Color:</strong> {dtfData.selectedColor || "Not selected"}</p>}
             {dtfData.dtfMode === "dtfOnly" && <p><strong>Transfer Size:</strong> {dtfData.dtfOnlyWidth || 0}" x {dtfData.dtfOnlyHeight || 0}"</p>}
-            <p><strong>{dtfData.dtfMode === "dtfOnly" ? "DTF Quantity" : "Total Garments"}:</strong> {dtfData.totalGarmentQty || 0}</p>
-            {dtfData.dtfMode !== "dtfOnly" && <p><strong>Sizes:</strong> {Object.entries(dtfData.sizeQuantities || {}).filter(([, v]) => Number(v) > 0).map(([k, v]) => `${k}(${v})`).join(", ") || "None"}</p>}
+            <p><strong>{dtfData.dtfMode === "dtfOnly" || dtfData.bringYourOwnApparel ? "Transfer Quantity" : "Total Garments"}:</strong> {dtfData.totalGarmentQty || 0}</p>
+            {dtfData.dtfMode !== "dtfOnly" && !dtfData.bringYourOwnApparel && <p><strong>Sizes:</strong> {Object.entries(dtfData.sizeQuantities || {}).filter(([, v]) => Number(v) > 0).map(([k, v]) => `${k}(${v})`).join(", ") || "None"}</p>}
             {dtfData.dtfMode !== "dtfOnly" && <p><strong>Print Locations:</strong> {(dtfData.selectedPrintLocations || []).length ? dtfData.selectedPrintLocations.join(", ") : "None selected"}</p>}
             {dtfData.bringYourOwnApparel && !isAdminView && <p><strong>Bring your own apparel selected.</strong> Bring your own apparel option available. Please call for details.</p>}
             {(dtfData.sizePriceBreakdown || []).length ? (
@@ -424,12 +425,12 @@ export default function PricingSummary({
         ) : isDtf ? (
           <>
             <div className="mobileMeta">
-              DTF Transfers • {dtfData.totalGarmentQty || 0} garments
+              DTF Transfers • {dtfData.totalGarmentQty || 0} {dtfData.bringYourOwnApparel || dtfData.dtfMode === "dtfOnly" ? "transfers" : "garments"}
               {dtfData.productDisplay ? ` • ${dtfData.productDisplay}` : ""}
             </div>
             <div className="mobileOptions">
               {(dtfData.selectedPrintLocations || []).length ? dtfData.selectedPrintLocations.join(" • ") : "No print locations selected"}
-              {dtfData.each ? ` • ${money(dtfData.each)}/garment` : ""}
+              {dtfData.each ? ` • ${money(dtfData.each)}/${dtfData.bringYourOwnApparel || dtfData.dtfMode === "dtfOnly" ? "transfer" : "garment"}` : ""}
               {` • Total: ${money(dtfData.retail || 0)}`}
             </div>
           </>
