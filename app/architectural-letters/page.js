@@ -130,6 +130,13 @@ export default function ArchitecturalLettersPage() {
             <NumberField label="Pallet Fee ($)" value={form.palletFee} min={0} onChange={(value) => update("palletFee", value)} />
             <NumberField label="Adjustment / Discount ($)" value={form.adjustment} min={-999999} onChange={(value) => update("adjustment", value)} />
             <NumberField label="Markup Multiplier (optional test)" value={form.markupMultiplier} min={0} step={0.01} onChange={(value) => update("markupMultiplier", value)} />
+            <NumberField label="Freight Override ($, admin)" value={form.freightOverride} min={0} onChange={(value) => update("freightOverride", value)} />
+            <NumberField label="Manual Unit Price ($, admin)" value={form.manualUnitPrice} min={0} onChange={(value) => update("manualUnitPrice", value)} />
+            <NumberField label="Manual Final Retail ($, admin)" value={form.manualFinalRetail} min={0} onChange={(value) => update("manualFinalRetail", value)} />
+            <label>
+              Admin Notes
+              <textarea style={{ ...fieldStyle, minHeight: 72 }} value={form.notes || ""} onChange={(e) => update("notes", e.target.value)} />
+            </label>
             <label>
               Ship To ZIP
               <input style={fieldStyle} value={form.shippingZip} onChange={(e) => update("shippingZip", e.target.value)} placeholder="Optional in Phase 4" />
@@ -336,17 +343,8 @@ function QuoteSummary({ form, metrics, pricingModel, isAdminView, mode }) {
     <div>
       <h3 style={{ marginTop: 0 }}>Quote Summary</h3>
       <p style={{ marginTop: 0, color: "#64748b" }}>Spreadsheet matched price is currently treated as retail/base unit price for admin-only testing.</p>
-      <pre style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 8, padding: 12, overflowX: "auto" }}>{JSON.stringify(form, null, 2)}</pre>
       {isAdminView ? (
         <>
-        <div style={{ marginTop: 12, display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(170px, 1fr))", gap: 10 }}>
-          {Object.keys(pricingModel).filter((k) => k !== "source" && k !== "inputSnapshot").map((key) => (
-            <div key={key} style={{ border: "1px dashed #94a3b8", borderRadius: 8, padding: 10, background: "#fff" }}>
-              <strong>{key}</strong>
-              <div style={{ marginTop: 4, fontSize: 12, color: "#334155" }}>{typeof pricingModel[key] === "object" ? JSON.stringify(pricingModel[key]) : String(pricingModel[key] ?? "—")}</div>
-            </div>
-          ))}
-        </div>
         <AdminDebugPanel form={form} metrics={metrics} mode={mode} />
         </>
       ) : (
@@ -378,23 +376,32 @@ function AdminDebugPanel({ form, metrics, mode }) {
   const quantity = Number(form.quantity) || 0;
   const characterCount = Number(metrics.billableCharacters) || 0;
   const sets = Number(form.sets) || 0;
-  const freight = (Number(form.freight) || 0) + (Number(form.oversizedFreight) || 0) + (Number(form.crateFee) || 0) + (Number(form.palletFee) || 0);
+  const calculatedFreight = (Number(form.freight) || 0) + (Number(form.oversizedFreight) || 0) + (Number(form.crateFee) || 0) + (Number(form.palletFee) || 0);
+  const freightOverride = Number(form.freightOverride);
+  const freight = Number.isFinite(freightOverride) && freightOverride >= 0 ? freightOverride : calculatedFreight;
   const adjustment = Number(form.adjustment) || 0;
-  const markupMultiplier = Number(form.markupMultiplier) || 1;
   const sourcePrice = debug?.bestMatch?.numericPrice ?? null;
+  const manualUnitPrice = Number(form.manualUnitPrice);
+  const hasManualUnitPrice = Number.isFinite(manualUnitPrice) && manualUnitPrice >= 0;
+  const matchedUnitPrice = sourcePrice;
+  const unitPrice = hasManualUnitPrice ? manualUnitPrice : matchedUnitPrice;
   const effectiveSets = sets > 0 ? sets : 1;
   const billableCharacters = quantity * characterCount * effectiveSets;
-  const subtotal = sourcePrice != null ? sourcePrice * billableCharacters : 0;
+  const subtotal = unitPrice != null ? unitPrice * billableCharacters : 0;
   const adjustedSubtotal = subtotal + adjustment;
-  const estimatedRetail = adjustedSubtotal + freight;
+  const computedEstimatedRetail = adjustedSubtotal + freight;
+  const manualFinalRetail = Number(form.manualFinalRetail);
+  const hasManualFinalRetail = Number.isFinite(manualFinalRetail) && manualFinalRetail >= 0;
+  const estimatedRetail = hasManualFinalRetail ? manualFinalRetail : computedEstimatedRetail;
 
   const requiredFields = ["productType", "material", "finish", "thickness", "mounting", "lighting", "letterHeight"];
   const missingSelections = requiredFields.filter((key) => !form[key]);
   const warnings = [];
   if (!debug?.bestMatch) warnings.push("No pricing match found.");
   if (missingSelections.length) warnings.push(`Missing required selections: ${missingSelections.join(", ")}.`);
-  if (debug?.bestMatch && sourcePrice == null) warnings.push("Pricing value unavailable for the matched catalog row.");
+  if (debug?.bestMatch && matchedUnitPrice == null) warnings.push("Pricing value unavailable for the matched catalog row.");
   if (debug?.warning) warnings.push(debug.warning);
+  const status = !debug?.bestMatch ? "No Match Found" : debug?.bestMatch?.usedFallback ? "Closest Match Used" : "Pricing Match Found";
 
   return (
     <div style={{ marginTop: 14, display: "grid", gap: 12 }}>
@@ -407,6 +414,8 @@ function AdminDebugPanel({ form, metrics, mode }) {
 
       <div style={{ background: "#fff", borderRadius: 8, border: "1px solid #cbd5e1", padding: 12 }}>
         <h4 style={{ marginTop: 0, marginBottom: 8 }}>Admin Quote Summary</h4>
+        <div style={{ marginBottom: 10, fontWeight: 700, color: status === "No Match Found" ? "#b45309" : "#166534" }}>Status: {status}</div>
+        {hasManualUnitPrice && <div style={{ marginBottom: 10, color: "#1d4ed8", fontWeight: 700 }}>Manual price override active</div>}
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 8 }}>
           <MatchCell label="Product type" value={form.productType} />
           <MatchCell label="Material" value={form.material} />
@@ -415,23 +424,23 @@ function AdminDebugPanel({ form, metrics, mode }) {
           <MatchCell label="Letter height" value={`${form.letterHeight} in`} />
           <MatchCell label="Mounting" value={form.mounting} />
           <MatchCell label="Lighting" value={form.lighting} />
-          <MatchCell label="Quantity" value={String(quantity)} />
-          <MatchCell label="Lines" value={metrics.lines.filter(Boolean).join(" | ") || "—"} />
-          <MatchCell label="Total chars / Billable chars" value={`${metrics.totalCharacters} / ${characterCount}`} />
+          <MatchCell label="Sign text / lines" value={metrics.lines.filter(Boolean).join(" | ") || "—"} />
+          <MatchCell label="Billable characters" value={String(billableCharacters)} />
           <MatchCell label="Sets" value={String(effectiveSets)} />
-          <MatchCell label="Lighting Type" value={form.lighting} />
-          <MatchCell label="Return Depth" value={form.returnDepth} />
-          <MatchCell label="Spreadsheet matched unit price" value={sourcePrice != null ? `$${sourcePrice.toFixed(2)}` : "—"} />
+          <MatchCell label="Matched unit price" value={unitPrice != null ? `$${unitPrice.toFixed(2)}` : "—"} />
           <MatchCell label="Subtotal" value={`$${subtotal.toFixed(2)}`} />
-          <MatchCell label="Estimated freight total" value={`$${freight.toFixed(2)}`} />
+          <MatchCell label="Freight" value={`$${freight.toFixed(2)}`} />
           <MatchCell label="Adjustments" value={`$${adjustment.toFixed(2)}`} />
-          <MatchCell label="Markup/multiplier (not applied)" value={markupMultiplier.toFixed(2)} />
           <MatchCell label="Final estimated retail" value={`$${estimatedRetail.toFixed(2)}`} />
+          <MatchCell label="Manual unit price" value={hasManualUnitPrice ? `$${manualUnitPrice.toFixed(2)}` : "—"} />
+          <MatchCell label="Manual final retail" value={hasManualFinalRetail ? `$${manualFinalRetail.toFixed(2)}` : "—"} />
+          <MatchCell label="Freight override" value={Number.isFinite(freightOverride) && freightOverride >= 0 ? `$${freightOverride.toFixed(2)}` : "—"} />
+          <MatchCell label="Notes" value={form.notes || "—"} />
         </div>
       </div>
 
       <details style={{ background: "#fff", borderRadius: 8, border: "1px solid #cbd5e1", padding: 10 }}>
-        <summary style={{ fontWeight: 700, cursor: "pointer" }}>Admin Pricing Debug (Spreadsheet Source)</summary>
+        <summary style={{ fontWeight: 700, cursor: "pointer" }}>Advanced Debug Info</summary>
         <div style={{ marginTop: 10, display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 8 }}>
           <MatchCell label="source sheet/tab" value={debug?.bestMatch?.sourceSheetName} />
           <MatchCell label="source row" value={debug?.bestMatch?.sourceRow ? String(debug.bestMatch.sourceRow) : "—"} />

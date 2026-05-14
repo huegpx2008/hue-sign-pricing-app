@@ -53,6 +53,9 @@ export const architecturalLetterDefaults = {
   palletFee: 0,
   adjustment: 0,
   markupMultiplier: 1,
+  manualUnitPrice: "",
+  manualFinalRetail: "",
+  freightOverride: "",
   notes: "",
 };
 
