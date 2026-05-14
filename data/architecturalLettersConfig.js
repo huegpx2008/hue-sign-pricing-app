@@ -59,6 +59,18 @@ export const architecturalLetterDefaults = {
   notes: "",
 };
 
+export const architecturalLetterValidOptionsByProductType = {
+  "Flat Cut Metal": {
+    materials: ["Aluminum", "Stainless Steel", "Brass", "Bronze"],
+    finishes: ["Raw", "Brushed", "Polished", "Painted", "Anodized", "Patina"],
+    thickness: ['1/8"', '1/4"'],
+    returnDepth: ['1/2"', '1"'],
+    mounting: ["Stud Mount", "Pad Mount", "Flush Mount", "Double-Face Tape"],
+    lighting: ["Non-Lit"],
+    letterHeights: [4, 6, 8, 10, 12, 15, 18, 24, 30, 36, 42, 48],
+  },
+};
+
 export const computeArchitecturalLetterMetrics = (state) => {
   const lines = [state.line1 || "", state.line2 || "", state.line3 || ""];
   const joined = lines.join("");
