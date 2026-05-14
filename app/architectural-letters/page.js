@@ -11,6 +11,50 @@ import {
 } from "../../data/architecturalLettersConfig";
 
 const fieldStyle = { width: "100%", padding: "10px 12px", borderRadius: 8, border: "1px solid #cbd5e1", background: "#fff" };
+const optionDescriptions = {
+  productType: {
+    "Flat Cut Metal": "Thin dimensional metal letters cut from sheet material.",
+    "Fabricated Non-Lit": "Deeper dimensional metal letters with formed sides/returns.",
+    "Flat Cut Acrylic": "Laser-cut acrylic dimensional letters.",
+    "Formed Plastic": "Molded plastic letters with lighter weight construction.",
+    "Cast Metal": "Solid cast bronze/aluminum letters for premium durability.",
+    "Face Lit": "Illuminated letters with light coming through the face.",
+    "Halo Lit": "Illuminated letters with back halo glow onto the wall.",
+    "Plaques": "Cast, etched, or signage plaques for donor/directories.",
+  },
+  mounting: {
+    "Stud Mount": "Hidden studs anchor letters off the wall.",
+    "Double-Face Tape": "Adhesive tape mount for lightweight applications.",
+    "Flush Mount": "Letters sit directly against the mounting surface.",
+    Raceway: "Letters pre-mounted to a raceway for easier installation.",
+    "Pad Mount": "Raised pads/spacers create stand-off distance.",
+  },
+  lighting: {
+    "Non-Lit": "No illumination; daytime visibility only.",
+    "Face-Lit": "Light outputs through face of each letter.",
+    "Halo-Lit": "Back-lit halo effect around each letter.",
+    "Face + Halo-Lit": "Combined face illumination and halo glow.",
+  },
+  finish: {
+    Painted: "Solid coated finish in selected paint color.",
+    Brushed: "Directional grain with satin metallic appearance.",
+    Polished: "High-shine reflective metallic finish.",
+    Anodized: "Electrochemical protective metallic finish.",
+    Patina: "Oxidized/weathered decorative finish.",
+    Raw: "Natural untreated metal finish.",
+  },
+};
+
+const productReferenceMap = {
+  "Flat Cut Metal": { page: "016", fileName: "2026-U.S.-Professional-Signage-Catalog_Page_016.jpg", label: "Gemini Catalog Page 16 — Flat Cut Metal", description: "Flat sheet-cut metal letters for clean dimensional branding.", notes: "Best for non-lit signage with precise, crisp edges." },
+  "Fabricated Non-Lit": { page: "017", fileName: "2026-U.S.-Professional-Signage-Catalog_Page_017.jpg", label: "Gemini Catalog Page 17 — Fabricated Metal", description: "Built-up fabricated metal letters with depth and returns.", notes: "Use when visual depth and premium profile are required." },
+  "Flat Cut Acrylic": { page: "036", fileName: "2026-U.S.-Professional-Signage-Catalog_Page_036.jpg", label: "Gemini Catalog Page 36 — Flat Cut Acrylic", description: "Precision-cut acrylic letters in multiple colors/thicknesses.", notes: "Popular for interior lobbies and directional signage." },
+  "Formed Plastic": { page: "047", fileName: "2026-U.S.-Professional-Signage-Catalog_Page_047.jpg", label: "Gemini Catalog Page 47 — Formed Plastic", description: "Vacuum/mold formed plastic letters for economical dimension.", notes: "Lightweight option with good durability." },
+  "Cast Metal": { page: "075", fileName: "2026-U.S.-Professional-Signage-Catalog_Page_075.jpg", label: "Gemini Catalog Page 75 — Cast Metal", description: "Cast bronze/aluminum letters with substantial body.", notes: "Classic architectural look with long service life." },
+  "Face Lit": { page: "092", fileName: "2026-U.S.-Professional-Signage-Catalog_Page_092.jpg", label: "Gemini Catalog Page 92 — Face Lit", description: "Face-illuminated channel letters for night visibility.", notes: "Primary lighting exits through the face material." },
+  "Halo Lit": { page: "168", fileName: "2026-U.S.-Professional-Signage-Catalog_Page_168.jpg", label: "Gemini Catalog Page 168 — Halo Lit", description: "Reverse-lit channel letters with halo backglow effect.", notes: "Creates softer premium lighting against wall surface." },
+  Plaques: { page: "198", fileName: "2026-U.S.-Professional-Signage-Catalog_Page_198.jpg", label: "Gemini Catalog Page 198 — Plaques", description: "Architectural plaques including donor, directory, and memorial styles.", notes: "Good for static information and commemorative signage." },
+};
 
 export default function ArchitecturalLettersPage() {
   const [stepIndex, setStepIndex] = useState(0);
@@ -122,6 +166,7 @@ export default function ArchitecturalLettersPage() {
           </div>
 
           <div style={{ border: "1px solid #e2e8f0", borderRadius: 12, padding: 16, background: "#f8fafc" }}>{renderStep()}</div>
+          <AdminVisualPanels form={form} metrics={metrics} />
 
           <div style={{ display: "flex", justifyContent: "space-between", marginTop: 16 }}>
             <button onClick={() => setStepIndex((s) => Math.max(0, s - 1))} disabled={stepIndex === 0}>Back</button>
@@ -137,6 +182,149 @@ export default function ArchitecturalLettersPage() {
 
 function Select({ label, value, options, onChange }) {
   return <label>{label}<select style={fieldStyle} value={value} onChange={(e) => onChange(e.target.value)}>{options.map((option) => <option key={option} value={option}>{option}</option>)}</select></label>;
+}
+
+function AdminVisualPanels({ form, metrics }) {
+  const reference = productReferenceMap[form.productType];
+  return (
+    <div style={{ marginTop: 14, display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 12 }}>
+      <div style={{ background: "#fff", borderRadius: 10, border: "1px solid #cbd5e1", padding: 12 }}>
+        <h3 style={{ marginTop: 0, marginBottom: 8 }}>Product Reference</h3>
+        {reference ? (
+          <div style={{ border: "1px solid #e2e8f0", borderRadius: 8, padding: 10, background: "#f8fafc" }}>
+            <div style={{ fontWeight: 700 }}>Reference: {reference.label}</div>
+            <div style={{ marginTop: 4, fontSize: 12, color: "#64748b" }}>File: /data/Gemini_Catalog/{reference.fileName}</div>
+          </div>
+        ) : <div style={{ border: "1px dashed #94a3b8", borderRadius: 8, padding: 10 }}>No catalog preview available yet.</div>}
+        <p style={{ marginBottom: 4 }}><strong>Description:</strong> {reference?.description || "No product description available yet."}</p>
+        <p style={{ marginTop: 4, marginBottom: 0 }}><strong>Notes:</strong> {reference?.notes || "No admin notes available yet."}</p>
+        <p style={{ marginTop: 8, marginBottom: 0, fontSize: 12, color: "#64748b" }}>
+          Catalog image preview will be enabled once assets are moved to /public/gemini-catalog/.
+        </p>
+      </div>
+
+      <LiveLetterMockup form={form} metrics={metrics} />
+    </div>
+  );
+}
+
+function LiveLetterMockup({ form, metrics }) {
+  const lines = metrics.lines;
+  const align = form.previewAlignment === "right" ? "right" : form.previewAlignment === "center" ? "center" : "left";
+  const [background, setBackground] = useState("light-wall");
+  const [previewMode, setPreviewMode] = useState("clean");
+  const isFabricated = /fabricated/i.test(form.productType);
+  const isFlatCut = /flat cut/i.test(form.productType);
+  const finishLabel = `${form.finish} ${form.material}`.toLowerCase();
+  const depthScale = { '1/8"': 1, '1/4"': 2, '3/8"': 3, '1/2"': 5, '3/4"': 7, '1"': 9, '1.5"': 11, '2"': 14, Custom: 16 };
+  const returnDepthScale = { '1/2"': 5, '1"': 8, '1.5"': 11, '2"': 14, Custom: 16 };
+  const baseDepth = Math.max(depthScale[form.thickness] || 2, returnDepthScale[form.returnDepth] || 2);
+  const depth = isFabricated ? Math.min(6, Math.max(3, Math.round(baseDepth / 2))) : isFlatCut ? Math.min(3, Math.max(1, Math.round(baseDepth / 3))) : Math.min(5, Math.max(2, Math.round(baseDepth / 2.5)));
+  const glow = form.lighting === "Halo-Lit"
+    ? "0 2px 4px rgba(15,23,42,.35), 0 0 14px rgba(96,165,250,.7), 0 0 24px rgba(186,230,253,.6)"
+    : form.lighting === "Face-Lit"
+      ? "0 1px 3px rgba(15,23,42,.3), 0 0 10px rgba(255,255,255,.65), 0 0 18px rgba(125,211,252,.45)"
+      : form.lighting === "Face + Halo-Lit"
+        ? "0 1px 3px rgba(15,23,42,.3), 0 0 12px rgba(255,255,255,.65), 0 0 24px rgba(125,211,252,.55), 0 0 32px rgba(147,197,253,.42)"
+        : "0 1px 2px rgba(15,23,42,.3)";
+  const fill = finishLabel.includes("brushed") || finishLabel.includes("stainless")
+    ? "linear-gradient(100deg,#d8e0e7 0%,#8f9aa4 26%,#edf2f7 49%,#96a2ad 71%,#e2e8f0 100%)"
+    : finishLabel.includes("polished")
+      ? "linear-gradient(100deg,#ffffff 0%,#cfd8e3 28%,#ffffff 50%,#aab6c5 70%,#f8fafc 100%)"
+      : finishLabel.includes("bronze") || finishLabel.includes("brass")
+        ? "linear-gradient(100deg,#f3d7a7 0%,#b88746 35%,#f8e2bc 58%,#9d6f37 82%,#e7c893 100%)"
+        : finishLabel.includes("black")
+          ? "linear-gradient(100deg,#4b5563 0%,#111827 45%,#374151 100%)"
+          : finishLabel.includes("painted")
+            ? "linear-gradient(100deg,#64748b 0%,#334155 65%,#1e293b 100%)"
+            : /acrylic|lit/i.test(finishLabel + form.productType)
+              ? "linear-gradient(180deg,#f8fbff 0%,#cfe7ff 38%,#6b9fd8 70%,#dbeafe 100%)"
+              : "linear-gradient(100deg,#d4d4d8 0%,#71717a 45%,#e4e4e7 100%)";
+  const sideColor = isFabricated ? "rgba(51,65,85,.45)" : "rgba(71,85,105,.3)";
+  const standoffShadow = form.mounting === "Stud Mount" ? "0 2px 5px rgba(15,23,42,.18)" : form.mounting === "Pad Mount" ? "0 2px 4px rgba(15,23,42,.16)" : form.mounting === "Double-Face Tape" ? "0 1px 2px rgba(15,23,42,.1)" : "0 2px 4px rgba(15,23,42,.14)";
+  const backgroundStyleMap = {
+    "light-wall": "linear-gradient(180deg,#f8fafc,#edf2f7)",
+    "dark-wall": "linear-gradient(180deg,#334155,#1e293b)",
+    brick: "repeating-linear-gradient(0deg,#9b735f 0 24px,#8d654f 24px 25px), repeating-linear-gradient(90deg,#ac826a 0 64px,#97715a 64px 65px)",
+    wood: "repeating-linear-gradient(90deg,#8a6b4f 0 30px,#7a5d43 30px 60px,#6e523b 60px 90px)",
+  };
+
+  const renderReturnShadow = (layerDepth) => Array.from({ length: layerDepth }, (_, idx) => `${Math.min(4, idx + 1)}px ${Math.min(4, idx + 1)}px 0 ${sideColor}`).join(",");
+  const grainOverlay = finishLabel.includes("brushed") || finishLabel.includes("stainless")
+    ? "repeating-linear-gradient(100deg, rgba(255,255,255,.14) 0 2px, rgba(148,163,184,.08) 2px 4px)"
+    : "none";
+
+  return (
+    <div style={{ background: "#fff", borderRadius: 10, border: "1px solid #cbd5e1", padding: 12 }}>
+      <h3 style={{ marginTop: 0, marginBottom: 8 }}>Live Letter Mockup</h3>
+      <div style={{ display: "grid", gap: 10 }}>
+        <OptionHelp label="Product Type" value={form.productType} description={optionDescriptions.productType[form.productType]} />
+        <OptionHelp label="Mounting" value={form.mounting} description={optionDescriptions.mounting[form.mounting]} />
+        <OptionHelp label="Lighting" value={form.lighting} description={optionDescriptions.lighting[form.lighting]} />
+        <OptionHelp label="Finish" value={form.finish} description={optionDescriptions.finish[form.finish]} />
+      </div>
+      <div style={{ marginTop: 10 }}>
+        <label>Sign Text / Wording</label>
+        <div style={{ fontSize: 12, color: "#475569", marginTop: 4 }}>Character count: {metrics.totalCharacters} · Billable: {metrics.billableCharacters} · Approx letters: {metrics.letters} · Spaces/punctuation: {metrics.spaces + metrics.punctuation}</div>
+      </div>
+      <label style={{ display: "block", marginTop: 10 }}>
+        Preview Background
+        <select style={fieldStyle} value={background} onChange={(e) => setBackground(e.target.value)}>
+          <option value="light-wall">Light wall</option>
+          <option value="dark-wall">Dark wall</option>
+          <option value="brick">Brick</option>
+          <option value="wood">Wood / slat wall</option>
+        </select>
+      </label>
+      <label style={{ display: "block", marginTop: 10 }}>
+        Preview Mode
+        <select style={fieldStyle} value={previewMode} onChange={(e) => setPreviewMode(e.target.value)}>
+          <option value="clean">Clean Mockup</option>
+          <option value="depth">Depth Emphasis</option>
+        </select>
+      </label>
+      <div style={{ marginTop: 10, minHeight: 190, borderRadius: 8, border: "1px dashed #94a3b8", padding: 16, background: backgroundStyleMap[background], backgroundSize: "cover", textAlign: align, overflow: "hidden", position: "relative", display: "flex", flexDirection: "column", justifyContent: "center", gap: 8 }}>
+        {form.mounting === "Raceway" && <div style={{ position: "absolute", left: "12%", right: "12%", top: "44%", height: 10, borderRadius: 6, background: "linear-gradient(180deg,#94a3b8,#64748b)", boxShadow: "0 1px 4px rgba(15,23,42,.2)" }} />}
+        {lines.map((line, idx) => (
+          <div
+            key={`${idx}-${line}`}
+            style={{
+              fontSize: "clamp(30px, 5.2vw, 42px)",
+              lineHeight: 1.2,
+              fontWeight: 800,
+              letterSpacing: ".06em",
+              color: "transparent",
+              background: grainOverlay === "none" ? fill : `${grainOverlay}, ${fill}`,
+              WebkitBackgroundClip: "text",
+              textShadow: `${renderReturnShadow(previewMode === "depth" ? Math.min(6, depth + 1) : depth)}, ${standoffShadow}, ${glow}`,
+              transform: form.productType === "Flat Cut Acrylic" ? "skewX(-1deg)" : "none",
+              minHeight: 48,
+              position: "relative",
+              zIndex: 2,
+              filter: finishLabel.includes("brushed") ? "brightness(1.05) contrast(1.05)" : finishLabel.includes("acrylic") ? "brightness(1.1)" : "none",
+              textAlign: align,
+            }}
+          >
+            {line || "‎"}
+          </div>
+        ))}
+      </div>
+      <div style={{ marginTop: 6, fontSize: 12, color: "#475569" }}>Preview is for visual reference only and not production artwork.</div>
+      <div style={{ marginTop: 10, display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 8 }}>
+        <MatchCell label="Product Type" value={form.productType} />
+        <MatchCell label="Material" value={form.material} />
+        <MatchCell label="Finish" value={form.finish} />
+        <MatchCell label="Depth" value={`${form.thickness} / ${form.returnDepth}`} />
+        <MatchCell label="Mounting" value={form.mounting} />
+        <MatchCell label="Lighting" value={form.lighting} />
+        <MatchCell label="Text entered" value={lines.filter(Boolean).join(" / ") || "—"} />
+      </div>
+    </div>
+  );
+}
+
+function OptionHelp({ label, value, description }) {
+  return <div style={{ background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 8, padding: 8 }}><strong>{label}:</strong> {value}<div style={{ fontSize: 12, color: "#475569", marginTop: 3 }}>{description || "Description coming soon."}</div></div>;
 }
 
 function NumberField({ label, value, onChange, min = 1, step = 1 }) {
