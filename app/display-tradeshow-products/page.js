@@ -37,7 +37,7 @@ export default function DisplayTradeshowProductsPage() {
 
   const selectedProduct = useMemo(() => displayTradeshowCatalog.find((p) => p.id === selectedProductId) || filteredProducts[0] || null, [filteredProducts, selectedProductId]);
   const selectedSize = selectedProduct?.sizes?.find((s) => s.id === selectedSizeId) || selectedProduct?.sizes?.[0] || null;
-  const activeTiers = selectedSize?.tierPricingBySide?.[selectedSided] || selectedSize?.tierPricing || [];
+  const activeTiers = selectedSize?.tierPricingBySideAndHardware?.[selectedSided]?.[selectedHardware] || selectedSize?.tierPricingBySide?.[selectedSided] || selectedSize?.tierPricing || [];
   const isNeedsReview = selectedProduct?.status === "NEEDS REVIEW";
 
   useEffect(() => {
@@ -87,6 +87,9 @@ export default function DisplayTradeshowProductsPage() {
             <h3 style={{ marginTop: 0 }}>{selectedProduct.name}</h3>
             <div style={{ color: "#94a3b8", fontSize: 12 }}>{selectedProduct.subcategory}</div>
             <p>{selectedProduct.description}</p>
+            {(selectedProduct.productionNotes || []).length > 0 ? <ul style={{ marginTop: -2, paddingLeft: 18, color: "#cbd5e1" }}>{selectedProduct.productionNotes.map((note) => <li key={note}>{note}</li>)}</ul> : null}
+            {(selectedProduct.featureIcons || []).length > 0 ? <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 10 }}>{selectedProduct.featureIcons.map((icon) => <span key={icon} style={{ border: "1px solid #0ea5e9", color: "#7dd3fc", background: "#082f49", borderRadius: 999, padding: "4px 10px", fontSize: 12, fontWeight: 700 }}>{icon}</span>)}</div> : null}
+            {selectedProduct.previewImage ? <div style={{ marginBottom: 10 }}><div style={{ fontSize: 12, color: "#94a3b8", marginBottom: 6 }}><strong>Product preview</strong></div><img src={selectedProduct.previewImage} alt={`${selectedProduct.name} reference`} style={{ width: "100%", maxHeight: 220, objectFit: "cover", borderRadius: 8, border: "1px solid #334155" }} /></div> : null}
             <div style={{ fontSize: 12, color: "#fbbf24" }}><strong>Status:</strong> {selectedProduct.status || "READY"}</div>
             <div style={{ fontSize: 12, color: "#94a3b8" }}><strong>Source screenshot:</strong> {selectedProduct.sourceScreenshot || "N/A"}</div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
