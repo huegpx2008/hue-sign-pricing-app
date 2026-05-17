@@ -17,18 +17,18 @@ export default function ProductNavigation({
   const router = useRouter();
 
   const handleNavSelection = (itemId) => {
-    if (itemId !== "architecturalLetters") {
+    if (!["architecturalLetters", "displayTradeshowProducts"].includes(itemId)) {
       if (onProductSelect) onProductSelect(itemId);
       else setProduct(itemId);
       return;
     }
 
     if (isAdminView) {
-      router.push("/architectural-letters");
+      router.push(itemId === "architecturalLetters" ? "/architectural-letters" : "/display-tradeshow-products");
       return;
     }
 
-    window.alert("Architectural Letters pricing is coming soon. Please contact us for a custom quote.");
+    window.alert(itemId === "architecturalLetters" ? "Architectural Letters pricing is coming soon. Please contact us for a custom quote." : "Display / Tradeshow Products coming soon.");
   };
 
   return (
@@ -42,8 +42,8 @@ export default function ProductNavigation({
                 key={item.id}
                 className={`presetBtn ${product === item.id ? "activePreset" : ""} ${item.calculator ? "" : "comingSoonBtn"}`}
                 onClick={() => handleNavSelection(item.id)}
-                aria-disabled={item.id === "architecturalLetters" && !isAdminView}
-                title={item.id === "architecturalLetters" && !isAdminView ? "Coming Soon" : undefined}
+                aria-disabled={["architecturalLetters", "displayTradeshowProducts"].includes(item.id) && !isAdminView}
+                title={["architecturalLetters", "displayTradeshowProducts"].includes(item.id) && !isAdminView ? "Coming Soon" : undefined}
               >
                 {item.label} {!item.calculator ? "• Coming Soon" : ""}
               </button>

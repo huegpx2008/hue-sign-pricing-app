@@ -30,6 +30,7 @@ export const productCategories = [
     { id: "pvc", label: "PVC", calculator: "pvc" }, { id: "polystyrene", label: "Polystyrene .03", calculator: "polystyrene" },
     { id: "aluminum", label: "Aluminum", calculator: "aluminum" }, { id: "backlit", label: "Backlit" },
     { id: "architecturalLetters", label: "Architectural Letters" },
+    { id: "displayTradeshowProducts", label: "Display / Tradeshow Products" },
     { id: "vehicleMagnets", label: "Vehicle Magnets", calculator: "vehicleMagnets" },
   ] },
   { name: "Vinyl / Decals", items: [
