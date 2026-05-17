@@ -379,7 +379,7 @@ export default function PricingSummary({
                 {isAdminView && !isEmbroidery && <p><strong>CASE_PRICE (avg):</strong> {money(li.casePrice || 0)}</p>}
                 {isAdminView && <p><strong>Final Retail Subtotal:</strong> {money(li.finalRetailSubtotal || 0)}</p>}
                 {(li.sizePriceBreakdown || []).length ? (
-                  <p><strong>Price breakdown:</strong> {(li.sizePriceBreakdown || []).map((tier) => `${tier.label || tier.size}: ${tier.qty} @ ${money(tier.priceEach || tier.garmentPriceEach || 0)}`).join(" • ")}</p>
+                  <p><strong>Price breakdown:</strong> {getScreenCustomerPriceTiers(li).map((tier) => `${tier.label}: ${tier.qty} @ ${money(tier.priceEach)}`).join(" • ")}</p>
                 ) : (
                   <p><strong>Final Retail Per Shirt:</strong> {money(li.retailPerShirt || 0)}</p>
                 )}
@@ -412,7 +412,7 @@ export default function PricingSummary({
             {isAdminView && isEmbroidery && dtfSummary.targetRetailPricePerItem && ((dtfSummary.targetRetailTotal || 0) <= (dtfSummary.cost || 0) ? <p style={{ color: "#ef4444", fontWeight: 700 }}>Warning: Target price is at or below direct cost (loss).</p> : null)}
             <p><strong>Final Retail:</strong> {money(dtfSummary.retail)}</p>
             {isAdminView && isEmbroidery && <p><strong>Actual Margin:</strong> {Number(dtfSummary.margin || 0).toFixed(1)}%</p>}
-            {isEmbroidery ? <p><strong>Average Retail Per Item:</strong> {money(dtfSummary.each || 0)}</p> : (((dtfSummary.lineItems || []).length <= 1) && <p><strong>Average price per item:</strong> {money(dtfSummary.averagePricePerShirt || dtfSummary.each)}</p>)}
+            {isEmbroidery && <p><strong>Average Retail Per Item:</strong> {money(dtfSummary.each || 0)}</p>}
             {isAdminView && <p><strong>Profit:</strong> {money(dtfSummary.profit)}</p>}
           </div>
         ) : <SelectedDetails details={selectedDetails} />}
