@@ -5,8 +5,8 @@ export const displayProductsCatalog = [
     subcategory: "Flags",
     name: "TEAR DROP BANNER",
     status: "READY",
-    sourceScreenshot: "public/data/display/Screenshot_20260516_162513_Chrome.jpg",
-    previewImage: "/data/display/Screenshot_20260516_162513_Chrome.jpg",
+    sourceScreenshot: "public/data/display/Screenshot_20260516_162028_Chrome.jpg",
+    previewImage: "/data/display/Screenshot_20260516_162028_Chrome.jpg",
     tags: ["Flags", "Outdoor", "Banner"],
     description:
       "Wind rated – 40 mile per hour winds – 200lbs strain-tested carbon fiber flexible pole system. Available in single and double sided.",
@@ -14,8 +14,10 @@ export const displayProductsCatalog = [
       "Full color dye sublimation printing.",
       "Ships in 7–8 days.",
       "Carry bag included.",
+      "12 month warranty.",
       "Crossbase water weight bag is included where cross base hardware is selected."
     ],
+    featureIcons: ["UV Resistant", "Outdoor Rated"],
     moq: 1,
     sidedOptions: ["Single-Sided", "Double-Sided"],
     hardwareOptions: [
