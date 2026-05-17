@@ -9,10 +9,10 @@ function Field({ label, value, setValue }) {
   );
 }
 
-function Check({ label, value, setValue }) {
+function Check({ label, value, setValue, disabled = false }) {
   return (
     <label style={{ display: "block", marginTop: 12 }}>
-      <input type="checkbox" checked={value} onChange={(e) => setValue(e.target.checked)} /> {label}
+      <input type="checkbox" checked={value} disabled={disabled} onChange={(e) => setValue(e.target.checked)} /> {label}
     </label>
   );
 }

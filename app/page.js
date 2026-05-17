@@ -40,9 +40,7 @@ export default function Page() {
     }
     if (typeof window === "undefined" || window.innerWidth > 800) return;
     window.requestAnimationFrame(() => {
-      const toQuoteDetails = ["dtfTransfers", "screenPrinting", "embroidery"].includes(nextProduct);
-      const anchorId = toQuoteDetails ? "quote-details-anchor" : "quick-presets-anchor";
-      document.getElementById(anchorId)?.scrollIntoView({ behavior: "smooth", block: "start" });
+      document.getElementById("quote-details-anchor")?.scrollIntoView({ behavior: "smooth", block: "start" });
     });
   };
 
