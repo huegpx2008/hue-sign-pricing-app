@@ -146,7 +146,7 @@ export default function DisplayTradeshowProductsPage() {
                   <h3 style={{ marginTop: 0, marginBottom: 6 }}>{selectedProduct.name}</h3>
                   <div style={{ fontSize: 12, color: "#64748b", marginBottom: 8 }}>{selectedProduct.subcategory}</div>
                   <p style={{ marginTop: 0 }}>{selectedProduct.description}</p>
-                  <p style={{ marginTop: 0, fontSize: 12, color: "#334155" }}><strong>Catalog reference:</strong> {selectedProduct.imageReference}</p>
+                  <p style={{ marginTop: 0, fontSize: 12, color: "#334155" }}><strong>Reference:</strong> Display catalog screenshot ({selectedProduct.imageReference})</p>
 
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
                     <label>Size / Option<select style={inputStyle} value={selectedSizeId} onChange={(e) => setSelectedSizeId(e.target.value)}>{selectedProduct.sizes.map((s) => <option key={s.id} value={s.id}>{s.label}</option>)}</select></label>
