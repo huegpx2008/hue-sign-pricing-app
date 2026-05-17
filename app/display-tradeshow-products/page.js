@@ -6,6 +6,7 @@ import {
   displayTradeshowCatalog,
   displayTradeshowParserMeta,
   displayTradeshowTagList,
+  displayDataSource,
 } from "../../data/displayTradeshowConfig";
 
 const inputStyle = { width: "100%", padding: "10px 12px", borderRadius: 8, border: "1px solid #cbd5e1", background: "#fff" };
@@ -65,6 +66,7 @@ export default function DisplayTradeshowProductsPage() {
   return <main style={{ padding: 20, fontFamily: "Arial, sans-serif" }}><div style={{ maxWidth: 1150, margin: "0 auto" }}><Link href="/">← Back to main pricing app</Link><h1>Display / Tradeshow Products</h1>
     <p>Admin-only parsed catalog workflow.</p>
     <div style={{ marginBottom: 10, fontSize: 12, color: "#475569" }}>Parser meta: source={displayTradeshowParserMeta.sourceDir}, generatedAt={displayTradeshowParserMeta.generatedAt || "N/A"}, version={displayTradeshowParserMeta.parserVersion}</div>
+    <div style={{ marginBottom: 10, fontSize: 12, color: "#0f766e" }}>Debug data source: {displayDataSource}</div>
 
     <div style={{ display: "grid", gridTemplateColumns: "1fr 1.6fr", gap: 14 }}>
       <section style={{ border: "1px solid #e2e8f0", borderRadius: 10, padding: 10 }}>
@@ -74,7 +76,7 @@ export default function DisplayTradeshowProductsPage() {
       </section>
 
       <section style={{ border: "1px solid #e2e8f0", borderRadius: 10, padding: 10 }}>
-        {!selectedProduct ? <div>No parsed products.</div> : <>
+        {!selectedProduct ? <div>No products available (data file is empty).</div> : <>
           <h3>{selectedProduct.name || "Unnamed Product"}</h3>
           <p>{selectedProduct.description || ""}</p>
           <p><strong>Reference:</strong> {selectedProduct.imageReference || ""}</p>

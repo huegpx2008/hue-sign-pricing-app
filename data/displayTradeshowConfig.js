@@ -1,6 +1,11 @@
 import generated from "./displayProducts.generated.json";
+import { fallbackDisplayCatalog } from "./displayProductsFallback";
 
-export const displayTradeshowCatalog = generated.products || [];
+
+const parsedProducts = generated.products || [];
+export const displayDataSource = parsedProducts.length ? "parsed data" : "fallback catalog data";
+
+export const displayTradeshowCatalog = parsedProducts.length ? parsedProducts : fallbackDisplayCatalog;
 
 export const displayTradeshowTagList = Array.from(
   new Set(displayTradeshowCatalog.flatMap((product) => product.tags || []))
