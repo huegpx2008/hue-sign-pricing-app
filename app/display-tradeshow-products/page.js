@@ -46,6 +46,8 @@ export default function DisplayTradeshowProductsPage() {
 
   const selectedSize = selectedProduct?.sizes.find((size) => size.id === selectedSizeId) || selectedProduct?.sizes[0] || null;
 
+  const activeTiers = selectedSize?.tierPricingBySide?.[selectedSided] || selectedSize?.tierPricing || [];
+
   useEffect(() => {
     if (!selectedProduct) return;
     setSelectedSizeId(selectedProduct.sizes[0]?.id || "");
@@ -56,8 +58,8 @@ export default function DisplayTradeshowProductsPage() {
 
   const activeTier = useMemo(() => {
     if (!selectedSize) return null;
-    return getTierForQuantity(selectedSize.tierPricing, quantity);
-  }, [quantity, selectedSize]);
+    return getTierForQuantity(activeTiers, quantity);
+  }, [activeTiers, quantity, selectedSize]);
 
   const isCallForPricing = !activeTier || activeTier.retailEach === "CALL";
   const retailEach = isCallForPricing ? null : Number(activeTier.retailEach);
@@ -147,9 +149,11 @@ export default function DisplayTradeshowProductsPage() {
                   <div style={{ fontSize: 12, color: "#64748b", marginBottom: 8 }}>{selectedProduct.subcategory}</div>
                   <p style={{ marginTop: 0 }}>{selectedProduct.description}</p>
                   <p style={{ marginTop: 0, fontSize: 12, color: "#334155" }}><strong>Reference:</strong> Display catalog screenshot ({selectedProduct.imageReference})</p>
+                  {selectedProduct.referenceStatus === "Needs review" ? <p style={{ marginTop: 0, fontSize: 12, color: "#b45309" }}><strong>Status:</strong> Needs review (confirm real screenshot filename in public/data/display)</p> : null}
+                  {selectedProduct.adminNotes?.length ? <p style={{ marginTop: 0, fontSize: 12, color: "#334155" }}><strong>Admin note:</strong> {selectedProduct.adminNotes.join(" ")}</p> : null}
 
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-                    <label>Size / Option<select style={inputStyle} value={selectedSizeId} onChange={(e) => setSelectedSizeId(e.target.value)}>{selectedProduct.sizes.map((s) => <option key={s.id} value={s.id}>{s.label}</option>)}</select></label>
+                    <label>Size / Option<select style={inputStyle} value={selectedSizeId} onChange={(e) => setSelectedSizeId(e.target.value)}>{selectedProduct.sizes.length ? selectedProduct.sizes.map((s) => <option key={s.id} value={s.id}>{s.label}</option>) : <option value="">Needs review</option>}</select></label>
                     <label>{selectedProduct.soldInSets ? "Set Quantity" : "Quantity"}{selectedProduct.soldInSets ? <select style={inputStyle} value={quantity} onChange={(e) => setQuantity(Number(e.target.value))}>{(selectedProduct.setQuantities || []).map((q) => <option key={q} value={q}>{q}</option>)}</select> : <input style={inputStyle} type="number" min={selectedProduct.moq || 1} value={quantity} onChange={(e) => setQuantity(Number(e.target.value))} />}</label>
                     <label>Print Side<select style={inputStyle} value={selectedSided} onChange={(e) => setSelectedSided(e.target.value)}>{selectedProduct.sidedOptions.map((side) => <option key={side} value={side}>{side}</option>)}</select></label>
                     <label>Hardware<select style={inputStyle} value={selectedHardware} onChange={(e) => setSelectedHardware(e.target.value)}>{selectedProduct.hardwareOptions.map((option) => <option key={option} value={option}>{option}</option>)}</select></label>
