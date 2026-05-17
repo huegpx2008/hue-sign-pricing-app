@@ -38,6 +38,7 @@ export default function DisplayTradeshowProductsPage() {
   const selectedProduct = useMemo(() => displayTradeshowCatalog.find((p) => p.id === selectedProductId) || filteredProducts[0] || null, [filteredProducts, selectedProductId]);
   const selectedSize = selectedProduct?.sizes?.find((s) => s.id === selectedSizeId) || selectedProduct?.sizes?.[0] || null;
   const activeTiers = selectedSize?.tierPricingBySide?.[selectedSided] || selectedSize?.tierPricing || [];
+  const isNeedsReview = selectedProduct?.status === "NEEDS REVIEW";
 
   useEffect(() => {
     if (!selectedProduct) return;
@@ -86,18 +87,20 @@ export default function DisplayTradeshowProductsPage() {
             <h3 style={{ marginTop: 0 }}>{selectedProduct.name}</h3>
             <div style={{ color: "#94a3b8", fontSize: 12 }}>{selectedProduct.subcategory}</div>
             <p>{selectedProduct.description}</p>
+            <div style={{ fontSize: 12, color: "#fbbf24" }}><strong>Status:</strong> {selectedProduct.status || "READY"}</div>
+            <div style={{ fontSize: 12, color: "#94a3b8" }}><strong>Source screenshot:</strong> {selectedProduct.sourceScreenshot || "N/A"}</div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-              <label>Size / Option<select style={inputStyle} value={selectedSizeId} onChange={(e)=>setSelectedSizeId(e.target.value)}>{(selectedProduct.sizes||[]).map((s)=><option key={s.id} value={s.id}>{s.label}</option>)}</select></label>
+              <label>Size / Option<select style={inputStyle} value={selectedSizeId} onChange={(e)=>setSelectedSizeId(e.target.value)}>{(selectedProduct.sizes||[]).length ? (selectedProduct.sizes||[]).map((s)=><option key={s.id} value={s.id}>{s.label}</option>) : <option value="">NEEDS REVIEW</option>}</select></label>
               <label>Quantity<input style={inputStyle} type="number" min={selectedProduct.moq || 1} value={quantity} onChange={(e)=>setQuantity(Number(e.target.value))} /></label>
-              <label>Print Side<select style={inputStyle} value={selectedSided} onChange={(e)=>setSelectedSided(e.target.value)}>{(selectedProduct.sidedOptions||["N/A"]).map((s)=><option key={s}>{s}</option>)}</select></label>
-              <label>Hardware<select style={inputStyle} value={selectedHardware} onChange={(e)=>setSelectedHardware(e.target.value)}>{(selectedProduct.hardwareOptions||["N/A"]).map((h)=><option key={h}>{h}</option>)}</select></label>
+              <label>Print Side<select style={inputStyle} value={selectedSided} onChange={(e)=>setSelectedSided(e.target.value)}>{(selectedProduct.sidedOptions||[]).length ? selectedProduct.sidedOptions.map((s)=><option key={s}>{s}</option>) : <option>NEEDS REVIEW</option>}</select></label>
+              <label>Hardware<select style={inputStyle} value={selectedHardware} onChange={(e)=>setSelectedHardware(e.target.value)}>{(selectedProduct.hardwareOptions||[]).length ? selectedProduct.hardwareOptions.map((h)=><option key={h}>{h}</option>) : <option>NEEDS REVIEW</option>}</select></label>
             </div>
             <div style={{ marginTop: 10, border: "1px solid #334155", borderRadius: 10, padding: 10, background: "#0b1220" }}>
               <div><strong>Tier used:</strong> {tierLabel(activeTier)}</div>
               <div><strong>Retail each:</strong> {retailEach == null ? "Call for pricing" : `$${retailEach.toFixed(2)}`}</div>
               <div><strong>Retail total:</strong> {retailTotal == null ? "Call for pricing" : `$${retailTotal.toFixed(2)}`}</div>
             </div>
-            <button onClick={addSelectedItem} style={{ marginTop: 12, borderRadius: 8, border: "1px solid #2563eb", background: "#2563eb", color: "#fff", padding: "10px 14px", fontWeight: 700 }}>Add selected item to quote</button>
+            {isNeedsReview ? <div style={{ marginTop: 12, color: "#fbbf24" }}>Catalog details must be verified from screenshot before quoting.</div> : <button onClick={addSelectedItem} style={{ marginTop: 12, borderRadius: 8, border: "1px solid #2563eb", background: "#2563eb", color: "#fff", padding: "10px 14px", fontWeight: 700 }}>Add selected item to quote</button>}
           </>}
         </section>
       </div>
