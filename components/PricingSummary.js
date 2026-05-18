@@ -146,7 +146,11 @@ export default function PricingSummary({
     "Quote Summary:",
     ...getCurrentItemCustomerDetailLines(),
     "",
-    "Please reply to this email if you’d like to move forward or have any questions.",
+    "Pricing shown is an estimate only. Final pricing will be confirmed and an official quote will be sent after artwork and order details are reviewed.",
+    "",
+    "Once reviewed, we will send an official quote for approval.",
+    "",
+    "Please email any artwork to jason@huegraphics.cc.",
   ];
 
   const multiItemQuoteLines = quoteItems.length
@@ -165,7 +169,11 @@ export default function PricingSummary({
         ]),
         `Grand Total: ${money(quoteGrandTotal)}`,
         "",
-        "Please reply to this email if you’d like to move forward or have any questions.",
+        "Pricing shown is an estimate only. Final pricing will be confirmed and an official quote will be sent after artwork and order details are reviewed.",
+        "",
+        "Once reviewed, we will send an official quote for approval.",
+        "",
+        "Please email any artwork to jason@huegraphics.cc.",
       ]
     : null;
   const quoteText = (multiItemQuoteLines || quoteLines).join("\n");
