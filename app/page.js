@@ -731,7 +731,7 @@ export default function Page() {
         )}
       </div>
       <p>Live Online Quote Form – Beta Version</p>
-      <p>Pricing shown is an estimate and may be adjusted after final review, artwork inspection, quantity confirmation, or production requirements.</p>
+      <p>Pricing shown is an estimate only. Final pricing will be confirmed and an official quote will be sent after artwork and order details are reviewed.</p>
 
       <div className="layout">
         <section className="card">
