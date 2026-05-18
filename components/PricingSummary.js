@@ -66,6 +66,7 @@ export default function PricingSummary({
   const isEmbroidery = activeProduct === "embroidery" && dtfSummary;
   const dtfData = dtfSummary || {};
   const summaryCalc = (isDtf || isScreenPrint || isEmbroidery) ? dtfSummary : calc;
+  const isScreenPrintMinQtyMet = !isScreenPrint || Number(dtfSummary?.totalGarments || 0) >= 24;
   const getCurrentItemCustomerDetailLines = () => {
     if (isDtf) {
       const isByoa = dtfSummary?.dtfMode === "standard" && dtfSummary?.bringYourOwnApparel;
@@ -237,7 +238,8 @@ export default function PricingSummary({
         </div>
         <div style={{ marginBottom: 14, padding: 12, borderRadius: 10, background: "rgba(255,255,255,0.09)" }}>
           <h3 style={{ marginTop: 0, marginBottom: 8 }}>Quote Items</h3>
-          <button className="modeBtn" onClick={addToQuote} disabled={!hasProductSelected} style={{ width: "100%", marginBottom: 8, opacity: hasProductSelected ? 1 : 0.6 }}>Add Selected Item to Quote</button>
+          <button className="modeBtn" onClick={addToQuote} disabled={!hasProductSelected || !isScreenPrintMinQtyMet} style={{ width: "100%", marginBottom: 8, opacity: (hasProductSelected && isScreenPrintMinQtyMet) ? 1 : 0.6 }}>Add Selected Item to Quote</button>
+          {isScreenPrint && !isScreenPrintMinQtyMet && <p style={{ margin: "0 0 8px", color: "#ef4444", fontWeight: 700 }}>24 piece minimum required for screen printing.</p>}
           {quoteItems.length === 0 ? (
             <p style={{ margin: 0 }}>No quote items added yet.</p>
           ) : (
@@ -379,7 +381,7 @@ export default function PricingSummary({
                 {isAdminView && !isEmbroidery && <p><strong>CASE_PRICE (avg):</strong> {money(li.casePrice || 0)}</p>}
                 {isAdminView && <p><strong>Final Retail Subtotal:</strong> {money(li.finalRetailSubtotal || 0)}</p>}
                 {(li.sizePriceBreakdown || []).length ? (
-                  <p><strong>Price breakdown:</strong> {(li.sizePriceBreakdown || []).map((tier) => `${tier.label || tier.size}: ${tier.qty} @ ${money(tier.priceEach || tier.garmentPriceEach || 0)}`).join(" • ")}</p>
+                  <p><strong>Price breakdown:</strong> {getScreenCustomerPriceTiers(li).map((tier) => `${tier.label}: ${tier.qty} @ ${money(tier.priceEach)}`).join(" • ")}</p>
                 ) : (
                   <p><strong>Final Retail Per Shirt:</strong> {money(li.retailPerShirt || 0)}</p>
                 )}
@@ -412,7 +414,7 @@ export default function PricingSummary({
             {isAdminView && isEmbroidery && dtfSummary.targetRetailPricePerItem && ((dtfSummary.targetRetailTotal || 0) <= (dtfSummary.cost || 0) ? <p style={{ color: "#ef4444", fontWeight: 700 }}>Warning: Target price is at or below direct cost (loss).</p> : null)}
             <p><strong>Final Retail:</strong> {money(dtfSummary.retail)}</p>
             {isAdminView && isEmbroidery && <p><strong>Actual Margin:</strong> {Number(dtfSummary.margin || 0).toFixed(1)}%</p>}
-            {isEmbroidery ? <p><strong>Average Retail Per Item:</strong> {money(dtfSummary.each || 0)}</p> : (((dtfSummary.lineItems || []).length <= 1) && <p><strong>Average price per item:</strong> {money(dtfSummary.averagePricePerShirt || dtfSummary.each)}</p>)}
+            {isEmbroidery && <p><strong>Average Retail Per Item:</strong> {money(dtfSummary.each || 0)}</p>}
             {isAdminView && <p><strong>Profit:</strong> {money(dtfSummary.profit)}</p>}
           </div>
         ) : <SelectedDetails details={selectedDetails} />}
@@ -420,6 +422,8 @@ export default function PricingSummary({
 
       <div className="mobilePrice" role="button" tabIndex={0} onClick={scrollToQuoteSummary} onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && scrollToQuoteSummary()} style={{ cursor: "pointer", borderColor: activeTheme?.summaryBorder, boxShadow: `0 10px 20px ${activeTheme?.accentGlow || "rgba(0,0,0,.35)"}`, background: `linear-gradient(160deg, rgba(11,23,56,.92), rgba(15,23,42,.95)), ${activeTheme?.mobileTint || "rgba(56,189,248,.1)"}` }}>
         <div className="mobilePriceTop"><strong>{hasProductSelected ? `Suggested Retail ${money(summaryCalc.retail).replace("$", "$ ")}` : "Select item to add to quote"}</strong></div>
+        <div className="mobileOptions" style={{ opacity: 0.9 }}>Click to return to quote summary and add selected items to quote.</div>
+        {isScreenPrint && !isScreenPrintMinQtyMet && <div className="mobileOptions" style={{ color: "#fca5a5", fontWeight: 700 }}>24 piece minimum required for screen printing.</div>}
         {!hasProductSelected ? (
           <div className="mobileOptions">Total: {money(0)}</div>
         ) : isDtf ? (
