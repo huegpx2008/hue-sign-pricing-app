@@ -135,6 +135,17 @@ export default function PricingSummary({
   const removeQuoteItem = (id) => setQuoteItems((prev) => prev.filter((item) => item.id !== id));
   const clearQuote = () => setQuoteItems([]);
   const quoteGrandTotal = quoteItems.reduce((sum, item) => sum + Number(item.total || 0), 0);
+  const embroideryDigitizingFee = isEmbroidery ? Number(dtfSummary?.digitizingFees || 0) : 0;
+  const embroideryQty = isEmbroidery ? Number(dtfSummary?.totalGarments || 0) : 0;
+  const embroideryRetailPerItemBeforeDigitizing = (isEmbroidery && embroideryQty > 0)
+    ? ((Number(summaryCalc?.retail || 0) - embroideryDigitizingFee) / embroideryQty)
+    : 0;
+  const embroideryGarmentDirectEach = (isEmbroidery && embroideryQty > 0)
+    ? (Number(dtfSummary?.apparelDirectCost || 0) / embroideryQty)
+    : 0;
+  const embroideryGarmentRetailEach = (isEmbroidery && embroideryQty > 0)
+    ? (Number(dtfSummary?.apparelRetailSubtotal || 0) / embroideryQty)
+    : 0;
 
   const quoteLines = [
     "Hue Graphics & Apparel Quote",
@@ -277,6 +288,12 @@ export default function PricingSummary({
           </div>
         )}
         {hasProductSelected && isDtf && (dtfData.dtfMode === "dtfOnly") && <p>Each: <strong>{money(summaryCalc.each || 0)}</strong></p>}
+        {hasProductSelected && isEmbroidery && (
+          <>
+            <p><strong>Retail per item:</strong> {money(embroideryRetailPerItemBeforeDigitizing)} each</p>
+            {embroideryDigitizingFee > 0 && <p><strong>Digitizing fee:</strong> {money(embroideryDigitizingFee)} one-time</p>}
+          </>
+        )}
         {hasProductSelected && isScreenPrint && !isAdminView && (dtfData.lineItems || []).filter((li) => Number(li.totalQty || 0) > 0).map((li, idx) => (
           <div key={`top-sp-tier-${li.id || idx}`}>
             {(dtfData.lineItems || []).length > 1 && <p style={{ marginBottom: 4 }}><strong>{li.style}</strong> {li.color ? `(${li.color})` : ""}</p>}
@@ -404,7 +421,9 @@ export default function PricingSummary({
             {isEmbroidery && <p><strong>Placement:</strong> {(dtfSummary.placements || []).join(", ")}</p>}
             {isEmbroidery && <p><strong>Thread Colors:</strong> {dtfSummary.threadColors}</p>}
             {isEmbroidery && Number(dtfSummary.digitizingFees || 0) > 0 && <p><strong>Digitizing Fee(s):</strong> {money(dtfSummary.digitizingFees)}</p>}
-            {isAdminView && isEmbroidery && <p><strong>Garment Direct Cost:</strong> {money(dtfSummary.apparelDirectCost || 0)}</p>}
+            {isAdminView && isEmbroidery && <p><strong>Garment Direct Each:</strong> {money(embroideryGarmentDirectEach)}</p>}
+            {isAdminView && isEmbroidery && <p><strong>Garment Direct Subtotal:</strong> {money(dtfSummary.apparelDirectCost || 0)}</p>}
+            {isAdminView && isEmbroidery && <p><strong>Garment Retail Each:</strong> {money(embroideryGarmentRetailEach)}</p>}
             {isAdminView && isEmbroidery && <p><strong>Garment Retail Subtotal:</strong> {money(dtfSummary.apparelRetailSubtotal || 0)}</p>}
             {isAdminView && isEmbroidery && <p><strong>Embroidery Direct / item:</strong> {money(dtfSummary.embroideryEachDirect || 0)}</p>}
             {isAdminView && isEmbroidery && <p style={{ fontWeight: 800, padding: "8px 10px", borderLeft: "4px solid #f59e0b", background: "rgba(245,158,11,0.15)", borderRadius: 6 }}><strong>OUTSOURCED EMBROIDERY COST (Embroidery Direct Total):</strong> {money(dtfSummary.embroideryDirectTotal || 0)}</p>}
@@ -422,7 +441,7 @@ export default function PricingSummary({
             {isAdminView && isEmbroidery && dtfSummary.targetRetailPricePerItem && ((dtfSummary.targetRetailTotal || 0) <= (dtfSummary.cost || 0) ? <p style={{ color: "#ef4444", fontWeight: 700 }}>Warning: Target price is at or below direct cost (loss).</p> : null)}
             <p><strong>Final Retail:</strong> {money(dtfSummary.retail)}</p>
             {isAdminView && isEmbroidery && <p><strong>Actual Margin:</strong> {Number(dtfSummary.margin || 0).toFixed(1)}%</p>}
-            {isEmbroidery && <p><strong>Average Retail Per Item:</strong> {money(dtfSummary.each || 0)}</p>}
+            {isEmbroidery && <p style={{ fontWeight: 800, padding: "8px 10px", borderLeft: "4px solid #22c55e", background: "rgba(34,197,94,0.15)", borderRadius: 6 }}><strong>Retail Per Hat Before Digitizing:</strong> {money(embroideryRetailPerItemBeforeDigitizing)} each</p>}
             {isAdminView && <p><strong>Profit:</strong> {money(dtfSummary.profit)}</p>}
           </div>
         ) : <SelectedDetails details={selectedDetails} />}
