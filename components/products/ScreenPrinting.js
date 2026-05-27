@@ -26,12 +26,11 @@ const tier = (q) => QTY_TIERS.reduce((a, t) => (q >= t ? t : a), QTY_TIERS[0]);
 const zeroQty = () => Object.fromEntries(SIZES.map((s) => [s, "0"]));
 const item = (id) => ({ id, search: "", styleKey: "", color: "", sizeQty: zeroQty(), open: false });
 
-export default function ScreenPrinting({ onSummaryChange, isAdminView = false }) {
+export default function ScreenPrinting({ product, onSummaryChange, isAdminView = false }) {
   const [rows, setRows] = useState([]);
   const [lineItems, setLineItems] = useState([item(1)]);
   const [locations, setLocations] = useState([{ id: 1, name: "Front", colors: 1 }]);
   const [setupFeeEnabled, setSetupFeeEnabled] = useState(!isAdminView);
-  const [decorationMethod, setDecorationMethod] = useState("screen");
   const [dtgDoubleSided, setDtgDoubleSided] = useState(false);
 
   useEffect(() => {
@@ -95,7 +94,7 @@ export default function ScreenPrinting({ onSummaryChange, isAdminView = false })
 
     const totalGarments = li.reduce((s, x) => s + x.totalQty, 0);
 
-    if (decorationMethod === "dtg") {
+    if (product === "dtgDirectToGarment") {
       const apparelDirectCost = li.reduce((s, x) => s + x.garmentCost, 0);
       const dtgBaseCost = totalGarments * 12;
       const dtgDoubleSidedCost = dtgDoubleSided ? totalGarments * 3 : 0;
@@ -149,44 +148,38 @@ export default function ScreenPrinting({ onSummaryChange, isAdminView = false })
       return { ...x, printChargeAllocated: x.totalQty * printChargePerShirt, setupFeeAllocated: 0, finalRetailSubtotal: finalRetail, retailPerShirt: finalPerShirt, printChargePerShirt };
     });
     return { retail, each: totalGarments ? retail / totalGarments : 0, cost: apparelDirectCost, profit: retail - apparelDirectCost, margin: retail ? ((retail - apparelDirectCost) / retail) * 100 : 0, materialCost: apparelDirectCost, shipping: 0, totalGarments, apparelDirectCost, apparelRetailSubtotal, printChargeSubtotal, setupFee, lineItems: lineItemsWithAlloc, printLines, averagePricePerShirt: totalGarments ? (apparelRetailSubtotal + printChargeSubtotal) / totalGarments : 0, productMarkupPercent: 115, decorationMethod: "screen" };
-  }, [lineItems, styles, locations, setupFeeEnabled, decorationMethod, dtgDoubleSided]);
+  }, [lineItems, styles, locations, setupFeeEnabled, product, dtgDoubleSided]);
 
   useEffect(() => onSummaryChange?.(summary), [summary, onSummaryChange]);
   useEffect(() => { if (!isAdminView) setSetupFeeEnabled(true); }, [isAdminView]);
 
   return <Box title="Screen Printing / Apparel">
-    <h4 style={{ marginTop: 0 }}>Decoration Method</h4>
-    <div className="buttonGrid" style={{ marginBottom: 10 }}>
-      <button className={`presetBtn ${decorationMethod === "screen" ? "activePreset" : ""}`} onClick={() => setDecorationMethod("screen")}>Screen Printing</button>
-      <button className={`presetBtn ${decorationMethod === "dtg" ? "activePreset" : ""}`} onClick={() => { setDecorationMethod("dtg"); setLineItems((p) => p.map((x) => ({ ...x, styleKey: "", search: "", color: "", sizeQty: Object.fromEntries(SIZES.map((s) => [s, DTG_ALLOWED_SIZES.includes(s) ? x.sizeQty[s] : "0"])) }))); setLocations([{ id: 1, name: "Front", colors: 1 }]); }}>DTG - Direct to Garment</button>
-    </div>
-
     {lineItems.map((li) => {
       const g = styles.get(li.styleKey);
-      const matches = li.search ? [...styles.values()].filter((s) => `${s.style} ${s.title}`.toLowerCase().includes(li.search.toLowerCase())).filter((s) => decorationMethod !== "dtg" || s.style === DTG_REQUIRED_STYLE).slice(0, 25) : [];
-      const colors = g ? [...new Set(g.rows.map((r) => r.color).filter(Boolean))].filter((c) => decorationMethod !== "dtg" || DTG_ALLOWED_COLORS.includes(c)) : [];
+      const matches = li.search ? [...styles.values()].filter((s) => `${s.style} ${s.title}`.toLowerCase().includes(li.search.toLowerCase())).filter((s) => product !== "dtgDirectToGarment" || s.style === DTG_REQUIRED_STYLE).slice(0, 25) : [];
+      const colors = g ? [...new Set(g.rows.map((r) => r.color).filter(Boolean))].filter((c) => product !== "dtgDirectToGarment" || DTG_ALLOWED_COLORS.includes(c)) : [];
       const det = summary.lineItems.find((x) => x.id === li.id);
       return <div key={li.id} style={{ border: "1px solid #334155", padding: 12, borderRadius: 10, marginBottom: 10, overflow: "hidden" }}>
-        {decorationMethod === "screen" && <><h4 style={{ margin: "0 0 8px" }}>Our Most Popular Styles</h4><div className="buttonGrid" style={{ marginBottom: 8 }}>{QUICK_STYLES.map((opt) => <button key={`${li.id}-${opt.code}`} className={`presetBtn ${g?.style === opt.code ? "activePreset" : ""}`} onClick={() => quick(li.id, opt.code)}>{opt.label}</button>)}</div></>}
-        {decorationMethod === "dtg" && <p style={{ marginTop: 0, fontSize: 13, opacity: 0.9 }}>DTG supports Bella Canvas only (Style BC3001), White/Black garments, and sizes S-3XL.</p>}
+        {product !== "dtgDirectToGarment" && <><h4 style={{ margin: "0 0 8px" }}>Our Most Popular Styles</h4><div className="buttonGrid" style={{ marginBottom: 8 }}>{QUICK_STYLES.map((opt) => <button key={`${li.id}-${opt.code}`} className={`presetBtn ${g?.style === opt.code ? "activePreset" : ""}`} onClick={() => quick(li.id, opt.code)}>{opt.label}</button>)}</div></>}
+        {product === "dtgDirectToGarment" && <p style={{ marginTop: 0, fontSize: 13, opacity: 0.9 }}>DTG supports Bella Canvas only (Style BC3001), White/Black garments, and sizes S-3XL.</p>}
         <label style={{ display: "block", marginBottom: 6 }}>Search our entire catalog for specific styles</label>
         <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 8 }}><input style={{ ...input, marginBottom: 0 }} placeholder="Search style # or product" value={li.search} onFocus={() => setLI(li.id, (x) => ({ ...x, open: true }))} onChange={(e) => setLI(li.id, (x) => ({ ...x, search: e.target.value, open: true, styleKey: "" }))} /><button className="modeBtn" type="button" onClick={() => setLI(li.id, (x) => ({ ...x, search: "", styleKey: "", open: false, color: "" }))}>Clear Search</button></div>
         {li.open && matches.length > 0 && <div style={{ border: "1px solid #475569", borderRadius: 8, maxHeight: 180, overflowY: "auto", marginBottom: 8 }}>{matches.map((m) => <button key={m.key} className="modeBtn" style={{ display: "block", width: "100%", textAlign: "left", margin: 0, borderRadius: 0, padding: "10px 12px" }} onClick={() => pick(li.id, m.key)}>{m.style} — {m.title}</button>)}</div>}
         <p style={{ margin: "6px 0" }}><strong>Selected:</strong> {g ? `${g.style} — ${g.title}` : "None"}</p>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(220px,1fr))", gap: 12, width: "100%" }}><div><select style={input} value={li.color} onChange={(e) => setLI(li.id, (x) => ({ ...x, color: e.target.value }))}><option value="">Select color</option>{colors.map((c) => <option key={c} value={c}>{c}</option>)}</select></div><div style={{ display: "grid", gridTemplateColumns: "repeat(5,minmax(0,1fr))", gap: 6, width: "100%" }}>{SIZES.filter((s) => decorationMethod !== "dtg" || DTG_ALLOWED_SIZES.includes(s)).map((s) => <label key={s} style={{ fontSize: 12 }}>{s}<input style={{ ...input, marginTop: 4, padding: "6px 8px", width: "100%", boxSizing: "border-box", minWidth: 0 }} value={li.sizeQty[s]} onChange={(e) => setLI(li.id, (x) => ({ ...x, sizeQty: { ...x.sizeQty, [s]: e.target.value.replace(/[^0-9]/g, "") } }))} onBlur={() => setLI(li.id, (x) => ({ ...x, sizeQty: { ...x.sizeQty, [s]: x.sizeQty[s] === "" ? "0" : String(n(x.sizeQty[s])) } }))} /></label>)}</div></div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(220px,1fr))", gap: 12, width: "100%" }}><div><select style={input} value={li.color} onChange={(e) => setLI(li.id, (x) => ({ ...x, color: e.target.value }))}><option value="">Select color</option>{colors.map((c) => <option key={c} value={c}>{c}</option>)}</select></div><div style={{ display: "grid", gridTemplateColumns: "repeat(5,minmax(0,1fr))", gap: 6, width: "100%" }}>{SIZES.filter((s) => product !== "dtgDirectToGarment" || DTG_ALLOWED_SIZES.includes(s)).map((s) => <label key={s} style={{ fontSize: 12 }}>{s}<input style={{ ...input, marginTop: 4, padding: "6px 8px", width: "100%", boxSizing: "border-box", minWidth: 0 }} value={li.sizeQty[s]} onChange={(e) => setLI(li.id, (x) => ({ ...x, sizeQty: { ...x.sizeQty, [s]: e.target.value.replace(/[^0-9]/g, "") } }))} onBlur={() => setLI(li.id, (x) => ({ ...x, sizeQty: { ...x.sizeQty, [s]: x.sizeQty[s] === "" ? "0" : String(n(x.sizeQty[s])) } }))} /></label>)}</div></div>
         <p>Total Qty: {det?.totalQty || 0}</p>
-        {decorationMethod === "screen" && (det?.totalQty || 0) < 24 && <p style={{ fontSize: 12, color: "#ef4444", fontWeight: 700, margin: "6px 0 0" }}>24 piece minimum required for screen printing.</p>}
-        {decorationMethod === "screen" && <p style={{ fontSize: 12, opacity: .85, margin: "6px 0 0" }}>Screen printing has a 24-piece minimum per design. Multiple garment styles can usually be combined when they stay in a similar color family (for example, lights together or darks together).</p>}
+        {product !== "dtgDirectToGarment" && (det?.totalQty || 0) < 24 && <p style={{ fontSize: 12, color: "#ef4444", fontWeight: 700, margin: "6px 0 0" }}>24 piece minimum required for screen printing.</p>}
+        {product !== "dtgDirectToGarment" && <p style={{ fontSize: 12, opacity: .85, margin: "6px 0 0" }}>Screen printing has a 24-piece minimum per design. Multiple garment styles can usually be combined when they stay in a similar color family (for example, lights together or darks together).</p>}
         {isAdminView && <p>Garment Direct Cost: ${(det?.garmentCost || 0).toFixed(2)}</p>}
         {lineItems.length > 1 && <button className="modeBtn" onClick={() => setLineItems((p) => p.filter((x) => x.id !== li.id))}>Remove line item</button>}
       </div>;
     })}
 
     <button className="modeBtn" style={{ width: "100%", marginBottom: 8 }} onClick={() => setLineItems((p) => [...p, item(Date.now())])}>+ Add apparel line item</button>
-    {decorationMethod === "screen" && <><hr /><h4>Imprint Locations</h4>{locations.map((loc, idx) => <div key={loc.id} style={{ display: "grid", gridTemplateColumns: "2fr 1fr auto", gap: 8, marginBottom: 8 }}><select style={input} value={loc.name} onChange={(e) => setLocations((p) => p.map((x) => x.id === loc.id ? { ...x, name: e.target.value } : x))}><option>Front</option><option>Back</option><option>Left Sleeve</option><option>Right Sleeve</option></select><select style={input} value={loc.colors} onChange={(e) => setLocations((p) => p.map((x) => x.id === loc.id ? { ...x, colors: n(e.target.value) } : x))}><option value={1}>1</option><option value={2}>2</option><option value={3}>3</option><option value={4}>4</option></select>{locations.length > 1 ? <button className="modeBtn" onClick={() => setLocations((p) => p.filter((x) => x.id !== loc.id))}>Remove</button> : <div />}<div style={{ gridColumn: "1 / -1", fontSize: 12, opacity: .8 }}>{idx === 0 ? "First location uses single-sided matrix" : "Additional location uses additional-side matrix"}</div></div>)}<button className="modeBtn" style={{ width: "100%" }} onClick={() => setLocations((p) => [...p, { id: Date.now(), name: "Back", colors: 1 }])}>+ Add print location</button></>}
-    {decorationMethod === "dtg" && <Check label="Double-sided print (+$3/shirt direct)" value={dtgDoubleSided} setValue={setDtgDoubleSided} />}
-    {decorationMethod === "screen" && <Check label="Artwork/Setup Fee (+$25)" value={setupFeeEnabled} setValue={setSetupFeeEnabled} disabled={!isAdminView} />}
-    {decorationMethod === "dtg" && <p style={{ fontSize: 12, opacity: .8, marginTop: 4 }}>DTG includes a mandatory $10 setup fee per order.</p>}
-    {!isAdminView && decorationMethod === "screen" && <p style={{ fontSize: 12, opacity: .8, marginTop: 4 }}>Artwork/setup fee is included on customer quotes.</p>}
+    {product !== "dtgDirectToGarment" && <><hr /><h4>Imprint Locations</h4>{locations.map((loc, idx) => <div key={loc.id} style={{ display: "grid", gridTemplateColumns: "2fr 1fr auto", gap: 8, marginBottom: 8 }}><select style={input} value={loc.name} onChange={(e) => setLocations((p) => p.map((x) => x.id === loc.id ? { ...x, name: e.target.value } : x))}><option>Front</option><option>Back</option><option>Left Sleeve</option><option>Right Sleeve</option></select><select style={input} value={loc.colors} onChange={(e) => setLocations((p) => p.map((x) => x.id === loc.id ? { ...x, colors: n(e.target.value) } : x))}><option value={1}>1</option><option value={2}>2</option><option value={3}>3</option><option value={4}>4</option></select>{locations.length > 1 ? <button className="modeBtn" onClick={() => setLocations((p) => p.filter((x) => x.id !== loc.id))}>Remove</button> : <div />}<div style={{ gridColumn: "1 / -1", fontSize: 12, opacity: .8 }}>{idx === 0 ? "First location uses single-sided matrix" : "Additional location uses additional-side matrix"}</div></div>)}<button className="modeBtn" style={{ width: "100%" }} onClick={() => setLocations((p) => [...p, { id: Date.now(), name: "Back", colors: 1 }])}>+ Add print location</button></>}
+    {product === "dtgDirectToGarment" && <Check label="Double-sided print (+$3/shirt direct)" value={dtgDoubleSided} setValue={setDtgDoubleSided} />}
+    {product !== "dtgDirectToGarment" && <Check label="Artwork/Setup Fee (+$25)" value={setupFeeEnabled} setValue={setSetupFeeEnabled} disabled={!isAdminView} />}
+    {product === "dtgDirectToGarment" && <p style={{ fontSize: 12, opacity: .8, marginTop: 4 }}>DTG includes a mandatory $10 setup fee per order.</p>}
+    {!isAdminView && product !== "dtgDirectToGarment" && <p style={{ fontSize: 12, opacity: .8, marginTop: 4 }}>Artwork/setup fee is included on customer quotes.</p>}
   </Box>;
 }

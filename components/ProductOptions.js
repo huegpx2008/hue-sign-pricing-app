@@ -406,7 +406,7 @@ export default function ProductOptions(props) {
       )}
 
 
-      {activeProduct === "screenPrinting" && <ScreenPrinting margin={margin} multiplier={multiplier} onSummaryChange={onDtfSummaryChange} isAdminView={isAdminView} />}
+      {activeProduct === "screenPrinting" && <ScreenPrinting product={product} margin={margin} multiplier={multiplier} onSummaryChange={onDtfSummaryChange} isAdminView={isAdminView} />}
 
       {activeProduct === "dtfTransfers" && <DTFTransfers onSummaryChange={onDtfSummaryChange} isAdminView={isAdminView} />}
       {activeProduct === "embroidery" && <Embroidery onSummaryChange={onDtfSummaryChange} isAdminView={isAdminView} />}

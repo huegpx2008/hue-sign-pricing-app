@@ -43,6 +43,7 @@ export const productCategories = [
   { name: "Screen Printing", items: [
     { id: "screenPrinting", label: "Screen Printing", calculator: "screenPrinting" },
     { id: "dtfTransfers", label: "DTF Transfers", calculator: "dtfTransfers" },
+    { id: "dtgDirectToGarment", label: "DTG - Direct to Garment", calculator: "screenPrinting" },
     { id: "embroidery", label: "Embroidery", calculator: "embroidery" },
   ] },
   { name: "Paper Printing", items: [
