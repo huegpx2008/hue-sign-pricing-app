@@ -66,7 +66,8 @@ export default function PricingSummary({
   const isEmbroidery = activeProduct === "embroidery" && dtfSummary;
   const dtfData = dtfSummary || {};
   const summaryCalc = (isDtf || isScreenPrint || isEmbroidery) ? dtfSummary : calc;
-  const isScreenPrintMinQtyMet = !isScreenPrint || Number(dtfSummary?.totalGarments || 0) >= 24;
+  const isDtgMode = isScreenPrint && dtfSummary?.decorationMethod === "dtg";
+  const isScreenPrintMinQtyMet = !isScreenPrint || isDtgMode || Number(dtfSummary?.totalGarments || 0) >= 24;
   const getCurrentItemCustomerDetailLines = () => {
     if (isDtf) {
       const isByoa = dtfSummary?.dtfMode === "standard" && dtfSummary?.bringYourOwnApparel;
@@ -92,7 +93,7 @@ export default function PricingSummary({
           `Color: ${li.color || "Not selected"}`,
           `Sizes: ${formatSizeBreakdown(li.sizeQty || {})}`,
           `Total Qty: ${li.totalQty || 0}`,
-          `Print Locations: ${formatPrintLocations(dtfSummary?.printLines || [])}`,
+          `Print Type: ${dtfSummary?.decorationMethod === "dtg" ? (dtfSummary?.dtgDoubleSided ? "Double-Sided" : "Single-Sided") : formatPrintLocations(dtfSummary?.printLines || [])}`,
           ...((li.sizePriceBreakdown || []).length
             ? ["Price Breakdown:", ...getScreenCustomerPriceTiers(li).map((tier) => `- ${tier.label} Price Each: ${money(tier.priceEach)}`)]
             : [`Price Each: ${money(li.retailPerShirt || 0)}`]),
@@ -101,8 +102,7 @@ export default function PricingSummary({
         ];
       });
       const methodLabel = dtfSummary?.decorationMethod === "dtg" ? "DTG - Direct to Garment" : "Screen Printing";
-      const setupFeeLine = Number(dtfSummary?.setupFee || 0) > 0 ? [`Setup Fee: ${money(dtfSummary?.setupFee || 0)}`] : [];
-      return [`Product: ${methodLabel}`, ...lineItems, ...setupFeeLine, `Grand Total: ${money(dtfSummary?.retail || 0)}`].filter((line, idx, arr) => !(line === "" && (idx === arr.length - 1 || arr[idx + 1] === "")));
+      return [`Product: ${methodLabel}`, ...lineItems, `Grand Total: ${money(dtfSummary?.retail || 0)}`].filter((line, idx, arr) => !(line === "" && (idx === arr.length - 1 || arr[idx + 1] === "")));
     }
     return [
       `Product: ${calc.label}`,
@@ -260,7 +260,7 @@ export default function PricingSummary({
         <div style={{ marginBottom: 14, padding: 12, borderRadius: 10, background: "rgba(255,255,255,0.09)" }}>
           <h3 style={{ marginTop: 0, marginBottom: 8 }}>Quote Items</h3>
           <button className="modeBtn" onClick={addToQuote} disabled={!hasProductSelected || !isScreenPrintMinQtyMet} style={{ width: "100%", marginBottom: 8, opacity: (hasProductSelected && isScreenPrintMinQtyMet) ? 1 : 0.6 }}>Add Selected Item to Quote</button>
-          {isScreenPrint && !isScreenPrintMinQtyMet && <p style={{ margin: "0 0 8px", color: "#ef4444", fontWeight: 700 }}>24 piece minimum required for screen printing.</p>}
+          {isScreenPrint && !isDtgMode && !isScreenPrintMinQtyMet && <p style={{ margin: "0 0 8px", color: "#ef4444", fontWeight: 700 }}>24 piece minimum required for screen printing.</p>}
           {quoteItems.length === 0 ? (
             <p style={{ margin: 0 }}>No quote items added yet.</p>
           ) : (
@@ -296,7 +296,8 @@ export default function PricingSummary({
             {embroideryDigitizingFee > 0 && <p><strong>Digitizing fee:</strong> {money(embroideryDigitizingFee)} one-time</p>}
           </>
         )}
-        {hasProductSelected && isScreenPrint && !isAdminView && (dtfData.lineItems || []).filter((li) => Number(li.totalQty || 0) > 0).map((li, idx) => (
+                {hasProductSelected && isScreenPrint && isDtgMode && !isAdminView && <p><strong>Retail Per Shirt:</strong> {money(summaryCalc.each || 0)} each</p>}
+{hasProductSelected && isScreenPrint && !isAdminView && (dtfData.lineItems || []).filter((li) => Number(li.totalQty || 0) > 0).map((li, idx) => (
           <div key={`top-sp-tier-${li.id || idx}`}>
             {(dtfData.lineItems || []).length > 1 && <p style={{ marginBottom: 4 }}><strong>{li.style}</strong> {li.color ? `(${li.color})` : ""}</p>}
             {getScreenCustomerPriceTiers(li).map((tier) => (
@@ -304,7 +305,7 @@ export default function PricingSummary({
             ))}
           </div>
         ))}
-        {hasProductSelected && isScreenPrint && !isAdminView && Number(dtfData.setupFee || 0) > 0 && <p><strong>Setup Fee:</strong> {money(dtfData.setupFee || 0)}</p>}
+        
         {isAdminView && <p>Profit: <strong>{money(summaryCalc.profit)}</strong></p>}
         <hr style={{ borderColor: activeTheme?.divider }} />
         <p>Product: {hasProductSelected ? (isDtf ? "DTF Transfers" : isScreenPrint ? (dtfData.decorationMethod === "dtg" ? "DTG - Direct to Garment" : "Screen Printing") : isEmbroidery ? "Embroidery" : calc.label) : "Select a product"}</p>
@@ -332,7 +333,7 @@ export default function PricingSummary({
         {!isDtf && !isEmbroidery && showBreakdown && calc.piecesPerSheet !== undefined && <p>Pieces Per Sheet: {showBreakdown && calc.piecesPerSheet}</p>}
         {!isDtf && !isEmbroidery && showBreakdown && calc.sheetLayout !== undefined && <p>Sheet Layout: {showBreakdown && calc.sheetLayout}</p>}
         {showBreakdown && calc.costPerPiece !== undefined && <p>Cost Per Piece: {money(calc.costPerPiece)}</p>}
-        {isAdminView && !isEmbroidery && <p>Material Cost: {money(summaryCalc.materialCost)}</p>}
+        {isAdminView && !isEmbroidery && !isDtgMode && <p>Material Cost: {money(summaryCalc.materialCost)}</p>}
         {calc.standOffQty !== undefined && calc.standOffQty > 0 && (
           <>
             <p>Stand-Off Qty: {calc.standOffQty} ({calc.standOffColor})</p>
@@ -340,7 +341,7 @@ export default function PricingSummary({
             <p>Stand-Off Retail Charge: {money(calc.standOffRetailCharge)}</p>
           </>
         )}
-        {isAdminView && <p>Shipping: {money(summaryCalc.shipping)}</p>}
+        {isAdminView && !isDtgMode && <p>Shipping: {money(summaryCalc.shipping)}</p>}
         {isAdminView && <p>Direct Cost: {money(summaryCalc.cost)}</p>}
         {isAdminView && <p>Actual Margin: {Number(summaryCalc.margin || 0).toFixed(1)}%</p>}
         {isAdminView && !isDtf && !isEmbroidery && <p>Multiplier: {num(multiplier, 1)}x</p>}
@@ -453,7 +454,7 @@ export default function PricingSummary({
       <div className="mobilePrice" role="button" tabIndex={0} onClick={scrollToQuoteSummary} onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && scrollToQuoteSummary()} style={{ cursor: "pointer", borderColor: activeTheme?.summaryBorder, boxShadow: `0 10px 20px ${activeTheme?.accentGlow || "rgba(0,0,0,.35)"}`, background: `linear-gradient(160deg, rgba(11,23,56,.92), rgba(15,23,42,.95)), ${activeTheme?.mobileTint || "rgba(56,189,248,.1)"}` }}>
         <div className="mobilePriceTop"><strong>{hasProductSelected ? `Suggested Retail ${money(summaryCalc.retail).replace("$", "$ ")}` : "Select item to add to quote"}</strong></div>
         <div className="mobileOptions" style={{ opacity: 0.9 }}>Click to return to quote summary and add selected items to quote.</div>
-        {isScreenPrint && !isScreenPrintMinQtyMet && <div className="mobileOptions" style={{ color: "#fca5a5", fontWeight: 700 }}>24 piece minimum required for screen printing.</div>}
+        {isScreenPrint && !isDtgMode && !isScreenPrintMinQtyMet && <div className="mobileOptions" style={{ color: "#fca5a5", fontWeight: 700 }}>24 piece minimum required for screen printing.</div>}
         {!hasProductSelected ? (
           <div className="mobileOptions">Total: {money(0)}</div>
         ) : isDtf ? (

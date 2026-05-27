@@ -95,34 +95,21 @@ export default function ScreenPrinting({ product, onSummaryChange, isAdminView =
     const totalGarments = li.reduce((s, x) => s + x.totalQty, 0);
 
     if (product === "dtgDirectToGarment") {
-      const apparelDirectCost = li.reduce((s, x) => s + x.garmentCost, 0);
-      const dtgBaseCost = totalGarments * 12;
-      const dtgDoubleSidedCost = dtgDoubleSided ? totalGarments * 3 : 0;
-      const dtgSizeUpchargeQty = li.reduce((sum, x) => sum + n(x.sizeQty["2XL"]) + n(x.sizeQty["3XL"]), 0);
-      const dtgSizeUpchargeCost = dtgSizeUpchargeQty * 2.5;
-      const setupFee = 10;
-      const totalDirectCost = apparelDirectCost + dtgBaseCost + dtgDoubleSidedCost + dtgSizeUpchargeCost + setupFee;
-      const retail = totalDirectCost / 0.4;
+      const setupFeeDirect = 10;
+      const setupFeePerShirtDirect = totalGarments > 0 ? (setupFeeDirect / totalGarments) : 0;
       const dtgPrintChargePerShirt = 12 + (dtgDoubleSided ? 3 : 0);
       const lineItemsWithAlloc = li.map((x) => {
         const qty2xl = n(x.sizeQty["2XL"]);
         const qty3xl = n(x.sizeQty["3XL"]);
-        const printChargeAllocated = x.totalQty * dtgPrintChargePerShirt;
         const dtgSizeUpchargeAllocated = (qty2xl + qty3xl) * 2.5;
-        const setupFeeAllocated = totalGarments ? (x.totalQty / totalGarments) * setupFee : 0;
-        const directTotal = x.garmentCost + printChargeAllocated + dtgSizeUpchargeAllocated + setupFeeAllocated;
+        const directPerShirt = dtgPrintChargePerShirt + setupFeePerShirtDirect;
+        const directTotal = (x.totalQty * directPerShirt) + dtgSizeUpchargeAllocated;
         const finalRetailSubtotal = directTotal / 0.4;
-        return {
-          ...x,
-          dtgSizeUpchargeAllocated,
-          printChargeAllocated,
-          setupFeeAllocated,
-          finalRetailSubtotal,
-          retailPerShirt: x.totalQty ? finalRetailSubtotal / x.totalQty : 0,
-          printChargePerShirt: dtgPrintChargePerShirt,
-        };
+        return { ...x, dtgSizeUpchargeAllocated, finalRetailSubtotal, retailPerShirt: x.totalQty ? finalRetailSubtotal / x.totalQty : 0, printChargePerShirt: dtgPrintChargePerShirt, printType: dtgDoubleSided ? "Double-Sided" : "Single-Sided" };
       });
-      return { retail, each: totalGarments ? retail / totalGarments : 0, cost: totalDirectCost, profit: retail - totalDirectCost, margin: retail ? ((retail - totalDirectCost) / retail) * 100 : 0, materialCost: apparelDirectCost, shipping: 0, totalGarments, apparelDirectCost, apparelRetailSubtotal: retail - (dtgBaseCost + dtgDoubleSidedCost + dtgSizeUpchargeCost + setupFee) / 0.4, printChargeSubtotal: (dtgBaseCost + dtgDoubleSidedCost) / 0.4, setupFee: setupFee / 0.4, lineItems: lineItemsWithAlloc, printLines: [], averagePricePerShirt: totalGarments ? (retail - (setupFee / 0.4)) / totalGarments : 0, productMarkupPercent: 150, decorationMethod: "dtg", dtgDoubleSided, dtgSetupFeeRetail: setupFee / 0.4 };
+      const totalDirectCost = lineItemsWithAlloc.reduce((sum, x) => sum + ((x.finalRetailSubtotal || 0) * 0.4), 0);
+      const retail = lineItemsWithAlloc.reduce((sum, x) => sum + (x.finalRetailSubtotal || 0), 0);
+      return { retail, each: totalGarments ? retail / totalGarments : 0, cost: totalDirectCost, profit: retail - totalDirectCost, margin: retail ? ((retail - totalDirectCost) / retail) * 100 : 0, totalGarments, lineItems: lineItemsWithAlloc, printLines: [], averagePricePerShirt: totalGarments ? retail / totalGarments : 0, decorationMethod: "dtg", dtgDoubleSided };
     }
 
     const PRODUCT_MARKUP_MULTIPLIER = 1.15;
