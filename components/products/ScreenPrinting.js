@@ -139,6 +139,16 @@ export default function ScreenPrinting({ product, onSummaryChange, isAdminView =
 
   useEffect(() => onSummaryChange?.(summary), [summary, onSummaryChange]);
   useEffect(() => { if (!isAdminView) setSetupFeeEnabled(true); }, [isAdminView]);
+  useEffect(() => {
+    if (product !== "dtgDirectToGarment") return;
+    const bc = [...styles.values()].find((x) => x.style === DTG_REQUIRED_STYLE);
+    if (!bc) return;
+    setLineItems((prev) => prev.map((li) => {
+      if (li.styleKey) return li;
+      const colors = [...new Set((bc.rows || []).map((r) => r.color).filter(Boolean))].filter((c) => DTG_ALLOWED_COLORS.includes(c));
+      return { ...li, styleKey: bc.key, search: `${bc.style} — ${bc.title}`, color: li.color || colors[0] || "White" };
+    }));
+  }, [product, styles]);
 
   return <Box title="Screen Printing / Apparel">
     {lineItems.map((li) => {
@@ -157,7 +167,7 @@ export default function ScreenPrinting({ product, onSummaryChange, isAdminView =
         <p>Total Qty: {det?.totalQty || 0}</p>
         {product !== "dtgDirectToGarment" && (det?.totalQty || 0) < 24 && <p style={{ fontSize: 12, color: "#ef4444", fontWeight: 700, margin: "6px 0 0" }}>24 piece minimum required for screen printing.</p>}
         {product !== "dtgDirectToGarment" && <p style={{ fontSize: 12, opacity: .85, margin: "6px 0 0" }}>Screen printing has a 24-piece minimum per design. Multiple garment styles can usually be combined when they stay in a similar color family (for example, lights together or darks together).</p>}
-        {isAdminView && <p>Garment Direct Cost: ${(det?.garmentCost || 0).toFixed(2)}</p>}
+        {isAdminView && product !== "dtgDirectToGarment" && <p>Garment Direct Cost: ${(det?.garmentCost || 0).toFixed(2)}</p>}
         {lineItems.length > 1 && <button className="modeBtn" onClick={() => setLineItems((p) => p.filter((x) => x.id !== li.id))}>Remove line item</button>}
       </div>;
     })}

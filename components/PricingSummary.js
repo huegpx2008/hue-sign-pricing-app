@@ -39,6 +39,14 @@ export default function PricingSummary({
     return ["S-XL", "2XL", "3XL", "4XL", "5XL", "6XL"].map((label) => grouped.get(label)).filter((x) => x && x.qty > 0);
   };
 
+
+  const getDtgSizePriceLines = (lineItem = {}) => (lineItem.sizePriceBreakdown || [])
+    .filter((tier) => Number(tier?.qty || 0) > 0)
+    .map((tier) => {
+      const qty = Number(tier.qty || 0);
+      const subtotal = qty * Number(lineItem.retailPerShirt || 0);
+      return { label: tier.size, qty, priceEach: Number(lineItem.retailPerShirt || 0), subtotal };
+    });
   const [customerName, setCustomerName] = useState("");
   const [customerEmail, setCustomerEmail] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
@@ -296,11 +304,10 @@ export default function PricingSummary({
             {embroideryDigitizingFee > 0 && <p><strong>Digitizing fee:</strong> {money(embroideryDigitizingFee)} one-time</p>}
           </>
         )}
-                {hasProductSelected && isScreenPrint && isDtgMode && !isAdminView && <p><strong>Retail Per Shirt:</strong> {money(summaryCalc.each || 0)} each</p>}
-{hasProductSelected && isScreenPrint && !isAdminView && (dtfData.lineItems || []).filter((li) => Number(li.totalQty || 0) > 0).map((li, idx) => (
+                {hasProductSelected && isScreenPrint && !isAdminView && (dtfData.lineItems || []).filter((li) => Number(li.totalQty || 0) > 0).map((li, idx) => (
           <div key={`top-sp-tier-${li.id || idx}`}>
             {(dtfData.lineItems || []).length > 1 && <p style={{ marginBottom: 4 }}><strong>{li.style}</strong> {li.color ? `(${li.color})` : ""}</p>}
-            {getScreenCustomerPriceTiers(li).map((tier) => (
+            {(isDtgMode ? getDtgSizePriceLines(li) : getScreenCustomerPriceTiers(li)).map((tier) => (
               <p key={`top-sp-${li.id || idx}-${tier.label}`} style={{ margin: "2px 0" }}><strong>{tier.label} Price Each:</strong> {money(tier.priceEach)}</p>
             ))}
           </div>
@@ -344,7 +351,7 @@ export default function PricingSummary({
         {isAdminView && !isDtgMode && <p>Shipping: {money(summaryCalc.shipping)}</p>}
         {isAdminView && <p>Direct Cost: {money(summaryCalc.cost)}</p>}
         {isAdminView && <p>Actual Margin: {Number(summaryCalc.margin || 0).toFixed(1)}%</p>}
-        {isAdminView && !isDtf && !isEmbroidery && <p>Multiplier: {num(multiplier, 1)}x</p>}
+        {isAdminView && !isDtf && !isEmbroidery && !isDtgMode && <p>Multiplier: {num(multiplier, 1)}x</p>}
         {isAdminView && isDtf && (
           <>
             {showBreakdown && (
@@ -399,25 +406,25 @@ export default function PricingSummary({
           </div>
         ) : (isScreenPrint || isEmbroidery) ? (
           <div style={{ marginTop: 16, padding: 16, borderRadius: 16, background: "rgba(255,255,255,0.08)", color: "#e5e7eb", fontSize: 14, lineHeight: 1.35 }}>
-            <h3 style={{ marginTop: 0 }}>{isEmbroidery ? "Embroidery Details" : "Screen Printing Details"}</h3>
-            <p><strong>Product:</strong> {isEmbroidery ? "Embroidery" : "Screen Printing"}</p>
+            <h3 style={{ marginTop: 0 }}>{isEmbroidery ? "Embroidery Details" : isDtgMode ? "DTG Details" : "Screen Printing Details"}</h3>
+            <p><strong>Product:</strong> {isEmbroidery ? "Embroidery" : isDtgMode ? "DTG - Direct to Garment" : "Screen Printing"}</p>
             {(dtfSummary.lineItems || []).map((li, idx) => (
               <div key={`${li.id}-${idx}`} style={{ marginBottom: 10, paddingBottom: 8, borderBottom: "1px solid rgba(148,163,184,0.35)" }}>
                 <p><strong>Line {idx + 1}:</strong> {li.style} — {li.title || ""}</p>
                 <p><strong>Color:</strong> {li.color || "Not selected"}</p>
                 <p><strong>Sizes:</strong> {Object.entries(li.sizeQty || {}).filter(([,v]) => Number(v) > 0).map(([k,v]) => `${k}:${v}`).join(", ") || "None"}</p>
                 <p><strong>Total Qty:</strong> {li.totalQty}</p>
-                {isAdminView && !isEmbroidery && <p><strong>CASE_PRICE (avg):</strong> {money(li.casePrice || 0)}</p>}
+                {isAdminView && !isEmbroidery && !isDtgMode && <p><strong>CASE_PRICE (avg):</strong> {money(li.casePrice || 0)}</p>}
                 {isAdminView && <p><strong>Final Retail Subtotal:</strong> {money(li.finalRetailSubtotal || 0)}</p>}
                 {(li.sizePriceBreakdown || []).length ? (
-                  <p><strong>Price breakdown:</strong> {getScreenCustomerPriceTiers(li).map((tier) => `${tier.label}: ${tier.qty} @ ${money(tier.priceEach)}`).join(" • ")}</p>
+                  <p><strong>Price breakdown:</strong> {(isDtgMode ? getDtgSizePriceLines(li) : getScreenCustomerPriceTiers(li)).map((tier) => `${tier.label}: ${tier.qty} @ ${money(tier.priceEach)}${isDtgMode ? ` = ${money(tier.subtotal)}` : ""}`).join(" • ")}</p>
                 ) : (
                   <p><strong>Final Retail Per Shirt:</strong> {money(li.retailPerShirt || 0)}</p>
                 )}
               </div>
             ))}
             <p><strong>Total Garments:</strong> {dtfSummary.totalGarments}</p>
-            {!isEmbroidery && (dtfSummary.printLines || []).map((pl, idx) => (
+            {!isEmbroidery && !isDtgMode && (dtfSummary.printLines || []).map((pl, idx) => (
               <p key={`${pl.id}-${idx}`}><strong>{pl.name}:</strong> {pl.colors} colors{isAdminView ? ` • ${pl.pricingType} • ${money(pl.pricePerPrint)}/print • ${money(pl.subtotal)}` : ""}</p>
             ))}
             {isEmbroidery && <p><strong>Stitch Count:</strong> {dtfSummary.stitchCount}</p>}
@@ -471,7 +478,7 @@ export default function PricingSummary({
           </>
         ) : (isScreenPrint || isEmbroidery) ? (
           <>
-            <div className="mobileMeta">{isEmbroidery ? `Embroidery • ${dtfSummary.totalGarments || 0} garments • ${(dtfSummary.lineItems || []).filter((li) => li.totalQty > 0).length} style(s)` : `Screen Printing • ${dtfSummary.totalGarments || 0} garments • ${(dtfSummary.lineItems || []).filter((li) => li.totalQty > 0).length} style(s)`}</div>
+            <div className="mobileMeta">{isEmbroidery ? `Embroidery • ${dtfSummary.totalGarments || 0} garments • ${(dtfSummary.lineItems || []).filter((li) => li.totalQty > 0).length} style(s)` : `${isDtgMode ? "DTG - Direct to Garment" : "Screen Printing"} • ${dtfSummary.totalGarments || 0} garments • ${(dtfSummary.lineItems || []).filter((li) => li.totalQty > 0).length} style(s)`}</div>
             <div className="mobileOptions">{isEmbroidery ? `Stitches ${dtfSummary.stitchCount || 0} • ${(dtfSummary.placements || []).join(", ") || "No placement selected"} • Total: ${money(dtfSummary.retail)}` : `${(dtfSummary.printLines || []).length ? (dtfSummary.printLines || []).map((pl) => `${pl.name} ${pl.colors}-color`).join(" • ") : "No print locations selected"} • Total: ${money(dtfSummary.retail)}`}</div>
           </>
         ) : (
