@@ -100,7 +100,9 @@ export default function PricingSummary({
           "",
         ];
       });
-      return ["Product: Screen Printing", ...lineItems, `Grand Total: ${money(dtfSummary?.retail || 0)}`].filter((line, idx, arr) => !(line === "" && (idx === arr.length - 1 || arr[idx + 1] === "")));
+      const methodLabel = dtfSummary?.decorationMethod === "dtg" ? "DTG - Direct to Garment" : "Screen Printing";
+      const setupFeeLine = Number(dtfSummary?.setupFee || 0) > 0 ? [`Setup Fee: ${money(dtfSummary?.setupFee || 0)}`] : [];
+      return [`Product: ${methodLabel}`, ...lineItems, ...setupFeeLine, `Grand Total: ${money(dtfSummary?.retail || 0)}`].filter((line, idx, arr) => !(line === "" && (idx === arr.length - 1 || arr[idx + 1] === "")));
     }
     return [
       `Product: ${calc.label}`,
@@ -117,7 +119,7 @@ export default function PricingSummary({
   };
   const buildCurrentQuoteItem = () => ({
     id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
-    product: isDtf ? (dtfSummary?.dtfMode === "dtfOnly" ? "DTF Transfers Only" : "DTF Transfers") : isScreenPrint ? "Screen Printing" : isEmbroidery ? "Embroidery" : calc.label,
+    product: isDtf ? (dtfSummary?.dtfMode === "dtfOnly" ? "DTF Transfers Only" : "DTF Transfers") : isScreenPrint ? (dtfSummary?.decorationMethod === "dtg" ? "DTG - Direct to Garment" : "Screen Printing") : isEmbroidery ? "Embroidery" : calc.label,
     quantity: isDtf ? dtfSummary?.totalGarmentQty || 0 : (isScreenPrint || isEmbroidery) ? dtfSummary?.totalGarments || 0 : selectedDetails?.qty || num(qty, 1),
     each: (isScreenPrint || isEmbroidery) ? dtfSummary?.averagePricePerShirt || dtfSummary?.each || 0 : summaryCalc.each || 0,
     total: summaryCalc.retail || 0,
@@ -302,9 +304,10 @@ export default function PricingSummary({
             ))}
           </div>
         ))}
+        {hasProductSelected && isScreenPrint && !isAdminView && Number(dtfData.setupFee || 0) > 0 && <p><strong>Setup Fee:</strong> {money(dtfData.setupFee || 0)}</p>}
         {isAdminView && <p>Profit: <strong>{money(summaryCalc.profit)}</strong></p>}
         <hr style={{ borderColor: activeTheme?.divider }} />
-        <p>Product: {hasProductSelected ? (isDtf ? "DTF Transfers" : isScreenPrint ? "Screen Printing" : isEmbroidery ? "Embroidery" : calc.label) : "Select a product"}</p>
+        <p>Product: {hasProductSelected ? (isDtf ? "DTF Transfers" : isScreenPrint ? (dtfData.decorationMethod === "dtg" ? "DTG - Direct to Garment" : "Screen Printing") : isEmbroidery ? "Embroidery" : calc.label) : "Select a product"}</p>
         {!isDtf && !isScreenPrint && !isEmbroidery && isAdminView && <p>Total Sq Ft: {calc.totalSqFt?.toFixed(2)}</p>}
 
         {isAdminView && <button className="modeBtn" style={{ marginBottom: 10 }} onClick={() => setShowBreakdown((v) => !v)}>{showBreakdown ? "Hide" : "Show"} Detailed Breakdown</button>}
