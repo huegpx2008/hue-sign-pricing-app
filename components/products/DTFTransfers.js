@@ -2,34 +2,9 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Box, Check, Field, input } from "../FormControls";
+import { parseApparelCatalogCsv } from "../../lib/catalog/apparel-catalog";
 
 const DATA_PATH = "/data/SanMar_SDL_hue.csv";
-
-function parseCsvLine(line) {
-  const cells = [];
-  let current = "";
-  let inQuotes = false;
-
-  for (let i = 0; i < line.length; i += 1) {
-    const char = line[i];
-    if (char === '"') {
-      if (inQuotes && line[i + 1] === '"') {
-        current += '"';
-        i += 1;
-      } else {
-        inQuotes = !inQuotes;
-      }
-    } else if (char === "," && !inQuotes) {
-      cells.push(current.trim());
-      current = "";
-    } else {
-      current += char;
-    }
-  }
-
-  cells.push(current.trim());
-  return cells;
-}
 
 function toNumber(value) {
   const cleaned = String(value || "").replace(/[^0-9.-]/g, "");
@@ -460,26 +435,7 @@ export default function DTFTransfers({ onSummaryChange, isAdminView = false }) {
       })
       .then((text) => {
         if (!mounted) return;
-        const lines = text.split(/\r?\n/).filter((line) => line.trim());
-        if (!lines.length) {
-          setCsvRows([]);
-          return;
-        }
-
-        const headers = parseCsvLine(lines[0]);
-        const headerIndex = Object.fromEntries(headers.map((header, index) => [header, index]));
-
-        const parsed = lines.slice(1).map((line) => parseCsvLine(line)).map((cols) => ({
-          style: cols[headerIndex["STYLE#"]] || "",
-          title: cols[headerIndex.PRODUCT_TITLE] || "",
-          color: cols[headerIndex.COLOR_NAME] || "",
-          size: cols[headerIndex.SIZE] || "",
-          casePriceRaw: cols[headerIndex.CASE_PRICE] || "",
-          casePrice: toNumber(cols[headerIndex.CASE_PRICE]),
-          caseSize: cols[headerIndex.CASE_SIZE] || "",
-        })).filter((row) => row.style && row.title);
-
-        setCsvRows(parsed);
+        setCsvRows(parseApparelCatalogCsv(text));
       })
       .catch((error) => {
         if (!mounted) return;
