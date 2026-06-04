@@ -1,5 +1,7 @@
-import { findStyle, findVariantSize, loadApparelCatalog } from "../../../../lib/catalog/apparel-catalog.js";
+import { findStyle, findVariantSize, getServerApparelCatalogStatus, loadApparelCatalog } from "../../../../lib/catalog/apparel-catalog.js";
 import { calculateScreenprintPricing } from "../../../../lib/pricing/screenprint.js";
+
+export const runtime = "nodejs";
 
 const allowedSizes = new Set(["XS", "S", "M", "L", "XL", "2XL", "3XL", "4XL", "5XL", "6XL"]);
 
@@ -13,6 +15,42 @@ let catalogLoader = loadApparelCatalog;
 
 export function setScreenprintCatalogLoaderForTests(loader) {
   catalogLoader = loader || loadApparelCatalog;
+}
+
+function getRequestedStylesColors(body) {
+  const lineItems = Array.isArray(body?.lineItems) ? body.lineItems : [];
+  return lineItems.map((item) => ({
+    style: String(item?.style || "").trim(),
+    color: String(item?.color || "").trim(),
+  })).filter((item) => item.style || item.color);
+}
+
+function safeErrorDetails(error) {
+  return error?.message ? String(error.message).slice(0, 500) : "Unexpected server error.";
+}
+
+async function logScreenprintError(error, body) {
+  if (error?.suppressLog) return;
+  const catalogStatus = await getServerApparelCatalogStatus();
+  console.error("Screen print pricing API error", {
+    route: "POST /api/pricing/screenprint",
+    message: error?.message || String(error),
+    stack: error?.stack || "",
+    privateCatalogExists: catalogStatus.exists,
+    privateCatalogPath: catalogStatus.resolvedPath,
+    requestedStylesColors: getRequestedStylesColors(body),
+  });
+}
+
+function internalErrorResponse(error) {
+  return Response.json({
+    ok: false,
+    error: {
+      code: "INTERNAL_ERROR",
+      message: "Screen print pricing failed.",
+      details: safeErrorDetails(error),
+    },
+  }, { status: 500 });
 }
 
 function validateStructure(body) {
@@ -137,85 +175,76 @@ export async function POST(request) {
   let body;
 
   try {
-    body = await request.json();
-  } catch {
+    try {
+      body = await request.json();
+    } catch {
+      return Response.json({
+        ok: false,
+        error: {
+          code: "INVALID_JSON",
+          message: "Request body must be valid JSON.",
+        },
+      }, { status: 400 });
+    }
+
+    const structureFields = validateStructure(body);
+    if (Object.keys(structureFields).length) {
+      return Response.json({
+        ok: false,
+        error: {
+          code: "VALIDATION_ERROR",
+          message: "Screen print pricing input is invalid.",
+          fields: structureFields,
+        },
+      }, { status: 400 });
+    }
+
+    const input = normalizeInput(body);
+    const catalog = await catalogLoader();
+    const catalogFields = validateCatalogMatches(input, catalog);
+    if (Object.keys(catalogFields).length) {
+      return Response.json({
+        ok: false,
+        error: {
+          code: "VALIDATION_ERROR",
+          message: "Screen print pricing input is invalid.",
+          fields: catalogFields,
+        },
+      }, { status: 400 });
+    }
+
+    const calc = calculateScreenprintPricing(input, catalog);
+
     return Response.json({
-      ok: false,
-      error: {
-        code: "INVALID_JSON",
-        message: "Request body must be valid JSON.",
+      ok: true,
+      product: "screenprint",
+      price: {
+        retail: calc.retail,
+        each: calc.each,
       },
-    }, { status: 400 });
-  }
-
-  const structureFields = validateStructure(body);
-  if (Object.keys(structureFields).length) {
-    return Response.json({
-      ok: false,
-      error: {
-        code: "VALIDATION_ERROR",
-        message: "Screen print pricing input is invalid.",
-        fields: structureFields,
+      currency: "USD",
+      summary: {
+        label: "Screen Printing",
+        totalQuantity: calc.totalGarments,
+        sameDesign: input.sameDesign,
+        setupFeeEnabled: input.setupFeeEnabled,
+        lineItems: calc.lineItems.map((item) => ({
+          style: item.style,
+          productName: item.title,
+          color: item.color,
+          quantity: item.totalQty,
+          sizes: Object.fromEntries(Object.entries(item.sizes || {}).filter(([, quantity]) => Number(quantity) > 0)),
+        })),
+        locations: input.locations,
+        options: {
+          darkGarments: input.darkGarments,
+          whiteUnderbase: input.whiteUnderbase,
+        },
       },
-    }, { status: 400 });
-  }
-
-  const input = normalizeInput(body);
-  let catalog;
-
-  try {
-    catalog = await catalogLoader();
+      warnings: buildWarnings(input, calc),
+    });
   } catch (error) {
-    if (!error?.suppressLog) console.error("Screen print catalog load failed:", error);
-    return Response.json({
-      ok: false,
-      error: {
-        code: "CATALOG_LOAD_ERROR",
-        message: "Screen print catalog is temporarily unavailable.",
-      },
-    }, { status: 503 });
+    await logScreenprintError(error, body);
+    return internalErrorResponse(error);
   }
-
-  const catalogFields = validateCatalogMatches(input, catalog);
-  if (Object.keys(catalogFields).length) {
-    return Response.json({
-      ok: false,
-      error: {
-        code: "VALIDATION_ERROR",
-        message: "Screen print pricing input is invalid.",
-        fields: catalogFields,
-      },
-    }, { status: 400 });
-  }
-
-  const calc = calculateScreenprintPricing(input, catalog);
-
-  return Response.json({
-    ok: true,
-    product: "screenprint",
-    price: {
-      retail: calc.retail,
-      each: calc.each,
-    },
-    currency: "USD",
-    summary: {
-      label: "Screen Printing",
-      totalQuantity: calc.totalGarments,
-      sameDesign: input.sameDesign,
-      setupFeeEnabled: input.setupFeeEnabled,
-      lineItems: calc.lineItems.map((item) => ({
-        style: item.style,
-        productName: item.title,
-        color: item.color,
-        quantity: item.totalQty,
-        sizes: Object.fromEntries(Object.entries(item.sizes || {}).filter(([, quantity]) => Number(quantity) > 0)),
-      })),
-      locations: input.locations,
-      options: {
-        darkGarments: input.darkGarments,
-        whiteUnderbase: input.whiteUnderbase,
-      },
-    },
-    warnings: buildWarnings(input, calc),
-  });
 }

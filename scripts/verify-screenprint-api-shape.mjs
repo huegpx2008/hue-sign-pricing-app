@@ -114,9 +114,11 @@ setScreenprintCatalogLoaderForTests(async () => {
   throw error;
 });
 const catalogFailure = await postJson(requestBody);
-assert(catalogFailure.status === 503, `Expected catalog failure status 503, got ${catalogFailure.status}`);
+assert(catalogFailure.status === 500, `Expected catalog failure status 500, got ${catalogFailure.status}`);
 assert(catalogFailure.json.ok === false, "Expected catalog failure ok=false");
-assert(catalogFailure.json.error?.code === "CATALOG_LOAD_ERROR", "Expected catalog load error code");
+assert(catalogFailure.json.error?.code === "INTERNAL_ERROR", "Expected internal error code");
+assert(catalogFailure.json.error?.message === "Screen print pricing failed.", "Expected internal error message");
+assert(catalogFailure.json.error?.details === "Simulated missing private catalog", "Expected safe error details");
 setScreenprintCatalogLoaderForTests(null);
 
 console.log("Screen print pricing API response shape passed.");
