@@ -9,6 +9,11 @@ const toPositiveNumber = (value) => {
 };
 
 const toBoolean = (value) => value === true;
+let catalogLoader = loadApparelCatalog;
+
+export function setScreenprintCatalogLoaderForTests(loader) {
+  catalogLoader = loader || loadApparelCatalog;
+}
 
 function validateStructure(body) {
   const fields = {};
@@ -156,7 +161,21 @@ export async function POST(request) {
   }
 
   const input = normalizeInput(body);
-  const catalog = await loadApparelCatalog();
+  let catalog;
+
+  try {
+    catalog = await catalogLoader();
+  } catch (error) {
+    if (!error?.suppressLog) console.error("Screen print catalog load failed:", error);
+    return Response.json({
+      ok: false,
+      error: {
+        code: "CATALOG_LOAD_ERROR",
+        message: "Screen print catalog is temporarily unavailable.",
+      },
+    }, { status: 503 });
+  }
+
   const catalogFields = validateCatalogMatches(input, catalog);
   if (Object.keys(catalogFields).length) {
     return Response.json({

@@ -1,4 +1,4 @@
-import { POST } from "../app/api/pricing/screenprint/route.js";
+import { POST, setScreenprintCatalogLoaderForTests } from "../app/api/pricing/screenprint/route.js";
 import { loadApparelCatalog } from "../lib/catalog/apparel-catalog.js";
 import { calculateScreenprintPricing } from "../lib/pricing/screenprint.js";
 
@@ -61,13 +61,12 @@ const requestBody = {
         M: 12,
         L: 12,
         XL: 12,
-        "2XL": 6,
       },
     },
   ],
   locations: [
     { name: "Front", colors: 1 },
-    { name: "Back", colors: 2 },
+    { name: "Back", colors: 1 },
   ],
   sameDesign: true,
   darkGarments: true,
@@ -108,5 +107,16 @@ assert(invalid.status === 400, `Expected validation status 400, got ${invalid.st
 assert(invalid.json.ok === false, "Expected validation ok=false");
 assert(invalid.json.error?.code === "VALIDATION_ERROR", "Expected validation error code");
 assert(invalid.json.error?.fields?.["lineItems.0.style"] === "Unknown style", "Expected unknown style validation message");
+
+setScreenprintCatalogLoaderForTests(async () => {
+  const error = new Error("Simulated missing private catalog");
+  error.suppressLog = true;
+  throw error;
+});
+const catalogFailure = await postJson(requestBody);
+assert(catalogFailure.status === 503, `Expected catalog failure status 503, got ${catalogFailure.status}`);
+assert(catalogFailure.json.ok === false, "Expected catalog failure ok=false");
+assert(catalogFailure.json.error?.code === "CATALOG_LOAD_ERROR", "Expected catalog load error code");
+setScreenprintCatalogLoaderForTests(null);
 
 console.log("Screen print pricing API response shape passed.");
