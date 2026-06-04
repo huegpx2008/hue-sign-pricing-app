@@ -1,9 +1,11 @@
 {
   "name": "hue-sign-pricing-app",
   "version": "1.0.0",
+  "type": "module",
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "test:pricing": "node scripts/verify-general-signs-parity.mjs && node scripts/verify-banner-api-shape.mjs",
     "build": "next build",
     "start": "next start"
   },
