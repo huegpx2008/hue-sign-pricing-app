@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
 import { Box, Check, input } from "../FormControls";
+import { calculateApparelLineCost, parseApparelCatalogCsv, sortApparelSizes } from "../../lib/catalog/apparel-catalog";
 
 const DATA_PATH = "/data/SanMar_SDL_hue.csv";
 const DEFAULT_SIZES = ["S", "M", "L", "XL", "2XL", "3XL"];
@@ -11,8 +12,7 @@ const QTIERS = [{max:5},{max:11},{max:23},{max:35},{max:71},{max:143},{max:287},
 const PLACEMENTS=["Left Chest","Center Chest","Full Back","Sleeve","Hat Front","Hat Side","Beanie","Custom Placement"];
 const n=(v)=>Number.parseFloat(String(v??"").replace(/[^0-9.-]/g,""))||0; const zeroQty=(sizes=DEFAULT_SIZES)=>Object.fromEntries(sizes.map((s)=>[s,"0"])); const item=(id)=>({id,search:"",styleKey:"",color:"",sizeQty:zeroQty(),open:false});
 const tierIndex=(qty)=>QTIERS.findIndex((t)=>qty<=t.max);
-const norm=(s)=>String(s||"").trim().toUpperCase();
-const sortSizes=(sizes=[])=>{const order=["YXS","YS","YM","YL","YXL","OSFA","XS","S","M","L","XL","2XL","3XL","4XL","5XL","6XL","LT","XLT","2XLT"]; return [...new Set(sizes.map((s)=>norm(s)).filter(Boolean))].sort((a,b)=>{const ai=order.indexOf(a),bi=order.indexOf(b); if(ai!==-1||bi!==-1)return (ai===-1?999:ai)-(bi===-1?999:bi); return a.localeCompare(b);});};
+const sortSizes=sortApparelSizes;
 
 export default function Embroidery({ onSummaryChange, isAdminView = false }) {
   const [rows,setRows]=useState([]); const [lineItems,setLineItems]=useState([item(1)]); const [placements,setPlacements]=useState(["Left Chest"]);
@@ -20,16 +20,12 @@ export default function Embroidery({ onSummaryChange, isAdminView = false }) {
   const [addNumbers,setAddNumbers]=useState(false); const [largeNumbers,setLargeNumbers]=useState(false); const [puff3mm,setPuff3mm]=useState(false); const [digitizingStatus,setDigitizingStatus]=useState("Reorder / Digitized File On Hand");
   const [manualMode,setManualMode]=useState(false); const [manualName,setManualName]=useState(""); const [manualColor,setManualColor]=useState(""); const [manualQty,setManualQty]=useState("0"); const [manualCostEach,setManualCostEach]=useState("0");
   const [targetRetailPricePerItem,setTargetRetailPricePerItem]=useState("");
-  useEffect(()=>{fetch(DATA_PATH).then((r)=>r.text()).then((txt)=>{const [h,...lines]=txt.split(/\r?\n/).filter(Boolean);const cols=h.split(",");const i=Object.fromEntries(cols.map((k,ix)=>[k.trim(),ix]));setRows(lines.map((line)=>{const c=line.split(",");return{style:c[i["STYLE#"]],title:c[i.PRODUCT_TITLE],color:c[i.COLOR_NAME],size:c[i.SIZE],casePrice:n(c[i.CASE_PRICE])};}));}).catch(()=>setRows([]));},[]);
+  useEffect(()=>{fetch(DATA_PATH).then((r)=>r.text()).then((txt)=>setRows(parseApparelCatalogCsv(txt))).catch(()=>setRows([]));},[]);
   const styles=useMemo(()=>{const m=new Map();rows.forEach((r)=>{const k=`${r.style}__${r.title}`;if(!m.has(k))m.set(k,{key:k,style:r.style,title:r.title,rows:[]});m.get(k).rows.push(r);});return m;},[rows]);
   const setLI=(id,u)=>setLineItems((p)=>p.map((x)=>x.id===id?u(x):x));
   const pick=(id,key)=>{const g=styles.get(key);const sizes=sortSizes((g?.rows||[]).map((r)=>r.size));setLI(id,(x)=>({...x,styleKey:key,search:g?`${g.style} — ${g.title}`:"",open:false,color:x.color&&g?.rows.find((r)=>r.color===x.color)?x.color:"",sizeQty:zeroQty(sizes.length?sizes:DEFAULT_SIZES)}));setTimeout(()=>document.getElementById("emb-stitch-count")?.focus(),0);};
 
-  const summary=useMemo(()=>{const li=(manualMode?[{id:"manual",style:manualName,title:manualName,color:manualColor,sizeQty:{OSFA:manualQty||"0"},totalQty:n(manualQty),garmentCost:n(manualQty)*n(manualCostEach),sizePriceBreakdown:[{size:"OSFA",qty:n(manualQty),blankCasePrice:n(manualCostEach)}],isCap:/cap|hat|beanie/i.test(`${manualName} ${placements.join(" ")}`)}]:lineItems.map((l)=>{const g=styles.get(l.styleKey); const t=Object.values(l.sizeQty).reduce((s,q)=>s+n(q),0); const matchedRows=(g?.rows||[]).filter((r)=>r.color===l.color);
-    const lineSizes=sortSizes((g?.rows||[]).map((r)=>r.size));
-    const garmentCost=lineSizes.reduce((s,sz)=>{const q=n(l.sizeQty[sz]);const row=matchedRows.find((r)=>norm(r.size)===sz);const fallback=(g?.rows||[]).find((r)=>norm(r.size)===sz);return s+((row?.casePrice ?? fallback?.casePrice) || 0)*q;},0);
-    const sizePriceBreakdown=lineSizes.map((sz)=>{const qty=n(l.sizeQty[sz]);if(qty<=0)return null;const row=matchedRows.find((r)=>norm(r.size)===sz) || (g?.rows||[]).find((r)=>norm(r.size)===sz);const blank=row?.casePrice||0;return {size:sz,qty,blankCasePrice:blank};}).filter(Boolean);
-    return {...l,style:g?.style||"",title:g?.title||"",totalQty:t,garmentCost,sizePriceBreakdown,isCap:/(cap|hat|beanie)/i.test(`${g?.title||""} ${placements.join(" ")}`)};}));
+  const summary=useMemo(()=>{const li=(manualMode?[{id:"manual",style:manualName,title:manualName,color:manualColor,sizeQty:{OSFA:manualQty||"0"},totalQty:n(manualQty),garmentCost:n(manualQty)*n(manualCostEach),sizePriceBreakdown:[{size:"OSFA",qty:n(manualQty),blankCasePrice:n(manualCostEach)}],isCap:/cap|hat|beanie/i.test(`${manualName} ${placements.join(" ")}`)}]:lineItems.map((l)=>{const g=styles.get(l.styleKey); return {...calculateApparelLineCost(l,{stylesByKey:styles},{mode:"embroidery"}),isCap:/(cap|hat|beanie)/i.test(`${g?.title||""} ${placements.join(" ")}`)};}));
   const totalGarments=li.reduce((s,x)=>s+x.totalQty,0); const idx=Math.max(tierIndex(totalGarments||1),0);
   const rounded=Math.min(Math.max(Math.ceil(stitchCount/1000)*1000,5000),15000); const base=(STITCH_MATRIX[rounded]||STITCH_MATRIX[15000])[idx];
   const extra1k=stitchCount>15000?Math.ceil((stitchCount-15000)/1000):0; const stitchEach=stitchCount>15000?STITCH_MATRIX[15000][idx]+extra1k*PLUS_PER_1K[idx]:base;

@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
 import { Box, Check, input } from "../FormControls";
+import { calculateApparelLineCost, parseApparelCatalogCsv } from "../../lib/catalog/apparel-catalog";
 
 const DATA_PATH = "/data/SanMar_SDL_hue.csv";
 const QUICK_STYLES = [
@@ -38,12 +39,7 @@ export default function ScreenPrinting({ product, onSummaryChange, isAdminView =
       .then((r) => r.text())
       .then((txt) => {
         const [h, ...lines] = txt.split(/\r?\n/).filter(Boolean);
-        const cols = h.split(",");
-        const i = Object.fromEntries(cols.map((k, ix) => [k.trim(), ix]));
-        setRows(lines.map((line) => {
-          const c = line.split(",");
-          return { style: c[i["STYLE#"]], title: c[i.PRODUCT_TITLE], color: c[i.COLOR_NAME], size: c[i.SIZE], casePrice: n(c[i.CASE_PRICE]) };
-        }));
+        setRows(parseApparelCatalogCsv([h, ...lines].join("\n")));
       })
       .catch(() => setRows([]));
   }, []);
@@ -74,22 +70,7 @@ export default function ScreenPrinting({ product, onSummaryChange, isAdminView =
 
   const summary = useMemo(() => {
     const li = lineItems.map((l) => {
-      const g = styles.get(l.styleKey);
-      const t = Object.values(l.sizeQty).reduce((s, q) => s + n(q), 0);
-      const matchedRows = (g?.rows || []).filter((r) => r.color === l.color);
-      const garmentCost = SIZES.reduce((s, sz) => {
-        const q = n(l.sizeQty[sz]);
-        const row = matchedRows.find((r) => String(r.size).trim().toUpperCase() === sz);
-        return s + (row?.casePrice || 0) * q;
-      }, 0);
-      const sizePriceBreakdown = SIZES.map((sz) => {
-        const qty = n(l.sizeQty[sz]);
-        if (qty <= 0) return null;
-        const row = matchedRows.find((r) => String(r.size).trim().toUpperCase() === sz);
-        const blankCasePrice = row?.casePrice || 0;
-        return { size: sz, qty, blankCasePrice };
-      }).filter(Boolean);
-      return { ...l, style: g?.style || "", title: g?.title || "", totalQty: t, garmentCost, sizePriceBreakdown };
+      return calculateApparelLineCost(l, { stylesByKey: styles }, { mode: "screen", sizes: SIZES });
     });
 
     const totalGarments = li.reduce((s, x) => s + x.totalQty, 0);
