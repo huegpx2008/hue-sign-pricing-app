@@ -1,0 +1,172 @@
+[
+  {
+    "name": "standard apparel left chest",
+    "input": {
+      "dtfMode": "standard",
+      "apparel": {
+        "style": "BC3001",
+        "color": "Black",
+        "sizes": { "S": 6, "M": 6, "L": 6, "XL": 6 }
+      },
+      "frontPreset": "Left Chest",
+      "backPreset": "None",
+      "optimizeLayout": true
+    }
+  },
+  {
+    "name": "standard apparel full front",
+    "input": {
+      "dtfMode": "standard",
+      "apparel": {
+        "style": "BC3001",
+        "color": "Black",
+        "sizes": { "S": 8, "M": 8, "L": 8 }
+      },
+      "frontPreset": "Full Front",
+      "backPreset": "None",
+      "optimizeLayout": true
+    }
+  },
+  {
+    "name": "standard apparel full back",
+    "input": {
+      "dtfMode": "standard",
+      "apparel": {
+        "style": "BC3001",
+        "color": "Black",
+        "sizes": { "S": 4, "M": 4, "L": 4, "XL": 4 }
+      },
+      "frontPreset": "None",
+      "backPreset": "Full Back",
+      "optimizeLayout": true
+    }
+  },
+  {
+    "name": "standard apparel front and back optimized",
+    "input": {
+      "dtfMode": "standard",
+      "apparel": {
+        "style": "BC3001",
+        "color": "Black",
+        "sizes": { "S": 5, "M": 5, "L": 5, "XL": 5 }
+      },
+      "frontPreset": "Full Front",
+      "backPreset": "Full Back",
+      "optimizeLayout": true
+    }
+  },
+  {
+    "name": "left sleeve only",
+    "input": {
+      "dtfMode": "standard",
+      "apparel": {
+        "style": "BC3001",
+        "color": "Black",
+        "sizes": { "S": 3, "M": 3, "L": 3, "XL": 3 }
+      },
+      "frontPreset": "None",
+      "backPreset": "None",
+      "leftSleeve": true,
+      "optimizeLayout": true
+    }
+  },
+  {
+    "name": "both sleeves",
+    "input": {
+      "dtfMode": "standard",
+      "apparel": {
+        "style": "BC3001",
+        "color": "Black",
+        "sizes": { "S": 3, "M": 3, "L": 3, "XL": 3 }
+      },
+      "frontPreset": "None",
+      "backPreset": "None",
+      "leftSleeve": true,
+      "rightSleeve": true,
+      "optimizeLayout": true
+    }
+  },
+  {
+    "name": "custom print sizes",
+    "input": {
+      "dtfMode": "standard",
+      "apparel": {
+        "style": "BC3001",
+        "color": "Black",
+        "sizes": { "S": 5, "M": 5 }
+      },
+      "frontPreset": "Custom Size",
+      "frontWidth": 9,
+      "frontHeight": 7.5,
+      "backPreset": "Custom Size",
+      "backWidth": 10,
+      "backHeight": 8,
+      "leftSleeve": true,
+      "leftSleeveCustomSize": true,
+      "leftSleeveWidth": 3,
+      "leftSleeveHeight": 4,
+      "optimizeLayout": true
+    }
+  },
+  {
+    "name": "oversized garments",
+    "input": {
+      "dtfMode": "standard",
+      "apparel": {
+        "style": "BC3001",
+        "color": "Black",
+        "sizes": { "S": 4, "M": 4, "L": 4, "XL": 4, "2XL": 3, "3XL": 2, "4XL": 1, "5XL": 1 }
+      },
+      "frontPreset": "Full Front",
+      "backPreset": "None",
+      "optimizeLayout": true
+    }
+  },
+  {
+    "name": "byo apparel",
+    "input": {
+      "dtfMode": "standard",
+      "bringYourOwnApparel": true,
+      "byoaTransferQty": 30,
+      "frontPreset": "Full Front",
+      "backPreset": "None",
+      "optimizeLayout": true
+    }
+  },
+  {
+    "name": "dtf only mode",
+    "input": {
+      "dtfMode": "dtfOnly",
+      "dtfOnlyWidth": 11,
+      "dtfOnlyHeight": 10,
+      "dtfOnlyQty": 25,
+      "optimizeLayout": true
+    }
+  },
+  {
+    "name": "non optimized layout",
+    "input": {
+      "dtfMode": "standard",
+      "apparel": {
+        "style": "BC3001",
+        "color": "Black",
+        "sizes": { "S": 10, "M": 10 }
+      },
+      "frontPreset": "Custom Size",
+      "frontWidth": 8,
+      "frontHeight": 14,
+      "backPreset": "None",
+      "optimizeLayout": false
+    }
+  },
+  {
+    "name": "width greater than roll width",
+    "input": {
+      "dtfMode": "dtfOnly",
+      "dtfOnlyWidth": 24,
+      "dtfOnlyHeight": 8,
+      "dtfOnlyQty": 10,
+      "optimizeLayout": true
+    }
+  }
+]

@@ -2,7 +2,8 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Box, Check, Field, input } from "../FormControls";
-import { parseApparelCatalogCsv } from "../../lib/catalog/apparel-catalog";
+import { createApparelCatalog, parseApparelCatalogCsv } from "../../lib/catalog/apparel-catalog";
+import { calculateDtfPricing, dtfPricingConstants } from "../../lib/pricing/dtf";
 
 const DATA_PATH = "/data/SanMar_SDL_hue.csv";
 
@@ -10,85 +11,6 @@ function toNumber(value) {
   const cleaned = String(value || "").replace(/[^0-9.-]/g, "");
   const parsed = Number.parseFloat(cleaned);
   return Number.isFinite(parsed) ? parsed : 0;
-}
-
-function layoutTransfers(items, rollWidth, padding, allowRotate) {
-  const usableItems = items
-    .map((item) => {
-      const baseW = toNumber(item.width);
-      const baseH = toNumber(item.height);
-      const rotatedW = baseH;
-      const rotatedH = baseW;
-
-      let width = baseW;
-      let height = baseH;
-      let rotated = false;
-
-      if (allowRotate) {
-        const fitsBase = baseW <= rollWidth;
-        const fitsRotated = rotatedW <= rollWidth;
-
-        if (!fitsBase && fitsRotated) {
-          width = rotatedW;
-          height = rotatedH;
-          rotated = true;
-        } else if (fitsBase && fitsRotated && rotatedH < baseH) {
-          width = rotatedW;
-          height = rotatedH;
-          rotated = true;
-        }
-      }
-
-      return {
-        ...item,
-        width,
-        height,
-        rotated,
-      };
-    })
-    .filter((item) => item.width > 0 && item.height > 0 && item.width <= rollWidth)
-    .sort((a, b) => b.height - a.height || b.width - a.width);
-
-  const rows = [];
-  for (const item of usableItems) {
-    const footprintW = item.width + padding;
-    const footprintH = item.height + padding;
-    let placed = false;
-
-    for (const row of rows) {
-      if (row.usedWidth + footprintW <= rollWidth + 0.0001) {
-        row.items.push({ ...item, x: row.usedWidth, y: row.y, footprintW, footprintH });
-        row.usedWidth += footprintW;
-        row.height = Math.max(row.height, footprintH);
-        placed = true;
-        break;
-      }
-    }
-
-    if (!placed) {
-      const y = rows.reduce((sum, row) => sum + row.height, 0);
-      rows.push({
-        y,
-        height: footprintH,
-        usedWidth: footprintW,
-        items: [{ ...item, x: 0, y, footprintW, footprintH }],
-      });
-    }
-  }
-
-  const rollLengthUsed = rows.reduce((sum, row) => sum + row.height, 0);
-  const placements = rows.flatMap((row) => row.items);
-  const rotationUsed = placements.some((p) => p.rotated);
-
-  return {
-    placements,
-    rows,
-    rollWidth,
-    rollLengthUsed,
-    totalTransfers: placements.length,
-    linearInches: rollLengthUsed,
-    rotationUsed,
-  };
 }
 
 function DtfRollPreview({ layout, padding }) {
@@ -147,11 +69,6 @@ function DtfRollPreview({ layout, padding }) {
 }
 
 export default function DTFTransfers({ onSummaryChange, isAdminView = false }) {
-  const DEFAULT_MARGIN_PERCENT = 60;
-  const DTF_MATERIAL_COST_PER_LINEAR_INCH = 0.5;
-  const DTF_MINIMUM_MATERIAL_CHARGE = 10;
-  const DTF_SHIPPING_FLAT = 10;
-  const DTF_SLEEVE_RETAIL_ADDON_EACH = 1;
   const QUICK_STYLES = [
     { code: "2000", label: "Gildan Tee 2000" },
     { code: "G2400", label: "Gildan Long Sleeve G2400" },
@@ -162,20 +79,7 @@ export default function DTFTransfers({ onSummaryChange, isAdminView = false }) {
     { code: "ST350LS", label: "Sport-Tek LS ST350LS" },
   ];
 
-  const FRONT_PRESETS = {
-    "Left Chest": { width: 4, height: 4 },
-    "Full Front": { width: 11, height: 10 },
-  };
-  const BACK_PRESETS = {
-    "Full Back": { width: 12.5, height: 13 },
-  };
-  const DEFAULT_SLEEVE_SIZE = { width: 3.5, height: 3.5 };
-  const SIZE_UPCHARGES = {
-    qty2xl: 2.5,
-    qty3xl: 3.5,
-    qty4xl: 4.5,
-    qty5xl: 5,
-  };
+  const DEFAULT_SLEEVE_SIZE = dtfPricingConstants.DEFAULT_SLEEVE_SIZE;
 
   const [sanMarSearch, setSanMarSearch] = useState("");
   const [product, setProduct] = useState("Select product");
@@ -220,149 +124,76 @@ export default function DTFTransfers({ onSummaryChange, isAdminView = false }) {
   const [manualApparelCost, setManualApparelCost] = useState(false);
   const [copyStatus, setCopyStatus] = useState("");
 
-  const totalGarmentQty = useMemo(() => (
-    dtfMode === "dtfOnly"
-      ? Math.max(0, Math.floor(toNumber(dtfOnlyQty)))
-      : (bringYourOwnApparel ? Math.max(0, Math.floor(toNumber(byoaTransferQty))) : (toNumber(qtyXs) + toNumber(qtyS) + toNumber(qtyM) + toNumber(qtyL) + toNumber(qtyXl)
-      + toNumber(qty2xl) + toNumber(qty3xl) + toNumber(qty4xl) + toNumber(qty5xl)))
-  ), [dtfMode, bringYourOwnApparel, dtfOnlyQty, byoaTransferQty, qtyXs, qtyS, qtyM, qtyL, qtyXl, qty2xl, qty3xl, qty4xl, qty5xl]);
+  const apparelCatalog = useMemo(() => createApparelCatalog(csvRows), [csvRows]);
+  const dtfPricing = useMemo(() => calculateDtfPricing({
+    dtfMode,
+    bringYourOwnApparel,
+    apparel: {
+      style: selectedProduct?.style || "",
+      styleKey: selectedStyleKey,
+      color: selectedProduct?.color || color,
+      apparelCost,
+      sizes: {
+        XS: qtyXs,
+        S: qtyS,
+        M: qtyM,
+        L: qtyL,
+        XL: qtyXl,
+        "2XL": qty2xl,
+        "3XL": qty3xl,
+        "4XL": qty4xl,
+        "5XL": qty5xl,
+      },
+    },
+    dtfOnlyWidth,
+    dtfOnlyHeight,
+    dtfOnlyQty,
+    byoaTransferQty,
+    frontPreset,
+    backPreset,
+    frontWidth,
+    frontHeight,
+    backWidth,
+    backHeight,
+    leftSleeve,
+    rightSleeve,
+    leftSleeveCustomSize,
+    rightSleeveCustomSize,
+    leftSleeveWidth,
+    leftSleeveHeight,
+    rightSleeveWidth,
+    rightSleeveHeight,
+    padding,
+    optimizeLayout,
+  }, apparelCatalog), [apparelCatalog, dtfMode, bringYourOwnApparel, selectedProduct, selectedStyleKey, color, apparelCost, qtyXs, qtyS, qtyM, qtyL, qtyXl, qty2xl, qty3xl, qty4xl, qty5xl, dtfOnlyWidth, dtfOnlyHeight, dtfOnlyQty, byoaTransferQty, frontPreset, backPreset, frontWidth, frontHeight, backWidth, backHeight, leftSleeve, rightSleeve, leftSleeveCustomSize, rightSleeveCustomSize, leftSleeveWidth, leftSleeveHeight, rightSleeveWidth, rightSleeveHeight, padding, optimizeLayout]);
 
-  const baseApparelCostUsed = useMemo(() => toNumber(apparelCost), [apparelCost]);
-
-  const sizeUpchargeTotal = useMemo(() => (
-    bringYourOwnApparel ? 0 :
-    toNumber(qty2xl) * SIZE_UPCHARGES.qty2xl
-    + toNumber(qty3xl) * SIZE_UPCHARGES.qty3xl
-    + toNumber(qty4xl) * SIZE_UPCHARGES.qty4xl
-    + toNumber(qty5xl) * SIZE_UPCHARGES.qty5xl
-  ), [bringYourOwnApparel, qty2xl, qty3xl, qty4xl, qty5xl]);
-
-  const apparelDirectCost = useMemo(() => {
-    if (dtfMode === "dtfOnly" || bringYourOwnApparel) return 0;
-    return totalGarmentQty * baseApparelCostUsed;
-  }, [dtfMode, bringYourOwnApparel, totalGarmentQty, baseApparelCostUsed]);
-
-  const apparelCostWithMargin = useMemo(() => {
-    const marginDecimal = DEFAULT_MARGIN_PERCENT / 100;
-    if (marginDecimal >= 1) return 0;
-    return apparelDirectCost / (1 - marginDecimal);
-  }, [apparelDirectCost]);
-
-  const apparelRetailSubtotal = useMemo(() => apparelCostWithMargin, [apparelCostWithMargin]);
-  const byoaRetailFee = useMemo(() => (dtfMode === "standard" && bringYourOwnApparel ? 20 : 0), [dtfMode, bringYourOwnApparel]);
-
-  const frontSelected = frontPreset !== "None";
-  const backSelected = backPreset !== "None";
-
-  const resolvedFrontSize = useMemo(() => {
-    if (frontPreset === "Custom Size") {
-      return { width: toNumber(frontWidth), height: toNumber(frontHeight) };
-    }
-    return FRONT_PRESETS[frontPreset] || null;
-  }, [frontPreset, frontWidth, frontHeight]);
-
-  const resolvedBackSize = useMemo(() => {
-    if (backPreset === "Custom Size") {
-      return { width: toNumber(backWidth), height: toNumber(backHeight) };
-    }
-    return BACK_PRESETS[backPreset] || null;
-  }, [backPreset, backWidth, backHeight]);
-
-  const resolvedLeftSleeveSize = leftSleeveCustomSize
-    ? { width: toNumber(leftSleeveWidth), height: toNumber(leftSleeveHeight) }
-    : DEFAULT_SLEEVE_SIZE;
-
-  const resolvedRightSleeveSize = rightSleeveCustomSize
-    ? { width: toNumber(rightSleeveWidth), height: toNumber(rightSleeveHeight) }
-    : DEFAULT_SLEEVE_SIZE;
-
-  const transferCountPerGarment = dtfMode === "dtfOnly"
-    ? 1
-    : (frontSelected ? 1 : 0)
-    + (backSelected ? 1 : 0)
-    + (leftSleeve ? 1 : 0)
-    + (rightSleeve ? 1 : 0);
-
-  const totalTransferCount = transferCountPerGarment * totalGarmentQty;
-  const sleevePrintsPerGarment = (leftSleeve ? 1 : 0) + (rightSleeve ? 1 : 0);
-  const sleeveRetailAddOnTotal = sleevePrintsPerGarment * totalGarmentQty * DTF_SLEEVE_RETAIL_ADDON_EACH;
-
-  const dtfTransferItems = useMemo(() => {
-    if (!totalGarmentQty) return [];
-    const items = [];
-    const repeat = Math.max(0, Math.floor(totalGarmentQty));
-    const pushRepeated = (transfer) => {
-      for (let i = 0; i < repeat; i += 1) items.push({ ...transfer, id: `${transfer.type}-${i}` });
-    };
-
-    if (dtfMode === "dtfOnly") {
-      pushRepeated({ type: "dtfOnly", label: "DTF Transfer", width: toNumber(dtfOnlyWidth), height: toNumber(dtfOnlyHeight) });
-      return items;
-    }
-
-    if (frontSelected && resolvedFrontSize) {
-      pushRepeated({ type: "front", label: "Front", width: resolvedFrontSize.width, height: resolvedFrontSize.height });
-    }
-    if (backSelected && resolvedBackSize) {
-      pushRepeated({ type: "back", label: "Back", width: resolvedBackSize.width, height: resolvedBackSize.height });
-    }
-    if (leftSleeve) {
-      pushRepeated({ type: "leftSleeve", label: "Left Sleeve", width: resolvedLeftSleeveSize.width, height: resolvedLeftSleeveSize.height });
-    }
-    if (rightSleeve) {
-      pushRepeated({ type: "rightSleeve", label: "Right Sleeve", width: resolvedRightSleeveSize.width, height: resolvedRightSleeveSize.height });
-    }
-    return items;
-  }, [dtfMode, dtfOnlyWidth, dtfOnlyHeight, totalGarmentQty, frontSelected, backSelected, leftSleeve, rightSleeve, resolvedFrontSize, resolvedBackSize, resolvedLeftSleeveSize.width, resolvedLeftSleeveSize.height, resolvedRightSleeveSize.width, resolvedRightSleeveSize.height]);
-
-  const dtfLayout = useMemo(() => {
-    const rollWidth = 22;
-    const safePadding = Math.max(0, toNumber(padding));
-    const noRotation = layoutTransfers(dtfTransferItems, rollWidth, safePadding, false);
-    const withRotation = layoutTransfers(dtfTransferItems, rollWidth, safePadding, true);
-    if (!optimizeLayout) return noRotation;
-    return withRotation.rollLengthUsed < noRotation.rollLengthUsed ? withRotation : noRotation;
-  }, [dtfTransferItems, padding, optimizeLayout]);
-
-  const dtfWasteSummary = useMemo(() => {
-    const runArea = dtfLayout.rollWidth * dtfLayout.rollLengthUsed;
-    const usedTransferArea = dtfLayout.placements.reduce((sum, item) => sum + (item.width * item.height), 0);
-    const unusedArea = Math.max(0, runArea - usedTransferArea);
-    const unusedPercent = runArea > 0 ? (unusedArea / runArea) * 100 : 0;
-    return { runArea, usedTransferArea, unusedArea, unusedPercent };
-  }, [dtfLayout]);
-
-  const dtfMaterialCost = useMemo(() => (
-    Math.max(dtfLayout.linearInches * DTF_MATERIAL_COST_PER_LINEAR_INCH, DTF_MINIMUM_MATERIAL_CHARGE)
-  ), [dtfLayout.linearInches]);
-
-  const dtfRetailSubtotal = useMemo(() => {
-    const marginDecimal = DEFAULT_MARGIN_PERCENT / 100;
-    if (marginDecimal >= 1) return 0;
-    return dtfMaterialCost / (1 - marginDecimal);
-  }, [dtfMaterialCost]);
-
-  const directCost = useMemo(() => apparelDirectCost + dtfMaterialCost + DTF_SHIPPING_FLAT, [apparelDirectCost, dtfMaterialCost]);
-
-  const finalRetail = useMemo(() => (
-    apparelRetailSubtotal + dtfRetailSubtotal + sizeUpchargeTotal + sleeveRetailAddOnTotal + DTF_SHIPPING_FLAT + byoaRetailFee
-  ), [apparelRetailSubtotal, dtfRetailSubtotal, sizeUpchargeTotal, sleeveRetailAddOnTotal, byoaRetailFee]);
-
-  const pricePerGarment = useMemo(() => (totalGarmentQty > 0 ? finalRetail / totalGarmentQty : 0), [finalRetail, totalGarmentQty]);
-  const dtfSizePriceBreakdown = useMemo(() => {
-    const baseEach = pricePerGarment;
-    const tiers = [
-      { label: "S-XL", qty: toNumber(qtyS) + toNumber(qtyM) + toNumber(qtyL) + toNumber(qtyXl), upcharge: 0 },
-      { label: "2XL", qty: toNumber(qty2xl), upcharge: 2.5 },
-      { label: "3XL", qty: toNumber(qty3xl), upcharge: 3.5 },
-      { label: "4XL", qty: toNumber(qty4xl), upcharge: 4.5 },
-      { label: "5XL", qty: toNumber(qty5xl), upcharge: 5 },
-    ];
-    return tiers.filter((tier) => tier.qty > 0).map((tier) => ({
-      ...tier,
-      priceEach: Math.max(0, baseEach + tier.upcharge),
-    }));
-  }, [pricePerGarment, qtyS, qtyM, qtyL, qtyXl, qty2xl, qty3xl, qty4xl, qty5xl]);
+  const {
+    totalGarmentQty,
+    apparelCostUsed: baseApparelCostUsed,
+    sizeUpchargeTotal,
+    apparelDirectCost,
+    apparelRetailSubtotal,
+    byoaRetailFee,
+    frontSelected,
+    backSelected,
+    resolvedFrontSize,
+    resolvedBackSize,
+    resolvedLeftSleeveSize,
+    resolvedRightSleeveSize,
+    totalTransferCount,
+    sleeveRetailAddOnTotal,
+    dtfLayout,
+    dtfWasteSummary,
+    dtfMaterialCost,
+    dtfRetailSubtotal,
+    directCost,
+    finalRetail,
+    pricePerGarment,
+    sizePriceBreakdown: dtfSizePriceBreakdown,
+  } = dtfPricing;
+  const DTF_SHIPPING_FLAT = dtfPricingConstants.DTF_SHIPPING_FLAT;
+  const DTF_MATERIAL_COST_PER_LINEAR_INCH = dtfPricingConstants.DTF_MATERIAL_COST_PER_LINEAR_INCH;
+  const DTF_MINIMUM_MATERIAL_CHARGE = dtfPricingConstants.DTF_MINIMUM_MATERIAL_CHARGE;
 
   useEffect(() => {
     if (!onSummaryChange) return;
