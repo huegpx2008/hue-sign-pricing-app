@@ -5,7 +5,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "test:pricing": "node scripts/verify-general-signs-parity.mjs && node scripts/verify-apparel-catalog-parity.mjs && node scripts/verify-embroidery-engine-parity.mjs && node scripts/verify-dtf-engine-parity.mjs && node scripts/verify-screenprint-api-shape.mjs && node scripts/verify-embroidery-api-shape.mjs && node scripts/verify-embroidery-api-parity.mjs && node scripts/verify-banner-api-shape.mjs && node scripts/verify-yard-sign-api-shape.mjs && node scripts/verify-acm-api-shape.mjs && node scripts/verify-vinyl-api-shape.mjs && node scripts/verify-custom-cut-coroplast-api-shape.mjs && node scripts/verify-vehicle-magnet-api-shape.mjs",
+    "test:pricing": "node scripts/verify-general-signs-parity.mjs && node scripts/verify-apparel-catalog-parity.mjs && node scripts/verify-embroidery-engine-parity.mjs && node scripts/verify-dtf-engine-parity.mjs && node scripts/verify-dtf-api-shape.mjs && node scripts/verify-screenprint-api-shape.mjs && node scripts/verify-embroidery-api-shape.mjs && node scripts/verify-embroidery-api-parity.mjs && node scripts/verify-banner-api-shape.mjs && node scripts/verify-yard-sign-api-shape.mjs && node scripts/verify-acm-api-shape.mjs && node scripts/verify-vinyl-api-shape.mjs && node scripts/verify-custom-cut-coroplast-api-shape.mjs && node scripts/verify-vehicle-magnet-api-shape.mjs",
     "build": "next build",
     "start": "next start"
   },
