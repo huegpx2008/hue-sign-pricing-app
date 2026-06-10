@@ -879,6 +879,253 @@ Example response:
 }
 ```
 
+## Business Card
+
+Endpoint URL:
+
+```text
+POST https://quotes.huegraphics.cc/api/pricing/business-card
+```
+
+Supported inputs:
+
+- `quantity`: required number, one of `250`, `500`, or `1000`.
+- `sides`: required string, either `single` or `double`.
+- `coating`: required string, either `Gloss Laminate` or `No Coating`.
+- `orientation`: required string, either `Landscape` or `Portrait`.
+- `rush`: optional boolean.
+
+The current business card formula prices quantity, sides, and rush. `coating` and `orientation` are accepted for request compatibility, but are not priced separately.
+
+Example request:
+
+```json
+{
+  "quantity": 1000,
+  "sides": "double",
+  "coating": "Gloss Laminate",
+  "orientation": "Landscape",
+  "rush": true
+}
+```
+
+Example response:
+
+```json
+{
+  "ok": true,
+  "product": "business-card",
+  "price": {
+    "retail": 139.98,
+    "each": 0.13998
+  },
+  "currency": "USD",
+  "summary": {
+    "label": "Business Cards",
+    "quantity": 1000,
+    "sides": "double",
+    "coating": "Gloss Laminate",
+    "orientation": "Landscape",
+    "options": {
+      "rush": true
+    }
+  },
+  "warnings": [
+    "Coating is accepted for request compatibility but is not priced separately by the current business card formula.",
+    "Orientation is accepted for request compatibility but is not priced by the current business card formula."
+  ]
+}
+```
+
+## Handheld Paper
+
+Endpoint URL:
+
+```text
+POST https://quotes.huegraphics.cc/api/pricing/handheld-paper
+```
+
+Supported inputs:
+
+- `quantity`: required positive number.
+- `size`: required string. Accepts the existing size keys, such as `3.5x2.5`, `5x3`, `6x4`, `7x5`, `9x4`, `9x6`, `11x8.5`, `14x11`, `16x12`, `17x11`, `12x18`, `20x16`, or `18x28`.
+- `sides`: required string, either `single` or `double`.
+- `coating`: required string, either `Gloss Laminate` or `No Coating`.
+- `orientation`: required string, either `Landscape` or `Portrait`.
+- `rush`: optional boolean.
+
+The current handheld 16pt paper formula prices quantity, selected size, and rush. `sides`, `coating`, and `orientation` are accepted for request compatibility, but are not priced separately.
+
+Example request:
+
+```json
+{
+  "quantity": 275,
+  "size": "9x6",
+  "sides": "double",
+  "coating": "No Coating",
+  "orientation": "Portrait",
+  "rush": true
+}
+```
+
+Example response:
+
+```json
+{
+  "ok": true,
+  "product": "handheld-paper",
+  "price": {
+    "retail": 688.6874285714287,
+    "each": 2.5043179220779224
+  },
+  "currency": "USD",
+  "summary": {
+    "label": "Handheld 16pt Paper",
+    "quantity": 275,
+    "size": "9x6",
+    "sizeLabel": "9\"x6\"",
+    "sides": "double",
+    "coating": "No Coating",
+    "orientation": "Portrait",
+    "options": {
+      "rush": true
+    }
+  },
+  "warnings": [
+    "Sides are accepted for request compatibility but are not priced separately by the current handheld paper formula.",
+    "Coating is accepted for request compatibility but is not priced separately by the current handheld paper formula.",
+    "Orientation is accepted for request compatibility but is not priced by the current handheld paper formula."
+  ]
+}
+```
+
+## Carbonless
+
+Endpoint URL:
+
+```text
+POST https://quotes.huegraphics.cc/api/pricing/carbonless
+```
+
+Supported inputs:
+
+- `formType`: required string, one of `2 Part`, `3 Part`, or `4 Part`.
+- `size`: required string, one of `8.5" x 11"`, `5.5" x 8.5"`, or `8.5" x 14"`.
+- `quantity`: required number, one of `100`, `250`, `500`, `1000`, `2000`, `2500`, `5000`, `7500`, or `10000`.
+- `printType`: required string, either `Black Ink` or `Full Color`.
+- `printSides`: required string, either `Front Only` or `Front and Back`.
+- `numbering`: optional boolean.
+- `wraparound`: optional boolean.
+- `bookedSets`: optional boolean.
+- `rush`: optional boolean.
+
+Example request:
+
+```json
+{
+  "formType": "3 Part",
+  "size": "8.5\" x 14\"",
+  "quantity": 2500,
+  "printType": "Full Color",
+  "printSides": "Front and Back",
+  "numbering": true,
+  "wraparound": true,
+  "bookedSets": true,
+  "rush": true
+}
+```
+
+Example response:
+
+```json
+{
+  "ok": true,
+  "product": "carbonless",
+  "price": {
+    "retail": 5934.6,
+    "each": 2.37384
+  },
+  "currency": "USD",
+  "summary": {
+    "label": "Carbonless Forms",
+    "quantity": 2500,
+    "formType": "3 Part",
+    "size": "8.5\" x 14\"",
+    "printType": "Full Color",
+    "printSides": "Front and Back",
+    "options": {
+      "numbering": true,
+      "wraparound": true,
+      "bookedSets": true,
+      "rush": true
+    }
+  },
+  "warnings": []
+}
+```
+
+## Door Hanger
+
+Endpoint URL:
+
+```text
+POST https://quotes.huegraphics.cc/api/pricing/door-hanger
+```
+
+Supported inputs:
+
+- `size`: required string, one of `3.5 x 8.5`, `4 x 11`, `5.25 x 8.5`, or `8.5 x 11`.
+- `quantity`: required positive number.
+- `type`: required string, one of the existing door hanger stock/type labels in the calculator.
+- `ink`: required string, either `Standard Black` or `Full Color`.
+- `backPrinting`: required string, one of `No`, `Standard Black`, or `Full Color`.
+- `perforation`: required string, one of `No`, `Yes (1 Perforation)`, `Yes (2 Perforations)`, `Yes (3 Perforations)`, or `Yes (4 Perforations)`.
+- `shrinkWrap`: required string, one of `Shrink Wrap 250`, `Shrink Wrap 25s`, `Shrink Wrap 50s`, or `Shrink Wrap 100s`.
+
+The current door hanger formula prices size, quantity, ink, back printing, perforation, and shrink wrap. `type` is accepted for request compatibility, but is not priced by the current formula.
+
+Example request:
+
+```json
+{
+  "size": "4 x 11",
+  "quantity": 2500,
+  "type": "14pt Gloss Front - Uncoated Back",
+  "ink": "Full Color",
+  "backPrinting": "Full Color",
+  "perforation": "Yes (2 Perforations)",
+  "shrinkWrap": "Shrink Wrap 50s"
+}
+```
+
+Example response:
+
+```json
+{
+  "ok": true,
+  "product": "door-hanger",
+  "price": {
+    "retail": 3807.611213445379,
+    "each": 1.5230444853781515
+  },
+  "currency": "USD",
+  "summary": {
+    "label": "Door Hangers",
+    "quantity": 2500,
+    "size": "4 x 11",
+    "type": "14pt Gloss Front - Uncoated Back",
+    "ink": "Full Color",
+    "backPrinting": "Full Color",
+    "perforation": "Yes (2 Perforations)",
+    "shrinkWrap": "Shrink Wrap 50s"
+  },
+  "warnings": [
+    "Type is accepted for request compatibility but is not priced by the current door hanger formula."
+  ]
+}
+```
+
 ## Error Shape
 
 Validation errors return `ok: false` with a stable error envelope:
