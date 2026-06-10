@@ -419,6 +419,466 @@ Example response:
 }
 ```
 
+## Mesh Banner
+
+Endpoint URL:
+
+```text
+POST https://quotes.huegraphics.cc/api/pricing/mesh-banner
+```
+
+Supported inputs:
+
+- `width`: required positive number, inches.
+- `height`: required positive number, inches.
+- `quantity`: required positive number.
+- `polePocket`: optional boolean.
+- `rope`: optional boolean.
+- `webbing`: optional boolean.
+- `grommets`: optional boolean.
+- `welding`: optional boolean.
+- `rush`: optional boolean.
+
+The current mesh banner formula prices dimensions, quantity, pole pocket, rope, webbing, and rush. `grommets` and `welding` are accepted for request compatibility, but are not priced separately.
+
+Example request:
+
+```json
+{
+  "width": 120,
+  "height": 60,
+  "quantity": 3,
+  "polePocket": true,
+  "rope": true,
+  "webbing": true,
+  "grommets": true,
+  "welding": true,
+  "rush": true
+}
+```
+
+Example response:
+
+```json
+{
+  "ok": true,
+  "product": "mesh-banner",
+  "price": {
+    "retail": 3240,
+    "each": 1080
+  },
+  "currency": "USD",
+  "summary": {
+    "label": "Mesh Banner",
+    "width": 120,
+    "height": 60,
+    "quantity": 3,
+    "options": {
+      "polePocket": true,
+      "rope": true,
+      "webbing": true,
+      "grommets": true,
+      "welding": true,
+      "rush": true
+    }
+  },
+  "warnings": [
+    "Grommets are accepted for request compatibility but are not priced separately by the current mesh banner formula.",
+    "Welding is accepted for request compatibility but is not priced separately by the current mesh banner formula."
+  ]
+}
+```
+
+## Poster
+
+Endpoint URL:
+
+```text
+POST https://quotes.huegraphics.cc/api/pricing/poster
+```
+
+Supported inputs:
+
+- `width`: required positive number, inches.
+- `height`: required positive number, inches.
+- `quantity`: required positive number.
+- `rush`: optional boolean.
+
+Example request:
+
+```json
+{
+  "width": 48,
+  "height": 96,
+  "quantity": 3,
+  "rush": true
+}
+```
+
+Example response:
+
+```json
+{
+  "ok": true,
+  "product": "poster",
+  "price": {
+    "retail": 970,
+    "each": 323.3333333333333
+  },
+  "currency": "USD",
+  "summary": {
+    "label": "Poster Paper",
+    "width": 48,
+    "height": 96,
+    "quantity": 3,
+    "options": {
+      "rush": true
+    }
+  },
+  "warnings": []
+}
+```
+
+## Acrylic
+
+Endpoint URL:
+
+```text
+POST https://quotes.huegraphics.cc/api/pricing/acrylic
+```
+
+Supported inputs:
+
+- `width`: required positive number, inches.
+- `height`: required positive number, inches.
+- `quantity`: required positive number.
+- `contourCut`: optional boolean.
+- `roundedCorners`: optional boolean.
+- `standOffs` or `standoffs`: optional boolean.
+- `standOffQty`: optional non-negative number. Defaults to `4`.
+- `standOffColor`: optional string, either `silver` or `black`. Defaults to `silver`.
+- `rush`: optional boolean.
+
+The current acrylic formula prices dimensions, quantity, contour cut, rounded corners, and stand-offs. `rush` is accepted for request compatibility, but is not priced by the current acrylic formula.
+
+Example request:
+
+```json
+{
+  "width": 24,
+  "height": 36,
+  "quantity": 2,
+  "contourCut": true,
+  "roundedCorners": true,
+  "standOffs": true,
+  "standOffQty": 8,
+  "standOffColor": "black",
+  "rush": true
+}
+```
+
+Example response:
+
+```json
+{
+  "ok": true,
+  "product": "acrylic",
+  "price": {
+    "retail": 560.05,
+    "each": 280.025
+  },
+  "currency": "USD",
+  "summary": {
+    "label": "Acrylic",
+    "width": 24,
+    "height": 36,
+    "quantity": 2,
+    "options": {
+      "contourCut": true,
+      "roundedCorners": true,
+      "standOffs": true,
+      "standOffQty": 8,
+      "standOffColor": "black",
+      "standOffColorName": "Black",
+      "rush": true
+    }
+  },
+  "warnings": [
+    "Rush is accepted for request compatibility but is not priced by the current acrylic formula."
+  ]
+}
+```
+
+## Foamcore
+
+Endpoint URL:
+
+```text
+POST https://quotes.huegraphics.cc/api/pricing/foamcore
+```
+
+Supported inputs:
+
+- `width`: required positive number, inches.
+- `height`: required positive number, inches.
+- `quantity`: required positive number.
+- `sides`: required string, either `single` or `double`.
+- `contourCut`: optional boolean.
+- `glossLaminate`: optional boolean.
+- `rush`: optional boolean.
+- `customCut`: optional boolean.
+
+The current foamcore formula prices dimensions, quantity, sides, contour cut, gloss finish, and rush. `customCut` is accepted for request compatibility, but is not priced separately.
+
+Example request:
+
+```json
+{
+  "width": 24,
+  "height": 36,
+  "quantity": 9,
+  "sides": "double",
+  "contourCut": true,
+  "glossLaminate": true,
+  "rush": true,
+  "customCut": true
+}
+```
+
+Example response:
+
+```json
+{
+  "ok": true,
+  "product": "foamcore",
+  "price": {
+    "retail": 1509.0249999999999,
+    "each": 167.66944444444442
+  },
+  "currency": "USD",
+  "summary": {
+    "label": "Foamcore",
+    "width": 24,
+    "height": 36,
+    "quantity": 9,
+    "sides": "double",
+    "options": {
+      "contourCut": true,
+      "glossLaminate": true,
+      "rush": true,
+      "customCut": true
+    }
+  },
+  "warnings": [
+    "Custom cut is accepted for request compatibility but is not priced separately by the current foamcore formula."
+  ]
+}
+```
+
+## PVC
+
+Endpoint URL:
+
+```text
+POST https://quotes.huegraphics.cc/api/pricing/pvc
+```
+
+Supported inputs:
+
+- `width`: required positive number, inches.
+- `height`: required positive number, inches.
+- `quantity`: required positive number.
+- `type` or `material`: optional exact PVC type, one of `3-single`, `3-double`, `6-single`, or `6-double`.
+- `thickness`: required when `type` is omitted, either `3mm` or `6mm`.
+- `sides`: required when `type` is omitted, either `single` or `double`.
+- `contourCut`: optional boolean.
+- `rush`: optional boolean.
+- `customCut`: optional boolean.
+
+The current PVC formula prices dimensions, quantity, PVC type, contour cut, and rush. `customCut` is accepted for request compatibility, but is not priced separately.
+
+Example request:
+
+```json
+{
+  "width": 18,
+  "height": 24,
+  "quantity": 16,
+  "thickness": "6mm",
+  "sides": "double",
+  "contourCut": true,
+  "rush": true,
+  "customCut": true
+}
+```
+
+Example response:
+
+```json
+{
+  "ok": true,
+  "product": "pvc",
+  "price": {
+    "retail": 1406.1,
+    "each": 87.88125
+  },
+  "currency": "USD",
+  "summary": {
+    "label": "PVC",
+    "width": 18,
+    "height": 24,
+    "quantity": 16,
+    "thickness": "6mm",
+    "sides": "double",
+    "type": "6-double",
+    "typeName": "6mm Double-Sided",
+    "options": {
+      "contourCut": true,
+      "rush": true,
+      "customCut": true
+    }
+  },
+  "warnings": [
+    "Custom cut is accepted for request compatibility but is not priced separately by the current PVC formula."
+  ]
+}
+```
+
+## Polystyrene
+
+Endpoint URL:
+
+```text
+POST https://quotes.huegraphics.cc/api/pricing/polystyrene
+```
+
+Supported inputs:
+
+- `width`: required positive number, inches.
+- `height`: required positive number, inches.
+- `quantity`: required positive number.
+- `sides`: required string, either `single` or `double`.
+- `contourCut`: optional boolean.
+- `glossLaminate`: optional boolean.
+- `rush`: optional boolean.
+- `customCut`: optional boolean.
+
+The current polystyrene formula prices dimensions, quantity, sides, contour cut, gloss finish, and rush. `customCut` is accepted for request compatibility, but is not priced separately.
+
+Example request:
+
+```json
+{
+  "width": 18,
+  "height": 24,
+  "quantity": 16,
+  "sides": "double",
+  "contourCut": true,
+  "glossLaminate": true,
+  "rush": true,
+  "customCut": true
+}
+```
+
+Example response:
+
+```json
+{
+  "ok": true,
+  "product": "polystyrene",
+  "price": {
+    "retail": 1199.1,
+    "each": 74.94375
+  },
+  "currency": "USD",
+  "summary": {
+    "label": "Polystyrene .03",
+    "width": 18,
+    "height": 24,
+    "quantity": 16,
+    "sides": "double",
+    "options": {
+      "contourCut": true,
+      "glossLaminate": true,
+      "rush": true,
+      "customCut": true
+    }
+  },
+  "warnings": [
+    "Custom cut is accepted for request compatibility but is not priced separately by the current polystyrene formula."
+  ]
+}
+```
+
+## Aluminum
+
+Endpoint URL:
+
+```text
+POST https://quotes.huegraphics.cc/api/pricing/aluminum
+```
+
+Supported inputs:
+
+- `width`: required positive number, inches.
+- `height`: required positive number, inches.
+- `quantity`: required positive number.
+- `type` or `material`: optional exact aluminum type, one of `040-single`, `040-double`, `080-single`, or `080-double`.
+- `thickness`: required when `type` is omitted, either `040` or `080`.
+- `sides`: required when `type` is omitted, either `single` or `double`.
+- `contourCut`: optional boolean.
+- `roundedCorners`: optional boolean.
+- `rush`: optional boolean.
+
+The current aluminum formula prices dimensions, quantity, aluminum type, contour cut, and rounded corners. `rush` is accepted for request compatibility, but is not priced by the current aluminum formula.
+
+Example request:
+
+```json
+{
+  "width": 24,
+  "height": 36,
+  "quantity": 12,
+  "thickness": "080",
+  "sides": "double",
+  "contourCut": true,
+  "roundedCorners": true,
+  "rush": true
+}
+```
+
+Example response:
+
+```json
+{
+  "ok": true,
+  "product": "aluminum",
+  "price": {
+    "retail": 3308.8799999999997,
+    "each": 275.73999999999995
+  },
+  "currency": "USD",
+  "summary": {
+    "label": "Aluminum",
+    "width": 24,
+    "height": 36,
+    "quantity": 12,
+    "thickness": ".080",
+    "sides": "double",
+    "type": "080-double",
+    "typeName": ".080 Double-Sided",
+    "options": {
+      "contourCut": true,
+      "roundedCorners": true,
+      "rush": true
+    }
+  },
+  "warnings": [
+    "Rush is accepted for request compatibility but is not priced by the current aluminum formula."
+  ]
+}
+```
+
 ## Error Shape
 
 Validation errors return `ok: false` with a stable error envelope:
