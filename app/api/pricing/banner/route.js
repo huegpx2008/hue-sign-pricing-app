@@ -1,5 +1,6 @@
 import { bannerOptions } from "../../../../data/productConfig.js";
 import { calculateGeneralSignPricing } from "../../../../lib/pricing/general-signs.js";
+import { internalSignCost } from "../../../../lib/pricing/internal-api.js";
 
 const requiredFields = ["width", "height", "quantity", "material"];
 
@@ -92,6 +93,7 @@ export async function POST(request) {
     windSlits: input.windSlits,
     bannerRush: input.rush,
   });
+  const internalCost = internalSignCost(request, calc);
 
   return Response.json({
     ok: true,
@@ -116,5 +118,6 @@ export async function POST(request) {
       },
     },
     warnings: [],
+    ...(internalCost ? { internalCost } : {}),
   });
 }

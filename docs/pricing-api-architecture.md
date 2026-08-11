@@ -253,7 +253,7 @@ Operational recommendations:
 
 - Add a pricing version string to every response.
 - Include normalized input in responses so website/debugging can see what defaults were applied.
-- Keep internal cost/profit fields available only to authenticated/admin callers, or behind an `includeInternal=true` policy enforced server-side.
+- Keep internal cost/profit fields available only to authenticated/admin callers. Banner, yard-sign, and ACM currently expose a bounded `internalCost` object only when the server verifies `HUE_PRICING_INTERNAL_API_SECRET`; public responses remain unchanged.
 - Return customer-safe totals by default.
 - Keep formulas in engine modules, not route handlers.
 - Keep route handlers thin: parse, validate, call engine, return JSON.

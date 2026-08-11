@@ -1,4 +1,5 @@
 import { calculateGeneralSignPricing } from "../../../../lib/pricing/general-signs.js";
+import { internalSignCost } from "../../../../lib/pricing/internal-api.js";
 
 const requiredFields = ["quantity", "sides", "stakeType"];
 const allowedSides = new Set(["single", "double"]);
@@ -87,6 +88,7 @@ export async function POST(request) {
     coroContour: false,
     coroRush: false,
   });
+  const internalCost = internalSignCost(request, calc);
 
   return Response.json({
     ok: true,
@@ -106,5 +108,6 @@ export async function POST(request) {
       stakeType: input.stakeType,
     },
     warnings: [],
+    ...(internalCost ? { internalCost } : {}),
   });
 }

@@ -10,6 +10,13 @@ All endpoints:
 - Use `USD` as the currency.
 - Do not expose costs, margins, profit, supplier pricing, shipping breakdowns, or internal calculations.
 
+The banner, yard-sign, and ACM routes have one server-only extension for Hue HQ.
+When `Authorization: Bearer <HUE_PRICING_INTERNAL_API_SECRET>` matches the
+configured 32+ character secret, the response also contains `internalCost` with
+`cost`, `materialCost`, `shipping`, and `otherDirectCost`. Missing, invalid, or
+unconfigured authorization returns the unchanged public response and no internal
+fields. This secret must never use a `NEXT_PUBLIC_` prefix.
+
 Production base URL:
 
 ```text

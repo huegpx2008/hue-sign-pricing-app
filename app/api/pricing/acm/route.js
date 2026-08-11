@@ -1,4 +1,5 @@
 import { calculateGeneralSignPricing } from "../../../../lib/pricing/general-signs.js";
+import { internalSignCost } from "../../../../lib/pricing/internal-api.js";
 
 const requiredFields = ["width", "height", "quantity", "thickness", "sides"];
 const allowedThicknesses = new Set(["3mm", "6mm"]);
@@ -120,6 +121,7 @@ export async function POST(request) {
     acmContour: input.contourCut,
     roundedCorners: false,
   });
+  const internalCost = internalSignCost(request, calc);
 
   return Response.json({
     ok: true,
@@ -143,5 +145,6 @@ export async function POST(request) {
       },
     },
     warnings: buildWarnings(input),
+    ...(internalCost ? { internalCost } : {}),
   });
 }
