@@ -1,9 +1,13 @@
-import { findStyle, findVariantSize, getServerApparelCatalogStatus, loadApparelCatalog } from "../../../../lib/catalog/apparel-catalog.js";
+import {
+  findStyle,
+  findVariantSize,
+  getServerApparelCatalogStatus,
+  loadApparelCatalog,
+  normalizeCatalogSizeQuantities,
+} from "../../../../lib/catalog/apparel-catalog.js";
 import { calculateScreenprintPricing } from "../../../../lib/pricing/screenprint.js";
 
 export const runtime = "nodejs";
-
-const allowedSizes = new Set(["XS", "S", "M", "L", "XL", "2XL", "3XL", "4XL", "5XL", "6XL"]);
 
 const toPositiveNumber = (value) => {
   const number = Number(value);
@@ -76,9 +80,7 @@ function validateStructure(body) {
 
     let positiveSizeCount = 0;
     for (const [size, quantity] of Object.entries(item.sizes)) {
-      const normalizedSize = String(size || "").trim().toUpperCase();
       const parsedQuantity = Number(quantity);
-      if (!allowedSizes.has(normalizedSize)) fields[`${prefix}.sizes.${size}`] = "Unsupported size";
       if (!Number.isFinite(parsedQuantity) || parsedQuantity < 0) fields[`${prefix}.sizes.${size}`] = "Must be a non-negative number";
       if (parsedQuantity > 0) positiveSizeCount += 1;
     }
@@ -99,15 +101,12 @@ function validateStructure(body) {
   return fields;
 }
 
-function normalizeInput(body) {
+function normalizeInput(body, catalog) {
   return {
     lineItems: body.lineItems.map((item) => ({
       style: String(item.style).trim(),
       color: String(item.color).trim(),
-      sizes: Object.fromEntries(Object.entries(item.sizes).map(([size, quantity]) => [
-        String(size).trim().toUpperCase(),
-        Number(quantity),
-      ])),
+      sizes: normalizeCatalogSizeQuantities(item.style, item.color, item.sizes, catalog),
     })),
     locations: (Array.isArray(body.locations) && body.locations.length ? body.locations : [{ name: "Front", colors: 1 }]).map((location) => ({
       name: String(location.name).trim(),
@@ -138,8 +137,7 @@ function validateCatalogMatches(input, catalog) {
       return;
     }
 
-    for (const [size, quantity] of Object.entries(item.sizes)) {
-      if (quantity <= 0) continue;
+    for (const size of Object.keys(item.sizes)) {
       if (!findVariantSize(item.style, item.color, size, catalog)) {
         fields[`${prefix}.sizes.${size}`] = "No catalog price for style, color, and size";
       }
@@ -199,9 +197,8 @@ export async function POST(request) {
       }, { status: 400 });
     }
 
-    const input = normalizeInput(body);
     const catalog = await catalogLoader();
-    const catalogFields = validateCatalogMatches(input, catalog);
+    const catalogFields = validateCatalogMatches({ lineItems: body.lineItems }, catalog);
     if (Object.keys(catalogFields).length) {
       return Response.json({
         ok: false,
@@ -212,6 +209,8 @@ export async function POST(request) {
         },
       }, { status: 400 });
     }
+
+    const input = normalizeInput(body, catalog);
 
     const calc = calculateScreenprintPricing(input, catalog);
 

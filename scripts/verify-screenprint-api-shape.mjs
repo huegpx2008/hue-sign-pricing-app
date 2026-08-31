@@ -90,6 +90,27 @@ assert(success.json.summary.locations.length === 2, "Expected two print location
 assert(success.json.warnings.some((warning) => warning.includes("underbase")), "Expected underbase warning");
 assertNoInternalFields(success.json);
 
+const infant = await postJson({
+  ...requestBody,
+  lineItems: [{ style: "RS4400", color: "White", sizes: { "06M": 24 } }],
+  locations: [{ name: "Front", colors: 1 }],
+  darkGarments: false,
+  whiteUnderbase: false,
+});
+assert(infant.status === 200, `Expected screen print infant request status 200, got ${infant.status}`);
+assert(infant.json.summary.totalQuantity === 24, "Expected screen print to count all infant garments");
+assert(infant.json.summary.lineItems[0].sizes["06M"] === 24, "Expected exact supplier size key in screen print summary");
+
+const unavailableInfantSize = await postJson({
+  ...requestBody,
+  lineItems: [{ style: "RS4400", color: "White", sizes: { "09M": 24 } }],
+});
+assert(unavailableInfantSize.status === 400, "Expected screen print to reject unavailable catalog size");
+assert(
+  unavailableInfantSize.json.error?.fields?.["lineItems.0.sizes.09M"] === "No catalog price for style, color, and size",
+  "Expected screen print catalog-specific size validation",
+);
+
 const lowQuantity = await postJson({
   ...requestBody,
   lineItems: [{ style: "2000", color: "Black", sizes: { S: 6 } }],

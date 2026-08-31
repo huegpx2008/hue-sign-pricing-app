@@ -10,6 +10,7 @@ import {
   getAvailableColors,
   getAvailableSizes,
   loadApparelCatalog,
+  normalizeCatalogSizeQuantities,
   parseApparelCatalogCsv,
   sortApparelSizes,
 } from "../lib/catalog/apparel-catalog.js";
@@ -209,6 +210,17 @@ const newDtf = calculateApparelLineCost(dtfLine, catalog, { mode: "dtf" });
 assert.equal(newDtf.apparelCostUsed, legacyDtf.apparelCostUsed, "DTF selected CASE_PRICE should match legacy behavior");
 assert.equal(newDtf.garmentCost, legacyDtf.garmentCost, "DTF apparel direct cost should match legacy behavior");
 assert.equal(newDtf.sizeUpchargeTotal, legacyDtf.sizeUpchargeTotal, "DTF hardcoded size upcharges should match legacy behavior");
+
+const infantSizes = normalizeCatalogSizeQuantities("RS4400", "White", { "06m": 24 }, privateCatalog);
+assert.deepEqual(infantSizes, { "06M": 24 }, "Catalog size normalization should preserve the supplier's exact size key");
+const infantLine = calculateApparelLineCost({
+  style: "RS4400",
+  color: "White",
+  sizes: infantSizes,
+}, privateCatalog, { mode: "screen" });
+assert.equal(infantLine.totalQty, 24, "Nonstandard catalog size quantities should be counted");
+assert(Math.abs(infantLine.garmentCost - 73.2) <= 1e-9, "Nonstandard catalog sizes should use their exact supplier garment cost");
+assert.deepEqual(infantLine.sizePriceBreakdown, [{ size: "06M", qty: 24, blankCasePrice: 3.05 }], "Expected exact supplier size cost breakdown");
 
 const embroideryStyle = [...legacyStyles.values()].find((style) => style.style.toLowerCase() === "K540".toLowerCase())
   || [...legacyStyles.values()].find((style) => style.style.toLowerCase() === "NE501".toLowerCase());

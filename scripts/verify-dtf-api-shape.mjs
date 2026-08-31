@@ -132,6 +132,61 @@ assert.equal(success.json.summary.options.artworkSupplied, true, "Expected artwo
 assert.deepEqual(success.json.warnings, [], "Expected no warnings for clean request");
 assertNoInternalFields(success.json);
 
+const infantRequest = {
+  mode: "standard",
+  apparel: {
+    source: "catalog",
+    supplier: "SanMar",
+    supplierStyle: "",
+    style: "RS4400",
+    color: "White",
+    sizes: {
+      "06M": 24,
+    },
+  },
+  printLocations: [
+    { placement: "front", preset: "fullFront", enabled: true },
+  ],
+  layout: { optimize: true },
+  artwork: { supplied: true, status: "printReady" },
+  production: { rush: false },
+};
+const infant = await postJson(infantRequest);
+assert.equal(infant.status, 200, `Expected RS4400 infant request status 200, got ${infant.status}`);
+assert.equal(infant.json.summary.totalQuantity, 24, "Expected all 24 infant garments to be priced");
+assert.deepEqual(infant.json.summary.apparel.sizes, { "06M": 24 }, "Expected exact supplier size key in summary");
+assert.equal(infant.json.price.retail, 500.5, "Expected RS4400 pricing to use the existing DTF formula");
+assert.equal(infant.json.price.each, 20.854166666666668, "Expected RS4400 per-piece price");
+assertNoInternalFields(infant.json);
+
+const unavailableInfantSize = await postJson({
+  ...infantRequest,
+  apparel: { ...infantRequest.apparel, sizes: { "09M": 24 } },
+});
+assert.equal(unavailableInfantSize.status, 400, "Expected unavailable catalog size to be rejected");
+assert.equal(
+  unavailableInfantSize.json.error?.fields?.["apparel.sizes.09M"],
+  "No catalog price for style, color, and size",
+  "Expected catalog-specific size validation",
+);
+
+const standardSizeBaseline = await postJson({
+  ...requestBody,
+  apparel: {
+    ...requestBody.apparel,
+    sizes: { S: 4, M: 4, L: 4, XL: 4, "2XL": 4, "3XL": 4 },
+  },
+  printLocations: [{ placement: "front", preset: "fullFront", enabled: true }],
+});
+assert.equal(standardSizeBaseline.status, 200, "Expected S-3XL baseline request status 200");
+assert.equal(standardSizeBaseline.json.price.retail, 629.5, "S-3XL retail must remain unchanged");
+assert.equal(standardSizeBaseline.json.price.each, 26.229166666666668, "S-3XL each price must remain unchanged");
+assert.deepEqual(
+  standardSizeBaseline.json.summary.apparel.sizes,
+  { S: 4, M: 4, L: 4, XL: 4, "2XL": 4, "3XL": 4 },
+  "Expected standard supplier size keys to remain unchanged",
+);
+
 const dtfOnly = await postJson({
   mode: "dtfOnly",
   transfer: {

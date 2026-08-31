@@ -1,9 +1,14 @@
-import { findStyle, getServerApparelCatalogStatus, loadApparelCatalog } from "../../../../lib/catalog/apparel-catalog.js";
+import {
+  findStyle,
+  findVariantSize,
+  getServerApparelCatalogStatus,
+  loadApparelCatalog,
+  normalizeCatalogSizeQuantities,
+} from "../../../../lib/catalog/apparel-catalog.js";
 import { calculateDtfPricing, dtfPricingConstants } from "../../../../lib/pricing/dtf.js";
 
 export const runtime = "nodejs";
 
-const allowedSizes = new Set(["XS", "S", "M", "L", "XL", "2XL", "3XL", "4XL", "5XL"]);
 const placementLabels = {
   front: "Front",
   back: "Back",
@@ -89,13 +94,6 @@ function validationResponse(fields) {
   }, { status: 400 });
 }
 
-function normalizeSizes(sizes = {}) {
-  return Object.fromEntries(Object.entries(sizes).map(([size, quantity]) => [
-    normalizeSizeKey(size),
-    Number(quantity),
-  ]));
-}
-
 function validateSizes(sizes, prefix, fields) {
   if (!sizes || typeof sizes !== "object" || Array.isArray(sizes)) {
     fields[prefix] = "Required sizes object";
@@ -106,7 +104,7 @@ function validateSizes(sizes, prefix, fields) {
   for (const [size, quantity] of Object.entries(sizes)) {
     const normalizedSize = normalizeSizeKey(size);
     const parsedQuantity = Number(quantity);
-    if (!allowedSizes.has(normalizedSize)) fields[`${prefix}.${size}`] = "Unsupported size";
+    if (!normalizedSize) fields[prefix] = "Size names are required";
     if (!Number.isFinite(parsedQuantity) || parsedQuantity < 0) fields[`${prefix}.${size}`] = "Must be a non-negative number";
     if (parsedQuantity > 0) positiveSizeCount += 1;
   }
@@ -209,6 +207,13 @@ function validateCatalogMatches(input, catalog) {
   const colorRows = style.rows.filter((row) => row.color === input.apparel.color);
   if (!colorRows.length) {
     fields["apparel.color"] = "Unknown color for style";
+    return fields;
+  }
+
+  for (const size of Object.keys(input.apparel.sizes)) {
+    if (!findVariantSize(input.apparel.style, input.apparel.color, size, catalog)) {
+      fields[`apparel.sizes.${size}`] = "No catalog price for style, color, and size";
+    }
   }
 
   return fields;
@@ -266,6 +271,9 @@ function normalizeInput(body, catalog) {
   const mode = normalizeMode(body);
   const source = String(body?.apparel?.source || "catalog").trim();
   const style = mode === "standard" && source === "catalog" ? findStyle(body.apparel.style, catalog) : null;
+  const sizes = mode === "standard" && source === "catalog"
+    ? normalizeCatalogSizeQuantities(body.apparel.style, body.apparel.color, body.apparel.sizes, catalog)
+    : {};
   const engineInput = {
     dtfMode: mode,
     bringYourOwnApparel: source === "customerProvided",
@@ -274,7 +282,7 @@ function normalizeInput(body, catalog) {
       style: String(body?.apparel?.style || "").trim(),
       styleKey: style?.key || "",
       color: String(body?.apparel?.color || "").trim(),
-      sizes: normalizeSizes(body?.apparel?.sizes || {}),
+      sizes,
     },
     dtfOnlyWidth: body?.transfer?.width ?? body?.dtfOnlyWidth ?? 11,
     dtfOnlyHeight: body?.transfer?.height ?? body?.dtfOnlyHeight ?? 10,

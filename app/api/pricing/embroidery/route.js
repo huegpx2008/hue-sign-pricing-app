@@ -1,4 +1,11 @@
-import { findStyle, findVariantSize, getServerApparelCatalogStatus, loadApparelCatalog, sortApparelSizes } from "../../../../lib/catalog/apparel-catalog.js";
+import {
+  findStyle,
+  findVariantSize,
+  getServerApparelCatalogStatus,
+  loadApparelCatalog,
+  normalizeCatalogSizeQuantities,
+  sortApparelSizes,
+} from "../../../../lib/catalog/apparel-catalog.js";
 import { calculateEmbroideryPricing } from "../../../../lib/pricing/embroidery.js";
 
 export const runtime = "nodejs";
@@ -113,13 +120,6 @@ function validateStructure(body) {
   return fields;
 }
 
-function normalizeSizeMap(sizes) {
-  return Object.fromEntries(Object.entries(sizes || {}).map(([size, quantity]) => [
-    String(size).trim().toUpperCase(),
-    Number(quantity),
-  ]));
-}
-
 function validateCatalogMatches(input, catalog) {
   const fields = {};
 
@@ -138,8 +138,7 @@ function validateCatalogMatches(input, catalog) {
       return;
     }
 
-    for (const [size, quantity] of Object.entries(item.sizes)) {
-      if (quantity <= 0) continue;
+    for (const size of Object.keys(item.sizes)) {
       if (!findVariantSize(item.style, item.color, size, catalog)) {
         fields[`${prefix}.sizes.${size}`] = "No catalog price for style, color, and size";
       }
@@ -154,7 +153,7 @@ function normalizeInput(body, catalog) {
   return {
     lineItems: body.lineItems.map((item, index) => {
       const style = findStyle(item.style, catalog);
-      const sizes = normalizeSizeMap(item.sizes);
+      const sizes = normalizeCatalogSizeQuantities(item.style, item.color, item.sizes, catalog);
       const styleSizes = sortApparelSizes((style?.rows || []).map((row) => row.size));
       return {
         id: `api-${index}`,
@@ -264,7 +263,7 @@ export async function POST(request) {
       lineItems: body.lineItems.map((item) => ({
         style: String(item.style).trim(),
         color: String(item.color).trim(),
-        sizes: normalizeSizeMap(item.sizes),
+        sizes: item.sizes,
       })),
     };
     const catalogFields = validateCatalogMatches(structureInput, catalog);
