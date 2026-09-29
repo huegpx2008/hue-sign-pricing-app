@@ -207,9 +207,8 @@ const dtfLine = {
 };
 const legacyDtf = legacyDtfCost(dtfLine, legacyDtfStyles);
 const newDtf = calculateApparelLineCost(dtfLine, catalog, { mode: "dtf" });
-assert.equal(newDtf.apparelCostUsed, legacyDtf.apparelCostUsed, "DTF selected CASE_PRICE should match legacy behavior");
-assert.equal(newDtf.garmentCost, legacyDtf.garmentCost, "DTF apparel direct cost should match legacy behavior");
-assert.equal(newDtf.sizeUpchargeTotal, legacyDtf.sizeUpchargeTotal, "DTF hardcoded size upcharges should match legacy behavior");
+assert.equal(newDtf.garmentCost, legacyScreenLineCost(dtfLine, legacyDtfStyles).garmentCost, "DTF must use the same exact size costs as screen printing");
+assert.equal(newDtf.sizeUpchargeTotal, 0, "DTF fixed size surcharges are removed");
 
 const infantSizes = normalizeCatalogSizeQuantities("RS4400", "White", { "06m": 24 }, privateCatalog);
 assert.deepEqual(infantSizes, { "06M": 24 }, "Catalog size normalization should preserve the supplier's exact size key");

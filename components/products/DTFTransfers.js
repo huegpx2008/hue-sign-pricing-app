@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Box, Check, Field, input } from "../FormControls";
-import { createApparelCatalog, parseApparelCatalogCsv } from "../../lib/catalog/apparel-catalog";
+import { createApparelCatalog, parseApparelCatalogCsv, selectDtfBaseProduct } from "../../lib/catalog/apparel-catalog";
 import { calculateDtfPricing, dtfPricingConstants } from "../../lib/pricing/dtf";
 
 const DATA_PATH = "/data/SanMar_SDL_hue.csv";
@@ -132,7 +132,7 @@ export default function DTFTransfers({ onSummaryChange, isAdminView = false }) {
       style: selectedProduct?.style || "",
       styleKey: selectedStyleKey,
       color: selectedProduct?.color || color,
-      apparelCost,
+      apparelCost: manualApparelCost ? apparelCost : undefined,
       sizes: {
         XS: qtyXs,
         S: qtyS,
@@ -165,7 +165,7 @@ export default function DTFTransfers({ onSummaryChange, isAdminView = false }) {
     rightSleeveHeight,
     padding,
     optimizeLayout,
-  }, apparelCatalog), [apparelCatalog, dtfMode, bringYourOwnApparel, selectedProduct, selectedStyleKey, color, apparelCost, qtyXs, qtyS, qtyM, qtyL, qtyXl, qty2xl, qty3xl, qty4xl, qty5xl, dtfOnlyWidth, dtfOnlyHeight, dtfOnlyQty, byoaTransferQty, frontPreset, backPreset, frontWidth, frontHeight, backWidth, backHeight, leftSleeve, rightSleeve, leftSleeveCustomSize, rightSleeveCustomSize, leftSleeveWidth, leftSleeveHeight, rightSleeveWidth, rightSleeveHeight, padding, optimizeLayout]);
+  }, apparelCatalog), [manualApparelCost, apparelCatalog, dtfMode, bringYourOwnApparel, selectedProduct, selectedStyleKey, color, apparelCost, qtyXs, qtyS, qtyM, qtyL, qtyXl, qty2xl, qty3xl, qty4xl, qty5xl, dtfOnlyWidth, dtfOnlyHeight, dtfOnlyQty, byoaTransferQty, frontPreset, backPreset, frontWidth, frontHeight, backWidth, backHeight, leftSleeve, rightSleeve, leftSleeveCustomSize, rightSleeveCustomSize, leftSleeveWidth, leftSleeveHeight, rightSleeveWidth, rightSleeveHeight, padding, optimizeLayout]);
 
   const {
     totalGarmentQty,
@@ -198,6 +198,7 @@ export default function DTFTransfers({ onSummaryChange, isAdminView = false }) {
   useEffect(() => {
     if (!onSummaryChange) return;
     onSummaryChange({
+      pricingErrors: dtfPricing.pricingErrors,
       label: dtfMode === "dtfOnly" ? "DTF Transfers Only" : "DTF Transfers",
       retail: finalRetail,
       each: pricePerGarment,
@@ -249,7 +250,7 @@ export default function DTFTransfers({ onSummaryChange, isAdminView = false }) {
       rollLengthUsed: dtfLayout.rollLengthUsed,
       transferCount: totalTransferCount,
     });
-  }, [onSummaryChange, dtfMode, bringYourOwnApparel, dtfOnlyWidth, dtfOnlyHeight, dtfOnlyQty, byoaTransferQty, byoaRetailFee, finalRetail, pricePerGarment, dtfSizePriceBreakdown, directCost, apparelDirectCost, dtfMaterialCost, DTF_SHIPPING_FLAT, apparelRetailSubtotal, dtfRetailSubtotal, sizeUpchargeTotal, sleeveRetailAddOnTotal, selectedProduct, baseApparelCostUsed, totalGarmentQty, frontSelected, resolvedFrontSize, backSelected, resolvedBackSize, leftSleeve, resolvedLeftSleeveSize, rightSleeve, resolvedRightSleeveSize, dtfLayout.rollLengthUsed, totalTransferCount, qtyXs, qtyS, qtyM, qtyL, qtyXl, qty2xl, qty3xl, qty4xl, qty5xl]);
+  }, [dtfPricing.pricingErrors, onSummaryChange, dtfMode, bringYourOwnApparel, dtfOnlyWidth, dtfOnlyHeight, dtfOnlyQty, byoaTransferQty, byoaRetailFee, finalRetail, pricePerGarment, dtfSizePriceBreakdown, directCost, apparelDirectCost, dtfMaterialCost, DTF_SHIPPING_FLAT, apparelRetailSubtotal, dtfRetailSubtotal, sizeUpchargeTotal, sleeveRetailAddOnTotal, selectedProduct, baseApparelCostUsed, totalGarmentQty, frontSelected, resolvedFrontSize, backSelected, resolvedBackSize, leftSleeve, resolvedLeftSleeveSize, rightSleeve, resolvedRightSleeveSize, dtfLayout.rollLengthUsed, totalTransferCount, qtyXs, qtyS, qtyM, qtyL, qtyXl, qty2xl, qty3xl, qty4xl, qty5xl]);
 
   const loadedRef = useRef(false);
 
@@ -315,7 +316,7 @@ export default function DTFTransfers({ onSummaryChange, isAdminView = false }) {
 
   useEffect(() => {
     if (!selectedStyle || color === "Select color") return;
-    const matched = selectedStyle.rows.find((row) => row.color === color) || null;
+    const matched = selectDtfBaseProduct(selectedStyle.rows.filter((row) => row.color === color));
     setSelectedProduct(matched);
     if (matched && !manualApparelCost) {
       setApparelCost(String(matched.casePrice));
@@ -509,8 +510,8 @@ export default function DTFTransfers({ onSummaryChange, isAdminView = false }) {
         </>}
 
         {isAdminView && dtfMode !== "dtfOnly" && !bringYourOwnApparel && <div style={{ marginTop: 15 }}>
-          <label>Apparel Cost (manual override supported)</label>
-          <input style={input} type="number" step="0.01" value={apparelCost} onChange={(e) => handleManualApparelCostChange(e.target.value)} placeholder="Auto-filled from CASE_PRICE" />
+          <label>Garment cost override (applies to every selected size)</label>
+          <input style={input} type="number" min="0" step="0.01" value={manualApparelCost ? apparelCost : ""} onChange={(e) => handleManualApparelCostChange(e.target.value)} placeholder="Automatic: actual supplier cost for each size" />
         </div>}
 
         {dtfMode === "dtfOnly" ? (
@@ -619,6 +620,7 @@ export default function DTFTransfers({ onSummaryChange, isAdminView = false }) {
         </div>
       </Box>}
 
+      {dtfPricing.pricingErrors.map((message) => <p role="alert" key={message}>{message}</p>)}
       <Box title="DTF Roll Layout Preview"><DtfRollPreview layout={dtfLayout} padding={Math.max(0, toNumber(padding))} /></Box>
       <Box title={isAdminView ? "DTF Pricing Summary" : "DTF Customer Quote Summary"}>
         {!isAdminView ? (
@@ -656,13 +658,12 @@ export default function DTFTransfers({ onSummaryChange, isAdminView = false }) {
         ) : (
         <>
         <div style={{ display: "grid", gap: 6 }}>
-          <div><strong>Base apparel cost used:</strong> ${baseApparelCostUsed.toFixed(2)} {manualApparelCost ? "(manual override)" : "(SanMar CASE_PRICE)"}</div>
+          <div><strong>Average garment cost used:</strong> ${baseApparelCostUsed.toFixed(2)} {manualApparelCost ? "(manual override)" : "(actual SanMar size costs)"}</div>
           <div><strong>{bringYourOwnApparel ? "Transfer quantity" : "Total garment quantity"}:</strong> {totalGarmentQty}</div>
           <div><strong>Apparel direct cost:</strong> ${apparelDirectCost.toFixed(2)}</div>
           <div><strong>Apparel retail subtotal:</strong> ${apparelRetailSubtotal.toFixed(2)}</div>
           <div><strong>DTF material cost:</strong> ${dtfMaterialCost.toFixed(2)}</div>
           <div><strong>DTF retail subtotal:</strong> ${dtfRetailSubtotal.toFixed(2)}</div>
-          <div><strong>Size upcharge total:</strong> ${sizeUpchargeTotal.toFixed(2)}</div>
           <div><strong>Sleeve retail add-on total:</strong> ${sleeveRetailAddOnTotal.toFixed(2)}</div>
           <div><strong>Shipping (pass-through):</strong> ${DTF_SHIPPING_FLAT.toFixed(2)}</div>
           <div><strong>Direct cost:</strong> ${directCost.toFixed(2)}</div>
@@ -687,7 +688,7 @@ export default function DTFTransfers({ onSummaryChange, isAdminView = false }) {
           <div><strong>Material formula:</strong> {dtfLayout.linearInches.toFixed(2)} × ${DTF_MATERIAL_COST_PER_LINEAR_INCH.toFixed(2)} (min ${DTF_MINIMUM_MATERIAL_CHARGE.toFixed(2)})</div>
         </div>
         <div style={{ marginTop: 12 }}>
-          <button type="button" className="modeBtn" onClick={handleCopyQuote}>Copy Quote</button>
+          <button type="button" className="modeBtn" onClick={handleCopyQuote} disabled={dtfPricing.pricingErrors.length > 0}>Copy Quote</button>
           {copyStatus && <span style={{ marginLeft: 10, fontSize: 13, color: "#bfdbfe" }}>{copyStatus}</span>}
         </div>
         </>

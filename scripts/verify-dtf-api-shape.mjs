@@ -179,8 +179,8 @@ const standardSizeBaseline = await postJson({
   printLocations: [{ placement: "front", preset: "fullFront", enabled: true }],
 });
 assert.equal(standardSizeBaseline.status, 200, "Expected S-3XL baseline request status 200");
-assert.equal(standardSizeBaseline.json.price.retail, 629.5, "S-3XL retail must remain unchanged");
-assert.equal(standardSizeBaseline.json.price.each, 26.229166666666668, "S-3XL each price must remain unchanged");
+assert.equal(standardSizeBaseline.json.price.retail, 643.5, "S-3XL retail uses actual supplier costs");
+assert.equal(standardSizeBaseline.json.price.each, 26.8125, "S-3XL average reflects actual supplier costs");
 assert.deepEqual(
   standardSizeBaseline.json.summary.apparel.sizes,
   { S: 4, M: 4, L: 4, XL: 4, "2XL": 4, "3XL": 4 },

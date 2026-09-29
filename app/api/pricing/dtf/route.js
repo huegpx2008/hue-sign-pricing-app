@@ -465,6 +465,7 @@ export async function POST(request) {
     if (Object.keys(catalogFields).length) return validationResponse(catalogFields);
 
     const calc = calculateDtfPricing(input.engineInput, catalog);
+    if (calc.pricingErrors.length) return validationResponse({ "apparel.sizes": calc.pricingErrors.join(" ") });
 
     return Response.json({
       ok: true,

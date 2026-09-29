@@ -367,8 +367,20 @@ function comparable(result) {
 
 for (const fixture of fixtures) {
   const actual = comparable(calculateDtfPricing(fixture.input, catalog));
-  const expected = comparable(legacyDtfPricing(fixture.input));
-  assert.deepEqual(actual, expected, `${fixture.name} should match legacy DTF pricing`);
+  const legacy = comparable(legacyDtfPricing(fixture.input));
+  // Layout, transfers, fees and material pricing must remain unchanged. Only blank costing changes.
+  for (const key of ["dtfLayout", "dtfWasteSummary", "dtfMaterialCost", "dtfRetailSubtotal", "shipping", "byoaRetailFee", "sleeveRetailAddOnTotal", "totalGarmentQty"]) {
+    assert.deepEqual(actual[key], legacy[key], fixture.name + ": " + key);
+  }
+  const input = normalizeLegacyInput(fixture.input);
+  const garmentCost = input.dtfMode === "dtfOnly" || input.bringYourOwnApparel ? 0 : Object.entries(input.sizes).reduce((sum, [size, qty]) => {
+    const row = findStyle(input.style, catalog)?.rows.find(r => r.color === input.color && r.size === size);
+    return sum + Number(qty) * Number(input.apparelCost ?? row?.casePrice ?? 0);
+  }, 0);
+  assert(Math.abs(actual.apparelDirectCost - garmentCost) < 1e-8, fixture.name);
+  const expectedRetail = garmentCost / 0.4 + legacy.dtfRetailSubtotal + legacy.shipping + legacy.byoaRetailFee + legacy.sleeveRetailAddOnTotal;
+  assert(Math.abs(actual.retail - expectedRetail) < 1e-8, fixture.name);
+  assert.equal(actual.sizeUpchargeTotal, 0);
+  if (actual.sizePriceBreakdown.length) assert(Math.abs(actual.sizePriceBreakdown.reduce((sum, tier) => sum + tier.qty * tier.priceEach, 0) - actual.retail) < 1e-8, fixture.name);
 }
-
-console.log(`DTF pricing engine parity passed for ${fixtures.length} cases.`);
+console.log(`DTF size-cost policy and unchanged transfer/layout checks passed for ${fixtures.length} cases.`);

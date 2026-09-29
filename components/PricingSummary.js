@@ -73,6 +73,8 @@ export default function PricingSummary({
   const isScreenPrint = activeProduct === "screenPrinting" && dtfSummary;
   const isEmbroidery = activeProduct === "embroidery" && dtfSummary;
   const dtfData = dtfSummary || {};
+  const invalidDtfPrice = Boolean(isDtf && dtfData.pricingErrors?.length);
+  const canShareQuote = quoteItems.length > 0 || !invalidDtfPrice;
   const summaryCalc = (isDtf || isScreenPrint || isEmbroidery) ? dtfSummary : calc;
   const isDtgMode = isScreenPrint && dtfSummary?.decorationMethod === "dtg";
   const isScreenPrintMinQtyMet = !isScreenPrint || isDtgMode || Number(dtfSummary?.totalGarments || 0) >= 24;
@@ -139,7 +141,7 @@ export default function PricingSummary({
     ],
   });
   const addToQuote = () => {
-    if (!hasProductSelected) return;
+    if (!hasProductSelected || invalidDtfPrice) return;
     setQuoteItems((prev) => [...prev, buildCurrentQuoteItem()]);
   };
   const removeQuoteItem = (id) => setQuoteItems((prev) => prev.filter((item) => item.id !== id));
@@ -243,6 +245,7 @@ export default function PricingSummary({
   })();
 
   const handleCopyQuote = async () => {
+    if (!canShareQuote) return;
     if (typeof navigator !== "undefined" && navigator.clipboard?.writeText) {
       await navigator.clipboard.writeText(quoteText);
       return;
@@ -261,13 +264,13 @@ export default function PricingSummary({
           <label style={{ display: "block", fontSize: 12, fontWeight: 700, letterSpacing: ".04em", marginBottom: 6 }}>SENDING QUOTE TO HUE</label>
           <input style={{ width: "100%", marginBottom: 8, padding: 8, borderRadius: 8, border: "1px solid rgba(148,163,184,.5)", opacity: 0.9 }} value={emailQuoteToHue} readOnly />
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-            <button className="modeBtn" onClick={handleCopyQuote}>Copy Quote</button>
-            <a className="modeBtn" href={emailQuoteToHue ? emailHref : "#"} onClick={(e) => { if (!emailQuoteToHue) e.preventDefault(); }} style={{ textDecoration: "none", textAlign: "center", lineHeight: "36px" }}>SUBMIT / EMAIL QUOTE</a>
+            <button className="modeBtn" onClick={handleCopyQuote} disabled={!canShareQuote}>Copy Quote</button>
+            <a className="modeBtn" href={emailQuoteToHue && canShareQuote ? emailHref : "#"} aria-disabled={!canShareQuote} onClick={(e) => { if (!emailQuoteToHue || !canShareQuote) e.preventDefault(); }} style={{ textDecoration: "none", textAlign: "center", lineHeight: "36px" }}>SUBMIT / EMAIL QUOTE</a>
           </div>
         </div>
         <div style={{ marginBottom: 14, padding: 12, borderRadius: 10, background: "rgba(255,255,255,0.09)" }}>
           <h3 style={{ marginTop: 0, marginBottom: 8 }}>Quote Items</h3>
-          <button className="modeBtn" onClick={addToQuote} disabled={!hasProductSelected || !isScreenPrintMinQtyMet} style={{ width: "100%", marginBottom: 8, opacity: (hasProductSelected && isScreenPrintMinQtyMet) ? 1 : 0.6 }}>Add Selected Item to Quote</button>
+          <button className="modeBtn" onClick={addToQuote} disabled={!hasProductSelected || !isScreenPrintMinQtyMet || invalidDtfPrice} style={{ width: "100%", marginBottom: 8, opacity: (hasProductSelected && isScreenPrintMinQtyMet) ? 1 : 0.6 }}>Add Selected Item to Quote</button>
           {isScreenPrint && !isDtgMode && !isScreenPrintMinQtyMet && <p style={{ margin: "0 0 8px", color: "#ef4444", fontWeight: 700 }}>24 piece minimum required for screen printing.</p>}
           {quoteItems.length === 0 ? (
             <p style={{ margin: 0 }}>No quote items added yet.</p>
@@ -288,7 +291,8 @@ export default function PricingSummary({
           )}
         </div>
         <h2>{isAdminView ? "Suggested Retail" : "Selected Item Preview"}</h2>
-        <div style={{ fontSize: 42, fontWeight: "bold" }}>{money(hasProductSelected ? summaryCalc.retail : 0)}</div>
+        <div style={{ fontSize: 42, fontWeight: "bold" }}>{invalidDtfPrice ? "Price unavailable" : money(hasProductSelected ? summaryCalc.retail : 0)}</div>
+        {invalidDtfPrice && <p role="alert">{dtfData.pricingErrors.join(" ")}</p>}
         {hasProductSelected && !isScreenPrint && !isEmbroidery && !isDtf && !(isScreenPrint && (dtfData.lineItems || []).length > 1) && <p>Each: <strong>{money(summaryCalc.each || 0)}</strong></p>}
         {hasProductSelected && isDtf && (dtfData.dtfMode !== "dtfOnly") && (
           <div>
@@ -370,7 +374,6 @@ export default function PricingSummary({
             <p><strong>Apparel Retail Subtotal:</strong> {money(dtfData.apparelRetailSubtotal || 0)}</p>
             <p><strong>DTF Material Cost:</strong> {money(dtfData.dtfMaterialCost || 0)}</p>
             <p><strong>DTF Retail Subtotal:</strong> {money(dtfData.dtfRetailSubtotal || 0)}</p>
-            <p><strong>Size Upcharges:</strong> {money(dtfData.sizeUpchargeTotal || 0)}</p>
             <p><strong>Sleeve Retail Add-On:</strong> {money(dtfData.sleeveRetailAddOnTotal || 0)}</p>
             <p><strong>Roll Length Used:</strong> {Number(dtfData.rollLengthUsed || 0).toFixed(2)}"</p>
             <p><strong>Transfer Count:</strong> {dtfData.transferCount || 0}</p>
@@ -399,10 +402,9 @@ export default function PricingSummary({
             )}
             <p><strong>Final total:</strong> {money(dtfData.retail || 0)}</p>
             {isAdminView && <p><strong>SanMar Item:</strong> {dtfData.productDisplay || "Not selected"}</p>}
-            {isAdminView && <p><strong>Apparel Cost Used:</strong> {money(dtfData.apparelCostUsed || 0)}</p>}
+            {isAdminView && <p><strong>Average Garment Cost:</strong> {money(dtfData.apparelCostUsed || 0)}</p>}
             {isAdminView && <p><strong>Roll Length Used:</strong> {Number(dtfData.rollLengthUsed || 0).toFixed(2)}"</p>}
             {isAdminView && <p><strong>Transfer Count:</strong> {dtfData.transferCount || 0}</p>}
-            {isAdminView && <p><strong>Size Upcharges:</strong> {money(dtfData.sizeUpchargeTotal || 0)}</p>}
           </div>
         ) : (isScreenPrint || isEmbroidery) ? (
           <div style={{ marginTop: 16, padding: 16, borderRadius: 16, background: "rgba(255,255,255,0.08)", color: "#e5e7eb", fontSize: 14, lineHeight: 1.35 }}>
