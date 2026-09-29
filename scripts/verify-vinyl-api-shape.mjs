@@ -153,7 +153,7 @@ const invalid = await postJson({ width: 24, height: 18, quantity: 1, material: "
 assert(invalid.status === 400, `Expected validation status 400, got ${invalid.status}`);
 assert(invalid.json.ok === false, "Expected validation ok=false");
 assert(invalid.json.error?.code === "VALIDATION_ERROR", "Expected validation error code");
-assert(invalid.json.error?.fields?.material === "Must be standard, reflective, low-tack-wall, or premium-vehicle", "Expected material validation message");
+assert(invalid.json.error?.fields?.material === "Must be standard, reflective, footprints, low-tack-wall, or premium-vehicle", "Expected material validation message");
 
 const missing = await postJson({ width: 24, height: 18, material: "standard" });
 assert(missing.status === 400, `Expected missing-field status 400, got ${missing.status}`);

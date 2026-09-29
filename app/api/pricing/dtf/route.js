@@ -380,6 +380,8 @@ function buildSummary(input, calc) {
     layout: {
       optimize: input.layout.optimize,
       rollWidth: calc.dtfLayout.rollWidth,
+      placements: calc.dtfLayout.placements,
+      padding: calc.padding,
       estimatedLinearInches: calc.dtfLayout.linearInches,
       totalTransfers: calc.transferCount,
       placedTransfers: calc.dtfLayout.totalTransfers,

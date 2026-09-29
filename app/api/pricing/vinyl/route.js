@@ -1,9 +1,11 @@
+import { internalSignCost } from "../../../../lib/pricing/internal-api.js";
 import { loadPublishedPricing } from "../../../../lib/pricing/hq-bridge.js";
 import { vinylOptions } from "../../../../data/productConfig.js";
 import { calculateGeneralSignPricing as calculateSharedSign } from "../../../../lib/pricing/general-signs.js";
 
 const requiredFields = ["width", "height", "quantity"];
 const materialMap = {
+  footprints: { product: "footprints", vinylType: "gf-standard", material: "footprints", materialName: "Footprints Vinyl" },
   standard: { product: "vinyl", vinylType: "gf-standard", material: "standard", materialName: vinylOptions["gf-standard"].name },
   "standard-vinyl": { product: "vinyl", vinylType: "gf-standard", material: "standard", materialName: vinylOptions["gf-standard"].name },
   reflective: { product: "reflective", vinylType: "gf-standard", material: "reflective", materialName: "Oralite 5600 Reflective Film" },
@@ -55,7 +57,7 @@ function validateVinylInput(body) {
   if (body?.width !== undefined && width === null) fields.width = "Must be a positive number";
   if (body?.height !== undefined && height === null) fields.height = "Must be a positive number";
   if (body?.quantity !== undefined && quantity === null) fields.quantity = "Must be a positive number";
-  if (rawMaterial !== undefined && !materialMap[materialKey]) fields.material = "Must be standard, reflective, low-tack-wall, or premium-vehicle";
+  if (rawMaterial !== undefined && !materialMap[materialKey]) fields.material = "Must be standard, reflective, footprints, low-tack-wall, or premium-vehicle";
   if (body?.laminate !== undefined && !laminateMap[laminateKey]) fields.laminate = "Must be none, gloss, or matte";
 
   return {
@@ -142,6 +144,7 @@ export async function POST(request) {
   });
 
   return Response.json({
+    ...(internalSignCost(request, calc) ? { internalCost: internalSignCost(request, calc) } : {}),
     ok: true,
     product: "vinyl",
     pricingReleaseId: release?.id ?? null,
