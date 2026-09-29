@@ -368,19 +368,24 @@ function comparable(result) {
 for (const fixture of fixtures) {
   const actual = comparable(calculateDtfPricing(fixture.input, catalog));
   const legacy = comparable(legacyDtfPricing(fixture.input));
-  // Layout, transfers, fees and material pricing must remain unchanged. Only blank costing changes.
-  for (const key of ["dtfLayout", "dtfWasteSummary", "dtfMaterialCost", "dtfRetailSubtotal", "shipping", "byoaRetailFee", "sleeveRetailAddOnTotal", "totalGarmentQty"]) {
+  // Fees and blank-cost policy stay unchanged; optimized packing may reduce material.
+  for (const key of ["shipping", "byoaRetailFee", "sleeveRetailAddOnTotal", "totalGarmentQty"]) {
     assert.deepEqual(actual[key], legacy[key], fixture.name + ": " + key);
   }
   const input = normalizeLegacyInput(fixture.input);
+  assert.ok(actual.dtfLayout.totalTransfers >= legacy.dtfLayout.totalTransfers);
+  if(actual.dtfLayout.totalTransfers === legacy.dtfLayout.totalTransfers) assert.ok(actual.rollLengthUsed <= legacy.rollLengthUsed + 1e-8, fixture.name + ": optimizer must not increase material");
+  if (!input.optimizeLayout) assert.deepEqual(actual.dtfLayout, legacy.dtfLayout, fixture.name + ": optimization off");
+  assert.equal(actual.dtfMaterialCost, Math.max(actual.rollLengthUsed * 0.5, 10));
+  assert.equal(actual.dtfRetailSubtotal, actual.dtfMaterialCost / 0.4);
   const garmentCost = input.dtfMode === "dtfOnly" || input.bringYourOwnApparel ? 0 : Object.entries(input.sizes).reduce((sum, [size, qty]) => {
     const row = findStyle(input.style, catalog)?.rows.find(r => r.color === input.color && r.size === size);
     return sum + Number(qty) * Number(input.apparelCost ?? row?.casePrice ?? 0);
   }, 0);
   assert(Math.abs(actual.apparelDirectCost - garmentCost) < 1e-8, fixture.name);
-  const expectedRetail = garmentCost / 0.4 + legacy.dtfRetailSubtotal + legacy.shipping + legacy.byoaRetailFee + legacy.sleeveRetailAddOnTotal;
+  const expectedRetail = garmentCost / 0.4 + actual.dtfRetailSubtotal + legacy.shipping + legacy.byoaRetailFee + legacy.sleeveRetailAddOnTotal;
   assert(Math.abs(actual.retail - expectedRetail) < 1e-8, fixture.name);
   assert.equal(actual.sizeUpchargeTotal, 0);
   if (actual.sizePriceBreakdown.length) assert(Math.abs(actual.sizePriceBreakdown.reduce((sum, tier) => sum + tier.qty * tier.priceEach, 0) - actual.retail) < 1e-8, fixture.name);
 }
-console.log(`DTF size-cost policy and unchanged transfer/layout checks passed for ${fixtures.length} cases.`);
+console.log(`DTF size-cost policy and optimized layout and unchanged fee checks passed for ${fixtures.length} cases.`);

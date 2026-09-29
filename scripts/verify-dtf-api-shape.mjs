@@ -155,8 +155,8 @@ const infant = await postJson(infantRequest);
 assert.equal(infant.status, 200, `Expected RS4400 infant request status 200, got ${infant.status}`);
 assert.equal(infant.json.summary.totalQuantity, 24, "Expected all 24 infant garments to be priced");
 assert.deepEqual(infant.json.summary.apparel.sizes, { "06M": 24 }, "Expected exact supplier size key in summary");
-assert.equal(infant.json.price.retail, 500.5, "Expected RS4400 pricing to use the existing DTF formula");
-assert.equal(infant.json.price.each, 20.854166666666668, "Expected RS4400 per-piece price");
+assert.equal(infant.json.price.retail, 361.75, "Expected RS4400 pricing with 12 rotated rows");
+assert.equal(infant.json.price.each, 361.75 / 24, "Expected RS4400 per-piece price");
 assertNoInternalFields(infant.json);
 
 const unavailableInfantSize = await postJson({
@@ -179,8 +179,8 @@ const standardSizeBaseline = await postJson({
   printLocations: [{ placement: "front", preset: "fullFront", enabled: true }],
 });
 assert.equal(standardSizeBaseline.status, 200, "Expected S-3XL baseline request status 200");
-assert.equal(standardSizeBaseline.json.price.retail, 643.5, "S-3XL retail uses actual supplier costs");
-assert.equal(standardSizeBaseline.json.price.each, 26.8125, "S-3XL average reflects actual supplier costs");
+assert.equal(standardSizeBaseline.json.price.retail, 504.75, "S-3XL retail uses actual supplier costs");
+assert.equal(standardSizeBaseline.json.price.each, 21.03125, "S-3XL average reflects actual supplier costs");
 assert.deepEqual(
   standardSizeBaseline.json.summary.apparel.sizes,
   { S: 4, M: 4, L: 4, XL: 4, "2XL": 4, "3XL": 4 },
@@ -226,7 +226,7 @@ const tooWide = await postJson({
   mode: "dtfOnly",
   transfer: {
     width: 24,
-    height: 8,
+    height: 24,
     quantity: 10,
   },
   artwork: { supplied: true, status: "printReady" },
@@ -277,3 +277,13 @@ assert.equal(catalogFailure.json.error?.details, "Simulated missing private cata
 setDtfCatalogLoaderForTests(null);
 
 console.log("DTF pricing API response shape passed.");
+
+// A transfer wider than the roll in its original orientation can still fit rotated.
+const rotatedOnly = await postJson({mode:'dtfOnly',transfer:{width:25,height:10,quantity:4},layout:{optimize:true,padding:.125}});
+assert.equal(rotatedOnly.status,200);
+assert.equal(rotatedOnly.json.summary.layout.placedTransfers,4);
+assert.equal(rotatedOnly.json.summary.layout.rotationUsed,true);
+assert(!rotatedOnly.json.warnings.some(w=>w.includes('exceed')));
+const invalidSpacing = await postJson({...requestBody,layout:{optimize:true,padding:-.125}});
+assert.equal(invalidSpacing.status,400);
+assertNoInternalFields(rotatedOnly.json);

@@ -176,6 +176,7 @@ function validateStructure(body) {
   if (body?.layout !== undefined && (!body.layout || typeof body.layout !== "object" || Array.isArray(body.layout))) {
     fields.layout = "Must be an object when provided";
   }
+  if (body?.layout?.padding !== undefined && (typeof body.layout.padding !== "number" || !Number.isFinite(body.layout.padding) || body.layout.padding < 0)) fields["layout.padding"] = "Must be a nonnegative finite number";
   if (body?.layout?.optimize !== undefined && typeof body.layout.optimize !== "boolean") {
     fields["layout.optimize"] = "Must be a boolean";
   }
@@ -293,7 +294,7 @@ function normalizeInput(body, catalog) {
     backPreset: "None",
     leftSleeve: false,
     rightSleeve: false,
-    padding: body?.layout?.padding ?? 0.25,
+    padding: body?.layout?.padding ?? catalog.pricing?.apparel?.dtf?.padding ?? 0.25,
     optimizeLayout: body?.layout?.optimize ?? true,
   };
 
@@ -430,8 +431,7 @@ function buildWarnings(input, calc) {
     warnings.push("Rush production requires confirmation and is not priced separately in this estimate.");
   }
 
-  const tooWide = calc.dtfTransferItems.some((item) => Number(item.width) > dtfPricingConstants.DTF_ROLL_WIDTH);
-  if (tooWide || calc.dtfLayout.totalTransfers < calc.transferCount) {
+  if (calc.dtfLayout.totalTransfers < calc.transferCount) {
     warnings.push("One or more transfer sizes exceed the current DTF roll width and require review.");
   }
 

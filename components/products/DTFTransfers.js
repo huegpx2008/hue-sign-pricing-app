@@ -33,7 +33,7 @@ function DtfRollPreview({ layout, padding }) {
   return (
     <div>
       <div style={{ fontSize: 12, marginBottom: 8, color: "#cbd5e1" }}>
-        22&quot; roll width • {layout.rollLengthUsed.toFixed(2)}&quot; long • padding {padding.toFixed(2)}&quot;
+        {layout.rollWidth}&quot; roll width • {layout.rollLengthUsed.toFixed(2)}&quot; long • padding {(layout.padding ?? padding).toFixed(3)}&quot;
       </div>
       <div style={{ maxWidth: "100%", overflowX: "auto", border: "2px solid #38bdf8", borderRadius: 10, padding: 6 }}>
         <div style={{ width: canvasWidth, height: canvasHeight, position: "relative", background: "rgba(15,23,42,0.7)" }}>
@@ -687,7 +687,7 @@ export default function DTFTransfers({ onSummaryChange, isAdminView = false }) {
             <div style={{ color: "#bfdbfe" }}>You may be able to fit more transfers in this run.</div>
           )}
           <div><strong>Rotation used:</strong> {dtfLayout.rotationUsed ? "Yes" : "No"}</div>
-          <div><strong>Layout optimization:</strong> {optimizeLayout ? "Enabled (auto-rotation allowed)" : "Disabled (no rotation)"}</div>
+          <div><strong>Layout optimization:</strong> {optimizeLayout ? "Enabled (compares rotation, grouped runs and gap filling)" : "Disabled (no rotation)"}</div>
           <div><strong>Estimated linear inches:</strong> {dtfLayout.linearInches.toFixed(2)}"</div>
           <div><strong>Material formula:</strong> {dtfLayout.linearInches.toFixed(2)} × ${DTF_MATERIAL_COST_PER_LINEAR_INCH.toFixed(2)} (min ${DTF_MINIMUM_MATERIAL_CHARGE.toFixed(2)})</div>
         </div>

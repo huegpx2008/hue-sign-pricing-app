@@ -14,7 +14,7 @@ for (const source of [catalog, reordered]) {
     assert.equal(calculateApparelLineCost(apparel, source, { mode: "dtf" }).garmentCost, 45 * 2.36 + 5 * 4.10);
     assert.equal(selectDtfBaseProduct(rows.filter(r => r.color === color)).size, "S");
     const result = calculateDtfPricing({ apparel, frontPreset: "Full Front", optimizeLayout: true }, source);
-    assert.equal(Math.round(result.retail * 100) / 100, 967.38);
+    assert.equal(Math.round(result.retail * 100) / 100, 678.31);
     assert.equal(calculateApparelLineCost({ ...apparel, apparelCost: 5 }, source, { mode: "dtf" }).apparelCostUsed, 5);
     const big = calculateApparelLineCost({ ...apparel, sizes: { "2XL": 5 } }, source, { mode: "dtf" });
     assert.equal(big.apparelCostUsed, 4.10);
@@ -31,12 +31,12 @@ for (const source of [catalog, reordered]) {
     const response = await POST(new Request("http://localhost/api/pricing/dtf", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ mode: "standard", apparel: { ...apparel, source: "catalog" }, printLocations: [{ placement: "front", preset: "fullFront", enabled: true }], layout: { optimize: true } }) }));
     assert.equal(response.status, 200);
     const data = await response.json();
-    assert.equal(Math.round(data.price.retail * 100) / 100, 967.38);
+    assert.equal(Math.round(data.price.retail * 100) / 100, 678.31);
     assert.deepEqual(data.summary.locations[0].size, { width: 11, height: 10 });
   }
 }
 setDtfCatalogLoaderForTests();
-console.log("DTF color/row-order regression passed; API/app totals match at $967.38 and screen-print size costs are unchanged.");
+console.log("DTF color/row-order regression passed; API/app totals match at $678.31 and screen-print size costs are unchanged.");
 
 // Unequal standard sizes, extended/youth sizes and color premiums must all use exact costs.
 const testRows = [
