@@ -1,4 +1,5 @@
-import { calculateGeneralSignPricing } from "../../../../lib/pricing/general-signs.js";
+import { loadPublishedPricing } from "../../../../lib/pricing/hq-bridge.js";
+import { calculateGeneralSignPricing as calculateSharedSign } from "../../../../lib/pricing/general-signs.js";
 import { internalSignCost } from "../../../../lib/pricing/internal-api.js";
 
 const requiredFields = ["quantity", "sides", "stakeType"];
@@ -65,6 +66,8 @@ export async function POST(request) {
   }
 
   const input = validation.value;
+  const release = await loadPublishedPricing();
+  const calculateGeneralSignPricing = input => calculateSharedSign(input, release?.configuration);
   const calc = calculateGeneralSignPricing({
     product: "coro",
     activeProduct: "coro",
@@ -93,6 +96,7 @@ export async function POST(request) {
   return Response.json({
     ok: true,
     product: "yard-sign",
+    pricingReleaseId: release?.id ?? null,
     price: {
       retail: calc.retail,
       each: calc.each,

@@ -933,7 +933,7 @@ export default function Page() {
               {activeProduct !== "businessCards" && <Field label="Quantity" value={qty} setValue={setQty} />}
               {(activeProduct !== "vehicleMagnets" || vehicleMagnetMode === "custom") && !["businessCards", "handheld16ptPaper", "doorHangers"].includes(activeProduct) && product !== "coro" && <Field label="Width Inches" value={width} setValue={setWidth} />}
               {(activeProduct !== "vehicleMagnets" || vehicleMagnetMode === "custom") && !["businessCards", "handheld16ptPaper", "doorHangers"].includes(activeProduct) && product !== "coro" && <Field label="Height Inches" value={height} setValue={setHeight} />}
-              {isAdminView && <Field label="Margin %" value={margin} setValue={setMargin} />}
+              {isAdminView && calc.costDetailsAvailable !== false && <Field label="Margin %" value={margin} setValue={setMargin} />}
               {showInternalFields && <Field label="Delivery / Install" value={delivery} setValue={setDelivery} />}
               {isAdminView && <Field label="Price Multiplier" value={multiplier} setValue={setMultiplier} />}
             </div>

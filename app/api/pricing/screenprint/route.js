@@ -1,3 +1,4 @@
+import { preparePricingCatalog } from "../../../../lib/pricing/hq-bridge.js";
 import {
   findStyle,
   findVariantSize,
@@ -149,8 +150,8 @@ function validateCatalogMatches(input, catalog) {
 
 function buildWarnings(input, calc) {
   const warnings = [];
-  if (calc.totalGarments > 0 && calc.totalGarments < 24) {
-    warnings.push("Screen printing usually starts at 24 pieces.");
+  if (calc.totalGarments > 0 && calc.totalGarments < calc.minimumQuantity) {
+    warnings.push(`Screen printing usually starts at ${calc.minimumQuantity} pieces.`);
   }
 
   const colors = new Set(input.lineItems.map((item) => item.color).filter(Boolean));
@@ -197,7 +198,7 @@ export async function POST(request) {
       }, { status: 400 });
     }
 
-    const catalog = await catalogLoader();
+    const catalog = await preparePricingCatalog(await catalogLoader(), body);
     const catalogFields = validateCatalogMatches({ lineItems: body.lineItems }, catalog);
     if (Object.keys(catalogFields).length) {
       return Response.json({
@@ -217,6 +218,7 @@ export async function POST(request) {
     return Response.json({
       ok: true,
       product: "screenprint",
+      pricingReleaseId: catalog.pricingSource?.releaseId ?? null,
       price: {
         retail: calc.retail,
         each: calc.each,

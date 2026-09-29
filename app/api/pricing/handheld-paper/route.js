@@ -1,6 +1,7 @@
+import { loadPublishedPricing } from "../../../../lib/pricing/hq-bridge.js";
 import {
   businessCardCoatings,
-  calculatePaperPricing,
+  calculatePaperPricing as calculateSharedPaper,
   errorResponse,
   handheldPaperSizes,
   invalidJsonResponse,
@@ -58,6 +59,8 @@ export async function POST(request) {
   const { fields, input } = validate(body);
   if (Object.keys(fields).length) return errorResponse("Handheld paper", fields);
 
+  const release = await loadPublishedPricing();
+  const calculatePaperPricing = input => calculateSharedPaper(input, release?.configuration);
   const calc = calculatePaperPricing({
     product: "handheld16ptPaper",
     qty: input.quantity,

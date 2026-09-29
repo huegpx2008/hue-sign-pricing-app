@@ -73,9 +73,11 @@ export default function PricingSummary({
   const isScreenPrint = activeProduct === "screenPrinting" && dtfSummary;
   const isEmbroidery = activeProduct === "embroidery" && dtfSummary;
   const dtfData = dtfSummary || {};
-  const invalidDtfPrice = Boolean(isDtf && dtfData.pricingErrors?.length);
+  const pricingErrors = ((isDtf || isScreenPrint || isEmbroidery) ? dtfData : calc)?.pricingErrors || [];
+  const invalidDtfPrice = pricingErrors.length > 0;
   const canShareQuote = quoteItems.length > 0 || !invalidDtfPrice;
   const summaryCalc = (isDtf || isScreenPrint || isEmbroidery) ? dtfSummary : calc;
+  const showPrivateCosts = isAdminView && summaryCalc?.costDetailsAvailable !== false;
   const isDtgMode = isScreenPrint && dtfSummary?.decorationMethod === "dtg";
   const isScreenPrintMinQtyMet = !isScreenPrint || isDtgMode || Number(dtfSummary?.totalGarments || 0) >= 24;
   const getCurrentItemCustomerDetailLines = () => {
@@ -281,7 +283,7 @@ export default function PricingSummary({
                   <p style={{ margin: "0 0 4px" }}><strong>{idx + 1}. {item.product}</strong></p>
                   <p style={{ margin: "0 0 4px" }}>Qty {item.quantity} • {money(item.each || 0)} each • {money(item.total || 0)} total</p>
                   <p style={{ margin: "0 0 4px", fontSize: 13 }}>{(item.safeDetails || []).filter(Boolean).join(" • ")}</p>
-                  {isAdminView && <p style={{ margin: "0 0 6px", fontSize: 12 }}>Admin: {(item.adminDetails || []).filter(Boolean).join(" • ")}</p>}
+                  {showPrivateCosts && <p style={{ margin: "0 0 6px", fontSize: 12 }}>Admin: {(item.adminDetails || []).filter(Boolean).join(" • ")}</p>}
                   <button className="modeBtn" onClick={() => removeQuoteItem(item.id)}>Remove</button>
                 </div>
               ))}
@@ -291,8 +293,9 @@ export default function PricingSummary({
           )}
         </div>
         <h2>{isAdminView ? "Suggested Retail" : "Selected Item Preview"}</h2>
+        {isAdminView && summaryCalc?.costDetailsAvailable === false && <p>Current estimates use HQ pricing. Supplier cost and profit details are available in HQ.</p>}
         <div style={{ fontSize: 42, fontWeight: "bold" }}>{invalidDtfPrice ? "Price unavailable" : money(hasProductSelected ? summaryCalc.retail : 0)}</div>
-        {invalidDtfPrice && <p role="alert">{dtfData.pricingErrors.join(" ")}</p>}
+        {invalidDtfPrice && <p role="alert">{pricingErrors.join(" ")}</p>}
         {hasProductSelected && !isScreenPrint && !isEmbroidery && !isDtf && !(isScreenPrint && (dtfData.lineItems || []).length > 1) && <p>Each: <strong>{money(summaryCalc.each || 0)}</strong></p>}
         {hasProductSelected && isDtf && (dtfData.dtfMode !== "dtfOnly") && (
           <div>
@@ -317,12 +320,12 @@ export default function PricingSummary({
           </div>
         ))}
         
-        {isAdminView && <p>Profit: <strong>{money(summaryCalc.profit)}</strong></p>}
+        {showPrivateCosts && <p>Profit: <strong>{money(summaryCalc.profit)}</strong></p>}
         <hr style={{ borderColor: activeTheme?.divider }} />
         <p>Product: {hasProductSelected ? (isDtf ? "DTF Transfers" : isScreenPrint ? (dtfData.decorationMethod === "dtg" ? "DTG - Direct to Garment" : "Screen Printing") : isEmbroidery ? "Embroidery" : calc.label) : "Select a product"}</p>
         {!isDtf && !isScreenPrint && !isEmbroidery && isAdminView && <p>Total Sq Ft: {calc.totalSqFt?.toFixed(2)}</p>}
 
-        {isAdminView && <button className="modeBtn" style={{ marginBottom: 10 }} onClick={() => setShowBreakdown((v) => !v)}>{showBreakdown ? "Hide" : "Show"} Detailed Breakdown</button>}
+        {showPrivateCosts && <button className="modeBtn" style={{ marginBottom: 10 }} onClick={() => setShowBreakdown((v) => !v)}>{showBreakdown ? "Hide" : "Show"} Detailed Breakdown</button>}
 
         {!isDtf && !isEmbroidery && showBreakdown && calc.actualTotalSqFt !== undefined && <p>Actual Sq Ft: {calc.actualTotalSqFt.toFixed(2)}</p>}
         {!isDtf && !isEmbroidery && showBreakdown && calc.effectiveSqFtEach !== undefined && <p>Effective Sq Ft Each: {showBreakdown && calc.effectiveSqFtEach.toFixed(2)}</p>}
@@ -344,7 +347,7 @@ export default function PricingSummary({
         {!isDtf && !isEmbroidery && showBreakdown && calc.piecesPerSheet !== undefined && <p>Pieces Per Sheet: {showBreakdown && calc.piecesPerSheet}</p>}
         {!isDtf && !isEmbroidery && showBreakdown && calc.sheetLayout !== undefined && <p>Sheet Layout: {showBreakdown && calc.sheetLayout}</p>}
         {showBreakdown && calc.costPerPiece !== undefined && <p>Cost Per Piece: {money(calc.costPerPiece)}</p>}
-        {isAdminView && !isEmbroidery && !isDtgMode && <p>Material Cost: {money(summaryCalc.materialCost)}</p>}
+        {showPrivateCosts && !isEmbroidery && !isDtgMode && <p>Material Cost: {money(summaryCalc.materialCost)}</p>}
         {calc.standOffQty !== undefined && calc.standOffQty > 0 && (
           <>
             <p>Stand-Off Qty: {calc.standOffQty} ({calc.standOffColor})</p>
@@ -352,11 +355,11 @@ export default function PricingSummary({
             <p>Stand-Off Retail Charge: {money(calc.standOffRetailCharge)}</p>
           </>
         )}
-        {isAdminView && !isDtgMode && <p>Shipping: {money(summaryCalc.shipping)}</p>}
-        {isAdminView && <p>Direct Cost: {money(summaryCalc.cost)}</p>}
-        {isAdminView && <p>Actual Margin: {Number(summaryCalc.margin || 0).toFixed(1)}%</p>}
-        {isAdminView && !isDtf && !isEmbroidery && !isDtgMode && <p>Multiplier: {num(multiplier, 1)}x</p>}
-        {isAdminView && isDtf && (
+        {showPrivateCosts && !isDtgMode && <p>Shipping: {money(summaryCalc.shipping)}</p>}
+        {showPrivateCosts && <p>Direct Cost: {money(summaryCalc.cost)}</p>}
+        {showPrivateCosts && <p>Actual Margin: {Number(summaryCalc.margin || 0).toFixed(1)}%</p>}
+        {showPrivateCosts && !isDtf && !isEmbroidery && !isDtgMode && <p>Multiplier: {num(multiplier, 1)}x</p>}
+        {showPrivateCosts && isDtf && (
           <>
             {showBreakdown && (
               <>
@@ -401,10 +404,10 @@ export default function PricingSummary({
               <p><strong>Price per garment:</strong> {money(dtfData.each || 0)}</p>
             )}
             <p><strong>Final total:</strong> {money(dtfData.retail || 0)}</p>
-            {isAdminView && <p><strong>SanMar Item:</strong> {dtfData.productDisplay || "Not selected"}</p>}
-            {isAdminView && <p><strong>Average Garment Cost:</strong> {money(dtfData.apparelCostUsed || 0)}</p>}
-            {isAdminView && <p><strong>Roll Length Used:</strong> {Number(dtfData.rollLengthUsed || 0).toFixed(2)}"</p>}
-            {isAdminView && <p><strong>Transfer Count:</strong> {dtfData.transferCount || 0}</p>}
+            {showPrivateCosts && <p><strong>SanMar Item:</strong> {dtfData.productDisplay || "Not selected"}</p>}
+            {showPrivateCosts && <p><strong>Average Garment Cost:</strong> {money(dtfData.apparelCostUsed || 0)}</p>}
+            {showPrivateCosts && <p><strong>Roll Length Used:</strong> {Number(dtfData.rollLengthUsed || 0).toFixed(2)}"</p>}
+            {showPrivateCosts && <p><strong>Transfer Count:</strong> {dtfData.transferCount || 0}</p>}
           </div>
         ) : (isScreenPrint || isEmbroidery) ? (
           <div style={{ marginTop: 16, padding: 16, borderRadius: 16, background: "rgba(255,255,255,0.08)", color: "#e5e7eb", fontSize: 14, lineHeight: 1.35 }}>
@@ -416,8 +419,8 @@ export default function PricingSummary({
                 <p><strong>Color:</strong> {li.color || "Not selected"}</p>
                 <p><strong>Sizes:</strong> {Object.entries(li.sizeQty || {}).filter(([,v]) => Number(v) > 0).map(([k,v]) => `${k}:${v}`).join(", ") || "None"}</p>
                 <p><strong>Total Qty:</strong> {li.totalQty}</p>
-                {isAdminView && !isEmbroidery && !isDtgMode && <p><strong>CASE_PRICE (avg):</strong> {money(li.casePrice || 0)}</p>}
-                {isAdminView && <p><strong>Final Retail Subtotal:</strong> {money(li.finalRetailSubtotal || 0)}</p>}
+                {showPrivateCosts && !isEmbroidery && !isDtgMode && <p><strong>CASE_PRICE (avg):</strong> {money(li.casePrice || 0)}</p>}
+                {showPrivateCosts && <p><strong>Final Retail Subtotal:</strong> {money(li.finalRetailSubtotal || 0)}</p>}
                 {(li.sizePriceBreakdown || []).length ? (
                   <p><strong>Price breakdown:</strong> {(isDtgMode ? getDtgSizePriceLines(li) : getScreenCustomerPriceTiers(li)).map((tier) => `${tier.label}: ${tier.qty} @ ${money(tier.priceEach)}${isDtgMode ? ` = ${money(tier.subtotal)}` : ""}`).join(" • ")}</p>
                 ) : (
@@ -434,28 +437,28 @@ export default function PricingSummary({
             {isEmbroidery && <p><strong>Placement:</strong> {(dtfSummary.placements || []).join(", ")}</p>}
             {isEmbroidery && <p><strong>Thread Colors:</strong> {dtfSummary.threadColors}</p>}
             {isEmbroidery && Number(dtfSummary.digitizingFees || 0) > 0 && <p><strong>Digitizing Fee(s):</strong> {money(dtfSummary.digitizingFees)}</p>}
-            {isAdminView && isEmbroidery && <p><strong>Garment Direct Each:</strong> {money(embroideryGarmentDirectEach)}</p>}
-            {isAdminView && isEmbroidery && <p><strong>Garment Direct Subtotal:</strong> {money(dtfSummary.apparelDirectCost || 0)}</p>}
-            {isAdminView && isEmbroidery && <p><strong>Garment Retail Each:</strong> {money(embroideryGarmentRetailEach)}</p>}
-            {isAdminView && isEmbroidery && <p><strong>Garment Retail Subtotal:</strong> {money(dtfSummary.apparelRetailSubtotal || 0)}</p>}
-            {isAdminView && isEmbroidery && <p><strong>Embroidery Direct / item:</strong> {money(dtfSummary.embroideryEachDirect || 0)}</p>}
-            {isAdminView && isEmbroidery && <p style={{ fontWeight: 800, padding: "8px 10px", borderLeft: "4px solid #f59e0b", background: "rgba(245,158,11,0.15)", borderRadius: 6 }}><strong>OUTSOURCED EMBROIDERY COST (Embroidery Direct Total):</strong> {money(dtfSummary.embroideryDirectTotal || 0)}</p>}
-            {isAdminView && isEmbroidery && <p><strong>Embroidery Retail / item:</strong> {money(dtfSummary.embroideryRetailEach || 0)}</p>}
-            {isAdminView && isEmbroidery && <p><strong>Embroidery Retail Subtotal:</strong> {money(dtfSummary.embroideryRetailSubtotal || dtfSummary.embroiderySubtotal || 0)}</p>}
-            {isAdminView && isEmbroidery && <p><strong>Handling Allowance:</strong> {money(dtfSummary.handlingDirect || 0)} direct</p>}
-            {isAdminView && isEmbroidery && <p><strong>Total Direct Cost:</strong> {money(dtfSummary.cost || 0)}</p>}
-            {isAdminView && isEmbroidery && <p><strong>Normal Calculated Retail:</strong> {money(dtfSummary.calculatedRetail || dtfSummary.retail || 0)}</p>}
-            {isAdminView && isEmbroidery && dtfSummary.targetRetailPricePerItem && <p><strong>Target Retail Price Per Item:</strong> {money(dtfSummary.targetRetailPricePerItem)}</p>}
-            {isAdminView && isEmbroidery && dtfSummary.targetRetailPricePerItem && <p><strong>Target Retail Total:</strong> {money(dtfSummary.targetRetailTotal || 0)}</p>}
-            {isAdminView && isEmbroidery && dtfSummary.targetRetailPricePerItem && <p><strong>Difference from calculated retail:</strong> {money(dtfSummary.targetRetailDelta || 0)}</p>}
-            {isAdminView && isEmbroidery && dtfSummary.targetRetailPricePerItem && <p><strong>Profit at Target:</strong> {money((dtfSummary.targetRetailTotal || 0) - (dtfSummary.cost || 0))}</p>}
-            {isAdminView && isEmbroidery && dtfSummary.targetRetailPricePerItem && <p><strong>Margin at Target:</strong> {((((((dtfSummary.targetRetailTotal || 0) - (dtfSummary.cost || 0)) / (dtfSummary.targetRetailTotal || 1)) * 100) || 0)).toFixed(1)}%</p>}
-            {isAdminView && isEmbroidery && dtfSummary.targetRetailPricePerItem && <p><strong>Target Price Per Item:</strong> {money(dtfSummary.targetRetailPricePerItem || 0)}</p>}
-            {isAdminView && isEmbroidery && dtfSummary.targetRetailPricePerItem && ((dtfSummary.targetRetailTotal || 0) <= (dtfSummary.cost || 0) ? <p style={{ color: "#ef4444", fontWeight: 700 }}>Warning: Target price is at or below direct cost (loss).</p> : null)}
+            {showPrivateCosts && isEmbroidery && <p><strong>Garment Direct Each:</strong> {money(embroideryGarmentDirectEach)}</p>}
+            {showPrivateCosts && isEmbroidery && <p><strong>Garment Direct Subtotal:</strong> {money(dtfSummary.apparelDirectCost || 0)}</p>}
+            {showPrivateCosts && isEmbroidery && <p><strong>Garment Retail Each:</strong> {money(embroideryGarmentRetailEach)}</p>}
+            {showPrivateCosts && isEmbroidery && <p><strong>Garment Retail Subtotal:</strong> {money(dtfSummary.apparelRetailSubtotal || 0)}</p>}
+            {showPrivateCosts && isEmbroidery && <p><strong>Embroidery Direct / item:</strong> {money(dtfSummary.embroideryEachDirect || 0)}</p>}
+            {showPrivateCosts && isEmbroidery && <p style={{ fontWeight: 800, padding: "8px 10px", borderLeft: "4px solid #f59e0b", background: "rgba(245,158,11,0.15)", borderRadius: 6 }}><strong>OUTSOURCED EMBROIDERY COST (Embroidery Direct Total):</strong> {money(dtfSummary.embroideryDirectTotal || 0)}</p>}
+            {showPrivateCosts && isEmbroidery && <p><strong>Embroidery Retail / item:</strong> {money(dtfSummary.embroideryRetailEach || 0)}</p>}
+            {showPrivateCosts && isEmbroidery && <p><strong>Embroidery Retail Subtotal:</strong> {money(dtfSummary.embroideryRetailSubtotal || dtfSummary.embroiderySubtotal || 0)}</p>}
+            {showPrivateCosts && isEmbroidery && <p><strong>Handling Allowance:</strong> {money(dtfSummary.handlingDirect || 0)} direct</p>}
+            {showPrivateCosts && isEmbroidery && <p><strong>Total Direct Cost:</strong> {money(dtfSummary.cost || 0)}</p>}
+            {showPrivateCosts && isEmbroidery && <p><strong>Normal Calculated Retail:</strong> {money(dtfSummary.calculatedRetail || dtfSummary.retail || 0)}</p>}
+            {showPrivateCosts && isEmbroidery && dtfSummary.targetRetailPricePerItem && <p><strong>Target Retail Price Per Item:</strong> {money(dtfSummary.targetRetailPricePerItem)}</p>}
+            {showPrivateCosts && isEmbroidery && dtfSummary.targetRetailPricePerItem && <p><strong>Target Retail Total:</strong> {money(dtfSummary.targetRetailTotal || 0)}</p>}
+            {showPrivateCosts && isEmbroidery && dtfSummary.targetRetailPricePerItem && <p><strong>Difference from calculated retail:</strong> {money(dtfSummary.targetRetailDelta || 0)}</p>}
+            {showPrivateCosts && isEmbroidery && dtfSummary.targetRetailPricePerItem && <p><strong>Profit at Target:</strong> {money((dtfSummary.targetRetailTotal || 0) - (dtfSummary.cost || 0))}</p>}
+            {showPrivateCosts && isEmbroidery && dtfSummary.targetRetailPricePerItem && <p><strong>Margin at Target:</strong> {((((((dtfSummary.targetRetailTotal || 0) - (dtfSummary.cost || 0)) / (dtfSummary.targetRetailTotal || 1)) * 100) || 0)).toFixed(1)}%</p>}
+            {showPrivateCosts && isEmbroidery && dtfSummary.targetRetailPricePerItem && <p><strong>Target Price Per Item:</strong> {money(dtfSummary.targetRetailPricePerItem || 0)}</p>}
+            {showPrivateCosts && isEmbroidery && dtfSummary.targetRetailPricePerItem && ((dtfSummary.targetRetailTotal || 0) <= (dtfSummary.cost || 0) ? <p style={{ color: "#ef4444", fontWeight: 700 }}>Warning: Target price is at or below direct cost (loss).</p> : null)}
             <p><strong>Final Retail:</strong> {money(dtfSummary.retail)}</p>
-            {isAdminView && isEmbroidery && <p><strong>Actual Margin:</strong> {Number(dtfSummary.margin || 0).toFixed(1)}%</p>}
+            {showPrivateCosts && isEmbroidery && <p><strong>Actual Margin:</strong> {Number(dtfSummary.margin || 0).toFixed(1)}%</p>}
             {isEmbroidery && <p style={{ fontWeight: 800, padding: "8px 10px", borderLeft: "4px solid #22c55e", background: "rgba(34,197,94,0.15)", borderRadius: 6 }}><strong>Retail Per Hat Before Digitizing:</strong> {money(embroideryRetailPerItemBeforeDigitizing)} each</p>}
-            {isAdminView && <p><strong>Profit:</strong> {money(dtfSummary.profit)}</p>}
+            {showPrivateCosts && <p><strong>Profit:</strong> {money(dtfSummary.profit)}</p>}
           </div>
         ) : <SelectedDetails details={selectedDetails} />}
       </aside>

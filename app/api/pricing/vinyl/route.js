@@ -1,5 +1,6 @@
+import { loadPublishedPricing } from "../../../../lib/pricing/hq-bridge.js";
 import { vinylOptions } from "../../../../data/productConfig.js";
-import { calculateGeneralSignPricing } from "../../../../lib/pricing/general-signs.js";
+import { calculateGeneralSignPricing as calculateSharedSign } from "../../../../lib/pricing/general-signs.js";
 
 const requiredFields = ["width", "height", "quantity"];
 const materialMap = {
@@ -115,6 +116,8 @@ export async function POST(request) {
   }
 
   const input = validation.value;
+  const release = await loadPublishedPricing();
+  const calculateGeneralSignPricing = input => calculateSharedSign(input, release?.configuration);
   const calc = calculateGeneralSignPricing({
     product: input.material.product,
     activeProduct: input.material.product,
@@ -141,6 +144,7 @@ export async function POST(request) {
   return Response.json({
     ok: true,
     product: "vinyl",
+    pricingReleaseId: release?.id ?? null,
     price: {
       retail: calc.retail,
       each: calc.each,

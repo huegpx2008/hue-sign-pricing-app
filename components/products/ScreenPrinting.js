@@ -1,4 +1,6 @@
 "use client";
+import { applySellingAdjustment } from "../../lib/pricing/pricing-layers";
+import { useServerEstimate } from "../../lib/hooks/use-server-estimate";
 import { useEffect, useMemo, useState } from "react";
 import { Box, Check, input } from "../FormControls";
 import { calculateApparelLineCost, parseApparelCatalogCsv } from "../../lib/catalog/apparel-catalog";
@@ -68,7 +70,7 @@ export default function ScreenPrinting({ product, onSummaryChange, isAdminView =
     setLI(id, (x) => ({ ...x, styleKey: g.key, search: `${g.style} — ${g.title}`, open: false, color: black, sizeQty: zeroQty() }));
   };
 
-  const summary = useMemo(() => {
+  const rawSummary = useMemo(() => {
     const li = lineItems.map((l) => {
       return calculateApparelLineCost(l, { stylesByKey: styles }, { mode: "screen", sizes: SIZES });
     });
@@ -93,31 +95,37 @@ export default function ScreenPrinting({ product, onSummaryChange, isAdminView =
       return { retail, each: totalGarments ? retail / totalGarments : 0, cost: totalDirectCost, profit: retail - totalDirectCost, margin: retail ? ((retail - totalDirectCost) / retail) * 100 : 0, totalGarments, lineItems: lineItemsWithAlloc, printLines: [], averagePricePerShirt: totalGarments ? retail / totalGarments : 0, decorationMethod: "dtg", dtgDoubleSided };
     }
 
-    const PRODUCT_MARKUP_MULTIPLIER = 1.15;
+
+    const configuration = undefined;
+    const garmentMultiplier = configuration?.productMarkupMultiplier ?? 1.15;
     const liWithRetail = li.map((x) => {
       const casePrice = x.totalQty ? x.garmentCost / x.totalQty : 0;
-      const markedUpGarmentPrice = casePrice * PRODUCT_MARKUP_MULTIPLIER;
-      return { ...x, casePrice, markedUpGarmentPrice, garmentRetail: x.garmentCost * PRODUCT_MARKUP_MULTIPLIER, sizePriceBreakdown: x.sizePriceBreakdown.map((b) => ({ ...b, garmentPriceEach: b.blankCasePrice * PRODUCT_MARKUP_MULTIPLIER })) };
+      const markedUpGarmentPrice = casePrice * garmentMultiplier;
+      return { ...x, casePrice, markedUpGarmentPrice, garmentRetail: x.garmentCost * garmentMultiplier, sizePriceBreakdown: x.sizePriceBreakdown.map((b) => ({ ...b, garmentPriceEach: b.blankCasePrice * garmentMultiplier })) };
     });
     const apparelDirectCost = liWithRetail.reduce((s, x) => s + x.garmentCost, 0);
     const apparelRetailSubtotal = liWithRetail.reduce((s, x) => s + x.garmentRetail, 0);
     const t = tier(totalGarments);
     const printLines = locations.map((loc, idx) => {
-      const per = ((idx === 0 ? SINGLE_SIDE : ADD_SIDE)[t]?.[loc.colors] || 0);
+      const configuredTier = configuration?.tiers.reduce((selected,row)=>totalGarments >= row.minimumQuantity ? row : selected,configuration.tiers[0]);
+      const per = configuredTier ? (idx===0 ? configuredTier.firstSide : configuredTier.additionalSide)[loc.colors-1] : ((idx === 0 ? SINGLE_SIDE : ADD_SIDE)[t]?.[loc.colors] || 0);
       return { ...loc, pricingType: idx === 0 ? "First Side" : "Additional Side", pricePerPrint: per, subtotal: per * totalGarments };
     });
     const printChargePerShirt = printLines.reduce((s, x) => s + x.pricePerPrint, 0);
     const printChargeSubtotal = printLines.reduce((s, x) => s + x.subtotal, 0);
-    const setupFee = setupFeeEnabled ? 25 : 0;
+    const setupFee = setupFeeEnabled ? (configuration?.setupFee ?? 25) : 0;
     const retail = apparelRetailSubtotal + printChargeSubtotal + setupFee;
     const lineItemsWithAlloc = liWithRetail.map((x) => {
       const finalPerShirt = x.markedUpGarmentPrice + printChargePerShirt;
       const finalRetail = x.totalQty * finalPerShirt;
       return { ...x, printChargeAllocated: x.totalQty * printChargePerShirt, setupFeeAllocated: 0, finalRetailSubtotal: finalRetail, retailPerShirt: finalPerShirt, printChargePerShirt };
     });
-    return { retail, each: totalGarments ? retail / totalGarments : 0, cost: apparelDirectCost, profit: retail - apparelDirectCost, margin: retail ? ((retail - apparelDirectCost) / retail) * 100 : 0, materialCost: apparelDirectCost, shipping: 0, totalGarments, apparelDirectCost, apparelRetailSubtotal, printChargeSubtotal, setupFee, lineItems: lineItemsWithAlloc, printLines, averagePricePerShirt: totalGarments ? (apparelRetailSubtotal + printChargeSubtotal) / totalGarments : 0, productMarkupPercent: 115, decorationMethod: "screen" };
+    return { retail, each: totalGarments ? retail / totalGarments : 0, cost: apparelDirectCost, profit: retail - apparelDirectCost, margin: retail ? ((retail - apparelDirectCost) / retail) * 100 : 0, materialCost: apparelDirectCost, shipping: 0, totalGarments, apparelDirectCost, apparelRetailSubtotal, printChargeSubtotal, setupFee, lineItems: lineItemsWithAlloc, printLines, averagePricePerShirt: totalGarments ? (apparelRetailSubtotal + printChargeSubtotal) / totalGarments : 0, productMarkupPercent: garmentMultiplier * 100, decorationMethod: "screen" };
   }, [lineItems, styles, locations, setupFeeEnabled, product, dtgDoubleSided]);
 
+  const pricingInput = {lineItems:lineItems.map(row=>({...row,style:row.styleKey.split('__')[0],sizes:row.sizeQty})),locations,setupFeeEnabled,sameDesign:true};
+  const serverSummary = useServerEstimate('screenprint',pricingInput,rawSummary);
+  const summary = product==='dtgDirectToGarment'?rawSummary:serverSummary;
   useEffect(() => onSummaryChange?.(summary), [summary, onSummaryChange]);
   useEffect(() => { if (!isAdminView) setSetupFeeEnabled(true); }, [isAdminView]);
   useEffect(() => {
@@ -132,6 +140,7 @@ export default function ScreenPrinting({ product, onSummaryChange, isAdminView =
   }, [product, styles]);
 
   return <Box title="Screen Printing / Apparel">
+    {summary.pricingErrors?.length>0 && <p role="status">{summary.pricingErrors.join(" ")}</p>}
     {lineItems.map((li) => {
       const g = styles.get(li.styleKey);
       const matches = li.search ? [...styles.values()].filter((s) => `${s.style} ${s.title}`.toLowerCase().includes(li.search.toLowerCase())).filter((s) => product !== "dtgDirectToGarment" || s.style === DTG_REQUIRED_STYLE).slice(0, 25) : [];
@@ -148,7 +157,7 @@ export default function ScreenPrinting({ product, onSummaryChange, isAdminView =
         <p>Total Qty: {det?.totalQty || 0}</p>
         {product !== "dtgDirectToGarment" && (det?.totalQty || 0) < 24 && <p style={{ fontSize: 12, color: "#ef4444", fontWeight: 700, margin: "6px 0 0" }}>24 piece minimum required for screen printing.</p>}
         {product !== "dtgDirectToGarment" && <p style={{ fontSize: 12, opacity: .85, margin: "6px 0 0" }}>Screen printing has a 24-piece minimum per design. Multiple garment styles can usually be combined when they stay in a similar color family (for example, lights together or darks together).</p>}
-        {isAdminView && product !== "dtgDirectToGarment" && <p>Garment Direct Cost: ${(det?.garmentCost || 0).toFixed(2)}</p>}
+        {isAdminView && summary.costDetailsAvailable !== false && product !== "dtgDirectToGarment" && <p>Garment Direct Cost: ${(det?.garmentCost || 0).toFixed(2)}</p>}
         {lineItems.length > 1 && <button className="modeBtn" onClick={() => setLineItems((p) => p.filter((x) => x.id !== li.id))}>Remove line item</button>}
       </div>;
     })}
@@ -156,7 +165,7 @@ export default function ScreenPrinting({ product, onSummaryChange, isAdminView =
     <button className="modeBtn" style={{ width: "100%", marginBottom: 8 }} onClick={() => setLineItems((p) => [...p, item(Date.now())])}>+ Add apparel line item</button>
     {product !== "dtgDirectToGarment" && <><hr /><h4>Imprint Locations</h4>{locations.map((loc, idx) => <div key={loc.id} style={{ display: "grid", gridTemplateColumns: "2fr 1fr auto", gap: 8, marginBottom: 8 }}><select style={input} value={loc.name} onChange={(e) => setLocations((p) => p.map((x) => x.id === loc.id ? { ...x, name: e.target.value } : x))}><option>Front</option><option>Back</option><option>Left Sleeve</option><option>Right Sleeve</option></select><select style={input} value={loc.colors} onChange={(e) => setLocations((p) => p.map((x) => x.id === loc.id ? { ...x, colors: n(e.target.value) } : x))}><option value={1}>1</option><option value={2}>2</option><option value={3}>3</option><option value={4}>4</option></select>{locations.length > 1 ? <button className="modeBtn" onClick={() => setLocations((p) => p.filter((x) => x.id !== loc.id))}>Remove</button> : <div />}<div style={{ gridColumn: "1 / -1", fontSize: 12, opacity: .8 }}>{idx === 0 ? "First location uses single-sided matrix" : "Additional location uses additional-side matrix"}</div></div>)}<button className="modeBtn" style={{ width: "100%" }} onClick={() => setLocations((p) => [...p, { id: Date.now(), name: "Back", colors: 1 }])}>+ Add print location</button></>}
     {product === "dtgDirectToGarment" && <Check label="Double-sided print (+$3/shirt direct)" value={dtgDoubleSided} setValue={setDtgDoubleSided} />}
-    {product !== "dtgDirectToGarment" && <Check label="Artwork/Setup Fee (+$25)" value={setupFeeEnabled} setValue={setSetupFeeEnabled} disabled={!isAdminView} />}
+    {product !== "dtgDirectToGarment" && <Check label={`Artwork/Setup Fee (+${summary.setupFee ?? 25})`} value={setupFeeEnabled} setValue={setSetupFeeEnabled} disabled={!isAdminView} />}
     {product === "dtgDirectToGarment" && <p style={{ fontSize: 12, opacity: .8, marginTop: 4 }}>DTG includes a mandatory $10 setup fee per order.</p>}
     {!isAdminView && product !== "dtgDirectToGarment" && <p style={{ fontSize: 12, opacity: .8, marginTop: 4 }}>Artwork/setup fee is included on customer quotes.</p>}
   </Box>;

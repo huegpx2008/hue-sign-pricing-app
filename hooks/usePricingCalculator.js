@@ -1,3 +1,4 @@
+import { useServerEstimate } from "../lib/hooks/use-server-estimate.js";
 import { useMemo } from "react";
 import { calculateGeneralSignPricing } from "../lib/pricing/general-signs.js";
 
@@ -92,7 +93,7 @@ export default function usePricingCalculator({
   doorHangerPerforation,
   doorHangerShrinkWrap,
 }) {
-  const calc = useMemo(() => calculateGeneralSignPricing({
+  const pricingInput = {
     product,
     width,
     height,
@@ -182,7 +183,8 @@ export default function usePricingCalculator({
     doorHangerBackPrinting,
     doorHangerPerforation,
     doorHangerShrinkWrap,
-  }), [product, width, height, qty, margin, multiplier, useDesignFee, useSetupFee, designFee, setupFee, delivery, activeProduct, productMap, coroDouble, coroFlute, stakes, heavyStakes, grommets, gloss, coroContour, coroRush, bannerType, polePocket, rope, windSlits, bannerRush, meshPolePocket, meshGrommets, meshWelding, meshRope, meshWebbing, meshRush, acmType, acmContour, roundedCorners, acrylicContour, acrylicRoundedCorners, acrylicStandOffs, acrylicStandOffQty, acrylicStandOffColor, vinylType, vinylLaminate, vinylContour, vinylRush, gangVinyl, contourPadding, gangWastePercent, posterRush, foamcoreDouble, foamcoreContour, foamcoreGloss, foamcoreRush, foamcoreCustomCut, pvcType, pvcContour, pvcRush, pvcCustomCut, vehicleMagnetMode, vehicleMagnetPreset, vehicleMagnetContour, vehicleMagnetRush, businessCardQty, businessCardSides, businessCardRush, handheldPaperSize, handheldPaperSides, handheldPaperRush, carbonlessFormType, carbonlessSize, carbonlessQty, carbonlessPrintType, carbonlessPrintSides, carbonlessNumbering, carbonlessWraparound, carbonlessBookedSets, carbonlessRush, doorHangerSize, doorHangerQty, doorHangerType, doorHangerInk, doorHangerBackPrinting, doorHangerPerforation, doorHangerShrinkWrap]);
+  };
+  const calc = useMemo(() => calculateGeneralSignPricing(pricingInput), [product, width, height, qty, margin, multiplier, useDesignFee, useSetupFee, designFee, setupFee, delivery, activeProduct, productMap, coroDouble, coroFlute, stakes, heavyStakes, grommets, gloss, coroContour, coroRush, bannerType, polePocket, rope, windSlits, bannerRush, meshPolePocket, meshGrommets, meshWelding, meshRope, meshWebbing, meshRush, acmType, acmContour, roundedCorners, acrylicContour, acrylicRoundedCorners, acrylicStandOffs, acrylicStandOffQty, acrylicStandOffColor, vinylType, vinylLaminate, vinylContour, vinylRush, gangVinyl, contourPadding, gangWastePercent, posterRush, foamcoreDouble, foamcoreContour, foamcoreGloss, foamcoreRush, foamcoreCustomCut, pvcType, pvcContour, pvcRush, pvcCustomCut, vehicleMagnetMode, vehicleMagnetPreset, vehicleMagnetContour, vehicleMagnetRush, businessCardQty, businessCardSides, businessCardRush, handheldPaperSize, handheldPaperSides, handheldPaperRush, carbonlessFormType, carbonlessSize, carbonlessQty, carbonlessPrintType, carbonlessPrintSides, carbonlessNumbering, carbonlessWraparound, carbonlessBookedSets, carbonlessRush, doorHangerSize, doorHangerQty, doorHangerType, doorHangerInk, doorHangerBackPrinting, doorHangerPerforation, doorHangerShrinkWrap]);
 
-  return calc;
+  return useServerEstimate('general',pricingInput,calc);
 }

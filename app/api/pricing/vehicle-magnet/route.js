@@ -1,4 +1,5 @@
-import { calculateGeneralSignPricing } from "../../../../lib/pricing/general-signs.js";
+import { loadPublishedPricing } from "../../../../lib/pricing/hq-bridge.js";
+import { calculateGeneralSignPricing as calculateSharedSign } from "../../../../lib/pricing/general-signs.js";
 
 const requiredFields = ["width", "height", "quantity"];
 const allowedStyles = new Set(["rectangle", "rounded-corners", "contour-cut"]);
@@ -91,6 +92,8 @@ export async function POST(request) {
   }
 
   const input = validation.value;
+  const release = await loadPublishedPricing();
+  const calculateGeneralSignPricing = input => calculateSharedSign(input, release?.configuration);
   const calc = calculateGeneralSignPricing({
     product: "vehicleMagnets",
     activeProduct: "vehicleMagnets",
@@ -114,6 +117,7 @@ export async function POST(request) {
   return Response.json({
     ok: true,
     product: "vehicle-magnet",
+    pricingReleaseId: release?.id ?? null,
     price: {
       retail: calc.retail,
       each: calc.each,

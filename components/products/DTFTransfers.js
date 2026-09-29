@@ -1,4 +1,5 @@
 "use client";
+import { useServerEstimate } from "../../lib/hooks/use-server-estimate";
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Box, Check, Field, input } from "../FormControls";
@@ -125,7 +126,7 @@ export default function DTFTransfers({ onSummaryChange, isAdminView = false }) {
   const [copyStatus, setCopyStatus] = useState("");
 
   const apparelCatalog = useMemo(() => createApparelCatalog(csvRows), [csvRows]);
-  const dtfPricing = useMemo(() => calculateDtfPricing({
+  const pricingInput = {
     dtfMode,
     bringYourOwnApparel,
     apparel: {
@@ -165,8 +166,10 @@ export default function DTFTransfers({ onSummaryChange, isAdminView = false }) {
     rightSleeveHeight,
     padding,
     optimizeLayout,
-  }, apparelCatalog), [manualApparelCost, apparelCatalog, dtfMode, bringYourOwnApparel, selectedProduct, selectedStyleKey, color, apparelCost, qtyXs, qtyS, qtyM, qtyL, qtyXl, qty2xl, qty3xl, qty4xl, qty5xl, dtfOnlyWidth, dtfOnlyHeight, dtfOnlyQty, byoaTransferQty, frontPreset, backPreset, frontWidth, frontHeight, backWidth, backHeight, leftSleeve, rightSleeve, leftSleeveCustomSize, rightSleeveCustomSize, leftSleeveWidth, leftSleeveHeight, rightSleeveWidth, rightSleeveHeight, padding, optimizeLayout]);
+  };
+  const rawDtfPricing = useMemo(()=>calculateDtfPricing(pricingInput,apparelCatalog),[JSON.stringify(pricingInput),apparelCatalog]);
 
+  const dtfPricing = useServerEstimate('dtf',pricingInput,rawDtfPricing);
   const {
     totalGarmentQty,
     apparelCostUsed: baseApparelCostUsed,
@@ -199,6 +202,7 @@ export default function DTFTransfers({ onSummaryChange, isAdminView = false }) {
     if (!onSummaryChange) return;
     onSummaryChange({
       pricingErrors: dtfPricing.pricingErrors,
+      costDetailsAvailable: dtfPricing.costDetailsAvailable,
       label: dtfMode === "dtfOnly" ? "DTF Transfers Only" : "DTF Transfers",
       retail: finalRetail,
       each: pricePerGarment,
@@ -250,7 +254,7 @@ export default function DTFTransfers({ onSummaryChange, isAdminView = false }) {
       rollLengthUsed: dtfLayout.rollLengthUsed,
       transferCount: totalTransferCount,
     });
-  }, [dtfPricing.pricingErrors, onSummaryChange, dtfMode, bringYourOwnApparel, dtfOnlyWidth, dtfOnlyHeight, dtfOnlyQty, byoaTransferQty, byoaRetailFee, finalRetail, pricePerGarment, dtfSizePriceBreakdown, directCost, apparelDirectCost, dtfMaterialCost, DTF_SHIPPING_FLAT, apparelRetailSubtotal, dtfRetailSubtotal, sizeUpchargeTotal, sleeveRetailAddOnTotal, selectedProduct, baseApparelCostUsed, totalGarmentQty, frontSelected, resolvedFrontSize, backSelected, resolvedBackSize, leftSleeve, resolvedLeftSleeveSize, rightSleeve, resolvedRightSleeveSize, dtfLayout.rollLengthUsed, totalTransferCount, qtyXs, qtyS, qtyM, qtyL, qtyXl, qty2xl, qty3xl, qty4xl, qty5xl]);
+  }, [dtfPricing.costDetailsAvailable, dtfPricing.pricingErrors, onSummaryChange, dtfMode, bringYourOwnApparel, dtfOnlyWidth, dtfOnlyHeight, dtfOnlyQty, byoaTransferQty, byoaRetailFee, finalRetail, pricePerGarment, dtfSizePriceBreakdown, directCost, apparelDirectCost, dtfMaterialCost, DTF_SHIPPING_FLAT, apparelRetailSubtotal, dtfRetailSubtotal, sizeUpchargeTotal, sleeveRetailAddOnTotal, selectedProduct, baseApparelCostUsed, totalGarmentQty, frontSelected, resolvedFrontSize, backSelected, resolvedBackSize, leftSleeve, resolvedLeftSleeveSize, rightSleeve, resolvedRightSleeveSize, dtfLayout.rollLengthUsed, totalTransferCount, qtyXs, qtyS, qtyM, qtyL, qtyXl, qty2xl, qty3xl, qty4xl, qty5xl]);
 
   const loadedRef = useRef(false);
 
@@ -594,7 +598,7 @@ export default function DTFTransfers({ onSummaryChange, isAdminView = false }) {
             <div><strong>Style #:</strong> {selectedProduct.style}</div>
             <div><strong>Product:</strong> {selectedProduct.title}</div>
             <div><strong>Color:</strong> {selectedProduct.color}</div>
-            {isAdminView && <div><strong>Case Price:</strong> {selectedProduct.casePriceRaw || "N/A"}</div>}
+            {isAdminView && dtfPricing.costDetailsAvailable !== false && <div><strong>Case Price:</strong> {selectedProduct.casePriceRaw || "N/A"}</div>}
             <div><strong>Case Size:</strong> {selectedProduct.caseSize || "N/A"}</div>
           </div>
         )}

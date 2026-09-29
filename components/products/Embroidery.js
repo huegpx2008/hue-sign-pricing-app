@@ -1,4 +1,5 @@
 "use client";
+import { useServerEstimate } from "../../lib/hooks/use-server-estimate";
 import { useEffect, useMemo, useState } from "react";
 import { Box, Check, input } from "../FormControls";
 import { parseApparelCatalogCsv, sortApparelSizes } from "../../lib/catalog/apparel-catalog";
@@ -21,10 +22,12 @@ export default function Embroidery({ onSummaryChange, isAdminView = false }) {
   const setLI=(id,u)=>setLineItems((p)=>p.map((x)=>x.id===id?u(x):x));
   const pick=(id,key)=>{const g=styles.get(key);const sizes=sortSizes((g?.rows||[]).map((r)=>r.size));setLI(id,(x)=>({...x,styleKey:key,search:g?`${g.style} — ${g.title}`:"",open:false,color:x.color&&g?.rows.find((r)=>r.color===x.color)?x.color:"",sizeQty:zeroQty(sizes.length?sizes:DEFAULT_SIZES)}));setTimeout(()=>document.getElementById("emb-stitch-count")?.focus(),0);};
 
-  const summary=useMemo(()=>calculateEmbroideryPricing({targetRetailPricePerItem,manualMode,manualName,manualColor,manualQty,manualCostEach,lineItems,stitchCount,threadColors,addNames,largeNames,addNumbers,largeNumbers,puff3mm,digitizingStatus,placements},{stylesByKey:styles}),[targetRetailPricePerItem,manualMode,manualName,manualColor,manualQty,manualCostEach,lineItems,styles,stitchCount,threadColors,addNames,largeNames,addNumbers,largeNumbers,puff3mm,digitizingStatus,placements]);
+  const pricingInput = {targetRetailPricePerItem,manualMode,manualName,manualColor,manualQty,manualCostEach,lineItems,stitchCount,threadColors,addNames,largeNames,addNumbers,largeNumbers,puff3mm,digitizingStatus,placements};
+  const rawSummary=useMemo(()=>calculateEmbroideryPricing(pricingInput,{stylesByKey:styles}),[targetRetailPricePerItem,manualMode,manualName,manualColor,manualQty,manualCostEach,lineItems,styles,stitchCount,threadColors,addNames,largeNames,addNumbers,largeNumbers,puff3mm,digitizingStatus,placements]);
+  const summary = useServerEstimate('embroidery',pricingInput,rawSummary);
   useEffect(()=>onSummaryChange?.(summary),[summary,onSummaryChange]);
 
-  return <Box title="Embroidery">{summary.minimumWarning&&<p style={{color:"#f59e0b",fontWeight:600}}>Minimum is 5 pieces. Quote is still allowed.</p>}
+  return <Box title="Embroidery">{summary.pricingErrors?.length>0 && <p role="status">{summary.pricingErrors.join(" ")}</p>}{summary.minimumWarning&&<p style={{color:"#f59e0b",fontWeight:600}}>Minimum is 5 pieces. Quote is still allowed.</p>}
   {isAdminView && <Check label="Manual Garment Entry" value={manualMode} setValue={setManualMode} />}
   {!manualMode && lineItems.map((li)=>{const g=styles.get(li.styleKey);const matches=li.search?[...styles.values()].filter((s)=>`${s.style} ${s.title}`.toLowerCase().includes(li.search.toLowerCase())).slice(0,25):[];const colors=g?[...new Set(g.rows.map((r)=>r.color).filter(Boolean))]:[];const det=summary.lineItems.find((x)=>x.id===li.id);
     return <div key={li.id} style={{border:"1px solid #334155",padding:12,borderRadius:10,marginBottom:10}}><div className="buttonGrid" style={{marginBottom:8}}>{QUICK_STYLES.map((opt)=><button key={`${li.id}-${opt.code}`} className={`presetBtn ${g?.style===opt.code?"activePreset":""}`} onClick={()=>{const found=[...styles.values()].find((s)=>s.style.toLowerCase()===opt.code.toLowerCase());if(found) pick(li.id,found.key);}}>{opt.label}</button>)}</div>

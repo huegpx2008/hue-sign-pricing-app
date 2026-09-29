@@ -1,3 +1,4 @@
+import { preparePricingCatalog } from "../../../../lib/pricing/hq-bridge.js";
 import {
   findStyle,
   findVariantSize,
@@ -258,7 +259,7 @@ export async function POST(request) {
       }, { status: 400 });
     }
 
-    const catalog = await catalogLoader();
+    const catalog = await preparePricingCatalog(await catalogLoader(), body);
     const structureInput = {
       lineItems: body.lineItems.map((item) => ({
         style: String(item.style).trim(),
@@ -284,6 +285,7 @@ export async function POST(request) {
     return Response.json({
       ok: true,
       product: "embroidery",
+      pricingReleaseId: catalog.pricingSource?.releaseId ?? null,
       price: {
         retail: calc.retail,
         each: calc.each,

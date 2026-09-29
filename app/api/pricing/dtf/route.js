@@ -1,3 +1,4 @@
+import { preparePricingCatalog } from "../../../../lib/pricing/hq-bridge.js";
 import {
   findStyle,
   findVariantSize,
@@ -459,7 +460,7 @@ export async function POST(request) {
     const structureFields = validateStructure(body);
     if (Object.keys(structureFields).length) return validationResponse(structureFields);
 
-    const catalog = await catalogLoader();
+    const catalog = await preparePricingCatalog(await catalogLoader(), body);
     const input = normalizeInput(body, catalog);
     const catalogFields = validateCatalogMatches(input, catalog);
     if (Object.keys(catalogFields).length) return validationResponse(catalogFields);
@@ -470,6 +471,7 @@ export async function POST(request) {
     return Response.json({
       ok: true,
       product: "dtf",
+      pricingReleaseId: catalog.pricingSource?.releaseId ?? null,
       price: {
         retail: calc.retail,
         each: calc.each,

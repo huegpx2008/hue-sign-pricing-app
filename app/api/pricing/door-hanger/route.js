@@ -1,5 +1,6 @@
+import { loadPublishedPricing } from "../../../../lib/pricing/hq-bridge.js";
 import {
-  calculatePaperPricing,
+  calculatePaperPricing as calculateSharedPaper,
   doorHangerBackPrintingOptions,
   doorHangerInkOptions,
   doorHangerPerforationOptions,
@@ -51,6 +52,8 @@ export async function POST(request) {
   const { fields, input } = validate(body);
   if (Object.keys(fields).length) return errorResponse("Door hanger", fields);
 
+  const release = await loadPublishedPricing();
+  const calculatePaperPricing = input => calculateSharedPaper(input, release?.configuration);
   const calc = calculatePaperPricing({
     product: "doorHangers",
     qty: input.quantity,

@@ -1,5 +1,6 @@
+import { loadPublishedPricing } from "../../../../lib/pricing/hq-bridge.js";
 import { bannerOptions } from "../../../../data/productConfig.js";
-import { calculateGeneralSignPricing } from "../../../../lib/pricing/general-signs.js";
+import { calculateGeneralSignPricing as calculateSharedSign } from "../../../../lib/pricing/general-signs.js";
 import { internalSignCost } from "../../../../lib/pricing/internal-api.js";
 
 const requiredFields = ["width", "height", "quantity", "material"];
@@ -73,6 +74,8 @@ export async function POST(request) {
 
   const input = validation.value;
   const material = bannerOptions[input.material];
+  const release = await loadPublishedPricing();
+  const calculateGeneralSignPricing = input => calculateSharedSign(input, release?.configuration);
   const calc = calculateGeneralSignPricing({
     product: "banner",
     activeProduct: "banner",
@@ -98,6 +101,7 @@ export async function POST(request) {
   return Response.json({
     ok: true,
     product: "banner",
+    pricingReleaseId: release?.id ?? null,
     price: {
       retail: calc.retail,
       each: calc.each,
