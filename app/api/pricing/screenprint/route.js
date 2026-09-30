@@ -236,6 +236,7 @@ export async function POST(request) {
           quantity: item.totalQty,
           sizes: Object.fromEntries(Object.entries(item.sizes || {}).filter(([, quantity]) => Number(quantity) > 0)),
         })),
+        pricedLines: calc.pricedLines,
         locations: input.locations,
         options: {
           darkGarments: input.darkGarments,

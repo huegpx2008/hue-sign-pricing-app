@@ -82,6 +82,23 @@ function engineInputForStandard(catalog, body) {
   };
 }
 
+const decorationRequest = {
+  mode:"standard",apparel:{source:"decorationOnly",quantity:44},
+  printLocations:[{placement:"front",preset:"leftChest",enabled:true}],
+  layout:{optimize:true,padding:0.125},
+};
+const decoration = await postJson(decorationRequest);
+assert.equal(decoration.status,200,JSON.stringify(decoration.json));
+assert.equal(decoration.json.summary.apparel.source,"decorationOnly");
+assert.equal(decoration.json.summary.totalQuantity,44);
+assertNoInternalFields(decoration.json);
+const customerGarments=await postJson({...decorationRequest,apparel:{source:"customerProvided",quantity:44}});
+assert.equal(customerGarments.status,200);
+assert.ok(Math.abs(customerGarments.json.price.retail-decoration.json.price.retail-20)<1e-8,"Decoration-only excludes customer garment fee");
+const decorationEngine=calculateDtfPricing({apparel:{source:"decorationOnly",quantity:44},frontPreset:"Left Chest",padding:.125,optimizeLayout:true});
+assert.equal(decorationEngine.apparelDirectCost,0);
+assert.equal(decorationEngine.byoaRetailFee,0);
+assert.ok(Math.abs(decorationEngine.finalRetail-decoration.json.price.retail)<1e-8);
 const requestBody = {
   mode: "standard",
   apparel: {

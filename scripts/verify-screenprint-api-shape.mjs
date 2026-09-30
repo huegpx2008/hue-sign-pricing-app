@@ -89,6 +89,10 @@ assert(success.json.summary.lineItems[0].style === requestBody.lineItems[0].styl
 assert(success.json.summary.locations.length === 2, "Expected two print locations");
 assert(success.json.warnings.some((warning) => warning.includes("underbase")), "Expected underbase warning");
 assertNoInternalFields(success.json);
+assert(success.json.summary.pricedLines.length > 0, "Missing individual selling prices");
+assert(Math.round(success.json.summary.pricedLines.reduce((sum,line)=>sum+line.lineTotal,0)*100) === Math.round(success.json.price.retail*100), "Individual prices must reconcile");
+assert(success.json.summary.pricedLines.every(line=>line.originalLineIndex===0 && line.unitPrice>0), "Missing HQ line mapping");
+
 
 const infant = await postJson({
   ...requestBody,

@@ -151,14 +151,14 @@ function validateStructure(body) {
   if (mode === "standard") {
     if (!body?.apparel || typeof body.apparel !== "object" || Array.isArray(body.apparel)) {
       fields.apparel = "Required apparel object";
-    } else if (apparelSource === "customerProvided") {
+    } else if (["customerProvided", "decorationOnly"].includes(apparelSource)) {
       if (toPositiveNumber(body.apparel.quantity ?? body.byoaTransferQty) === null) fields["apparel.quantity"] = "Must be a positive number";
     } else if (apparelSource === "catalog") {
       if (!body.apparel.style) fields["apparel.style"] = "Required";
       if (!body.apparel.color) fields["apparel.color"] = "Required";
       validateSizes(body.apparel.sizes, "apparel.sizes", fields);
     } else {
-      fields["apparel.source"] = "Must be catalog or customerProvided";
+      fields["apparel.source"] = "Must be catalog, customerProvided, or decorationOnly";
     }
 
     if (body?.printLocations !== undefined && !Array.isArray(body.printLocations)) {
@@ -278,7 +278,8 @@ function normalizeInput(body, catalog) {
     : {};
   const engineInput = {
     dtfMode: mode,
-    bringYourOwnApparel: source === "customerProvided",
+    bringYourOwnApparel: ["customerProvided", "decorationOnly"].includes(source),
+    decorationOnly: source === "decorationOnly",
     apparel: {
       source,
       style: String(body?.apparel?.style || "").trim(),
@@ -397,9 +398,9 @@ function buildSummary(input, calc) {
 
   if (input.mode === "dtfOnly") {
     summary.transfer = input.transfer;
-  } else if (input.apparel.source === "customerProvided") {
+  } else if (["customerProvided", "decorationOnly"].includes(input.apparel.source)) {
     summary.apparel = {
-      source: "customerProvided",
+      source: input.apparel.source,
       quantity: calc.totalGarmentQty,
     };
   } else {
